@@ -130,6 +130,12 @@ def docs_pptx():
                      download_name="planogram3d_presentation.pptx")
 
 
+@app.get("/docs/article.html")
+def docs_article_html():
+    """HTML-версия статьи о методике (со встроенным Markdown-исходником)."""
+    return send_file(_PKG_ROOT / "docs" / "ARTICLE_TEAM_TRAINING.html")
+
+
 @app.get("/docs/<name>")
 def docs_page(name):
     from .mdview import md_to_html
