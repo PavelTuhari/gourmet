@@ -136,6 +136,16 @@ def docs_article_html():
     return send_file(_PKG_ROOT / "docs" / "ARTICLE_TEAM_TRAINING.html")
 
 
+@app.get("/docs/img/<name>")
+def docs_img(name):
+    """Иллюстрации документации (скриншоты системы)."""
+    path = (_PKG_ROOT / "docs" / "img" / name).resolve()
+    if (path.parent != (_PKG_ROOT / "docs" / "img").resolve()
+            or not path.exists()):
+        abort(404)
+    return send_file(path)
+
+
 @app.get("/docs/<name>")
 def docs_page(name):
     from .mdview import md_to_html

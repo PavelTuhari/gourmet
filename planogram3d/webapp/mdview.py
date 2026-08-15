@@ -14,12 +14,39 @@ def _inline(text: str) -> str:
     out = re.sub(r"`([^`]+)`", r"<code>\1</code>", out)
     out = re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", out)
     out = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<i>\1</i>", out)
-    out = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", r'<a href="\2">\1</a>', out)
+    out = re.sub(r"!\[([^\]]*)\]\(([^)\s]+)\)",
+                 r'<img src="\2" alt="\1">', out)
+    out = re.sub(r"(?<!!)\[([^\]]+)\]\(([^)\s]+)\)",
+                 r'<a href="\2">\1</a>', out)
     return out
 
 
+_BLOCK_START = re.compile(
+    r"^(#{1,4} |[-*] |\d+\. |\||```|-{3,}\s*$|\s*$)")
+_NO_MERGE_PREV = re.compile(r"^(#{1,4} |\||```|-{3,}\s*$)")
+
+
+def _unwrap(lines):
+    """Склейка мягких переносов: абзац/пункт списка — одной строкой."""
+    merged, fence = [], False
+    for line in lines:
+        if line.startswith("```"):
+            fence = not fence
+            merged.append(line)
+            continue
+        if (not fence and merged and line.strip()
+                and not _BLOCK_START.match(line)
+                and merged[-1].strip()
+                and not merged[-1].startswith("```")
+                and not _NO_MERGE_PREV.match(merged[-1])):
+            merged[-1] = merged[-1].rstrip() + " " + line.strip()
+        else:
+            merged.append(line)
+    return merged
+
+
 def md_to_html(md: str) -> str:
-    lines = md.split("\n")
+    lines = _unwrap(md.split("\n"))
     out, i = [], 0
     in_list = in_table = False
 
