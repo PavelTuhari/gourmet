@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "planogram3d"
+version = "1.1.0"
+description = "3D-визуализация планограмм магазина: состояние продаж, утверждённая планограмма, проверка регламента и контрактов с поставщиками"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = ["plotly>=5.0"]
+
+[project.scripts]
+planogram3d = "planogram3d.app:main"
+
+[tool.setuptools]
+packages = ["planogram3d", "planogram3d.core"]
+
+[tool.setuptools.package-dir]
+planogram3d = "."

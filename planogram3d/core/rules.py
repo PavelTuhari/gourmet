@@ -13,9 +13,13 @@
 """
 
 from dataclasses import dataclass
-from typing import List
+from typing import Callable, Iterable, List, Optional
 
 from .models import Planogram, Store
+
+#: Сигнатура пользовательской проверки для ``check_compliance``:
+#: принимает магазин, возвращает список нарушений.
+ComplianceCheck = Callable[["Store"], List["Violation"]]
 
 
 @dataclass
@@ -211,9 +215,17 @@ def check_sales(store: Store) -> List[Violation]:
     return out
 
 
-def check_compliance(store: Store) -> List[Violation]:
+def check_compliance(
+        store: Store,
+        extra_checks: Optional[Iterable[ComplianceCheck]] = None,
+) -> List[Violation]:
     """Полная проверка: регламент и контракты — по фактической выкладке,
-    плюс расхождения с утверждённой планограммой и алерты по продажам."""
+    плюс расхождения с утверждённой планограммой и алерты по продажам.
+
+    ``extra_checks`` — дополнительные пользовательские проверки
+    (например, специфичные правила конкретной сети); каждая получает
+    ``store`` и возвращает список :class:`Violation`.
+    """
     planogram = store.current_planogram or store.approved_planogram
     out: List[Violation] = []
     if planogram is not None:
@@ -221,6 +233,9 @@ def check_compliance(store: Store) -> List[Violation]:
         out += check_contracts(store, planogram)
     out += check_against_approved(store)
     out += check_sales(store)
+    for check in (extra_checks or []):
+        out += list(check(store))
     severity_rank = {"critical": 0, "warning": 1}
-    out.sort(key=lambda v: (severity_rank[v.severity], v.group, v.where))
+    out.sort(key=lambda v: (severity_rank.get(v.severity, 2), v.group,
+                            v.where))
     return out
