@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNA.MD ERP — Modulul «Mașini-Unelte și Utilaje» pentru organizații necomerciale</title>
+<style>
+  :root {
+    --accent: #e31e24;        /* roșu 1C */
+    --accent-soft: #fdeaea;
+    --gold: #ffcc00;          /* galben 1C */
+    --gold-soft: #fff8db;
+    --ink: #1a1a1a;
+    --muted: #5a5a5a;
+    --line: #d9d9d9;
+    --bg: #ffffff;
+    --panel: #f6f6f4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", Tahoma, Verdana, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.55;
+    font-size: 15px;
+  }
+  .page { max-width: 960px; margin: 0 auto; padding: 0 24px 64px; }
+
+  header.doc-header {
+    border-bottom: 4px solid var(--gold);
+    background: linear-gradient(180deg, #fffef8 0%, #fff 100%);
+    padding: 28px 0 20px;
+    margin-bottom: 28px;
+  }
+  .brand-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .brand-mark {
+    background: var(--accent); color: #fff; font-weight: 800;
+    font-size: 22px; padding: 8px 14px; border-radius: 4px; letter-spacing: .5px;
+  }
+  .brand-txt { font-size: 13px; color: var(--muted); }
+  h1 { font-size: 26px; margin-top: 18px; line-height: 1.25; }
+  .subtitle { color: var(--muted); margin-top: 6px; font-size: 15px; }
+  .meta-band {
+    margin-top: 16px; background: var(--panel); border: 1px solid var(--line);
+    border-left: 5px solid var(--accent); padding: 10px 16px; font-size: 13.5px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 4px 24px;
+  }
+  .meta-band b { color: var(--accent); }
+
+  h2 {
+    font-size: 20px; margin: 40px 0 14px;
+    padding: 8px 14px; background: var(--gold-soft);
+    border-left: 6px solid var(--gold); border-bottom: 1px solid var(--line);
+  }
+  h3 {
+    font-size: 16.5px; margin: 26px 0 10px; color: var(--accent);
+  }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 10px 26px; }
+  li { margin: 5px 0; }
+
+  table {
+    width: 100%; border-collapse: collapse; margin: 14px 0 20px; font-size: 14px;
+  }
+  th {
+    background: var(--accent); color: #fff; text-align: left;
+    padding: 9px 12px; border: 1px solid #c01318; font-weight: 600;
+  }
+  td { padding: 8px 12px; border: 1px solid var(--line); vertical-align: top; }
+  tr:nth-child(even) td { background: #fafaf8; }
+  .tbl-wrap { overflow-x: auto; }
+
+  .note {
+    background: var(--gold-soft); border: 1px solid #e8d67a;
+    border-left: 6px solid var(--gold); padding: 12px 16px; margin: 16px 0; font-size: 14px;
+  }
+  .warn {
+    background: var(--accent-soft); border: 1px solid #f0b9bb;
+    border-left: 6px solid var(--accent); padding: 12px 16px; margin: 16px 0; font-size: 14px;
+  }
+  .tag {
+    display: inline-block; background: var(--gold); color: #4a3b00;
+    font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 10px; margin-left: 8px;
+    vertical-align: middle;
+  }
+  .price { white-space: nowrap; font-weight: 700; color: var(--accent); }
+  .anexa {
+    margin-top: 48px; border: 2px solid var(--accent); border-radius: 6px; overflow: hidden;
+  }
+  .anexa > .anexa-title {
+    background: var(--accent); color: #fff; padding: 12px 18px;
+    font-size: 18px; font-weight: 700;
+  }
+  .anexa > .anexa-body { padding: 6px 18px 18px; }
+  footer {
+    margin-top: 48px; border-top: 4px solid var(--gold); padding-top: 14px;
+    font-size: 12.5px; color: var(--muted);
+  }
+  code { background: #f0f0ee; padding: 1px 6px; border-radius: 3px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="doc-header">
+  <div class="brand-row">
+    <div class="brand-mark">UNA</div>
+    <div class="brand-txt">
+      <b>UNA.MD ERP Platform</b> · Configurație aplicativă pe Oracle Database<br>
+      Descriere de configurație în format standard (analog documentației «1C:Întreprindere»)
+    </div>
+  </div>
+  <h1>Modulul «Mașini-Unelte și Utilaje» (Parc de echipamente de producție)</h1>
+  <div class="subtitle">
+    Configurație specializată pentru organizații necomerciale din Republica Moldova —
+    exemplu de implementare: asociația obștească de tip «People in Need» (ateliere sociale,
+    ateliere de instruire vocațională, întreprinderi sociale)
+  </div>
+  <div class="meta-band">
+    <span><b>Platformă:</b> UNA.MD ERP</span>
+    <span><b>SGBD:</b> Oracle Database 26ai</span>
+    <span><b>Cloud:</b> Oracle Cloud Infrastructure (OCI)</span>
+    <span><b>Versiune configurație:</b> 1.0.2026</span>
+    <span><b>Limbi interfață:</b> RO / RU / EN</span>
+    <span><b>Data ediției:</b> 2026</span>
+  </div>
+</header>
+
+<!-- ==================== 1. DESTINAȚIE ==================== -->
+<h2>1. Destinația configurației</h2>
+<p>
+Modulul <b>«Mașini-Unelte și Utilaje»</b> al platformei <b>UNA.MD ERP</b> este destinat
+automatizării evidenței complete a parcului de mașini-unelte, utilaje și echipamente de
+producție în cadrul organizațiilor necomerciale (asociații obștești, fundații, instituții
+private de utilitate publică) din Republica Moldova.
+</p>
+<p>
+Exemplu tipic de utilizator: o organizație necomercială de tipul <b>«People in Need» Moldova</b>,
+care administrează ateliere sociale și centre de instruire vocațională dotate cu mașini-unelte
+(strunguri, mașini de frezat, mașini de cusut industriale, echipamente de tâmplărie, imprimante 3D),
+procurate din granturi și donații, și care are obligația de a ține evidența acestora conform
+cerințelor donatorilor și ale legislației Republicii Moldova (inclusiv Indicațiile metodice
+privind contabilitatea în organizațiile necomerciale).
+</p>
+<p>Modulul rezolvă următoarele sarcini:</p>
+<ul>
+  <li>evidența individuală a fiecărui utilaj pe toată durata ciclului de viață — de la recepție până la casare;</li>
+  <li>evidența surselor de finanțare (grant, donator, proiect, mijloace cu destinație specială);</li>
+  <li>planificarea și evidența mentenanței preventive (grafic PPR) și a reparațiilor;</li>
+  <li>evidența orelor de funcționare, a operatorilor și a instructajelor de securitate a muncii;</li>
+  <li>calculul uzurii/amortizării conform politicii de contabilitate a organizației necomerciale;</li>
+  <li>inventarierea, transferul între subdiviziuni, darea în folosință temporară beneficiarilor;</li>
+  <li>raportare către donatori și către conducerea organizației.</li>
+</ul>
+
+<!-- ==================== 2. ARHITECTURĂ ==================== -->
+<h2>2. Arhitectura soluției</h2>
+<p>
+Configurația este realizată pe platforma <b>UNA.MD ERP</b> — platformă ERP moldovenească
+construită pe <b>Oracle Database</b>. Principiul de organizare a configurației este identic
+cu cel din «1C:Întreprindere»: obiectele aplicative sunt împărțite în
+<b>nomenclatoare</b> (справочники), <b>documente</b>, <b>registre</b> și <b>rapoarte</b>,
+iar logica de business este separată de platforma tehnologică.
+</p>
+
+<div class="tbl-wrap">
+<table>
+  <tr><th>Nivel</th><th>Component</th><th>Descriere</th></tr>
+  <tr>
+    <td>Client</td>
+    <td>Client web / client mobil</td>
+    <td>Interfață web responsivă; acces de pe orice dispozitiv, fără instalare locală.</td>
+  </tr>
+  <tr>
+    <td>Aplicativ</td>
+    <td>Server de aplicații UNA.MD ERP</td>
+    <td>Logica de business, drepturi de acces pe roluri, mecanism de tichete și fluxuri de aprobare.</td>
+  </tr>
+  <tr>
+    <td>Date</td>
+    <td>Oracle Database 26ai</td>
+    <td>Stocarea datelor, integritate tranzacțională, funcții AI încorporate (vezi cap. 5).</td>
+  </tr>
+  <tr>
+    <td>Infrastructură</td>
+    <td>Oracle Cloud Infrastructure (OCI)</td>
+    <td>Găzduire PaaS/SaaS, copii de rezervă automate, securitate cibernetică (vezi cap. 6).</td>
+  </tr>
+  <tr>
+    <td>Configurare</td>
+    <td>Grok Builder <span class="tag">opțional recomandat</span></td>
+    <td>Sistem de configurare și dezvoltare ulterioară (low-code) a configurației — analogul «Configuratorului» din 1C.</td>
+  </tr>
+</table>
+</div>
+
+<!-- ==================== 3. FUNCȚIONALITATE ==================== -->
+<h2>3. Componența funcțională a modulului</h2>
+
+<h3>3.1. Nomenclatoare (cataloage)</h3>
+<div class="tbl-wrap">
+<table>
+  <tr><th>Nomenclator</th><th>Destinație</th></tr>
+  <tr><td><b>Utilaje și mașini-unelte</b></td>
+      <td>Fișa individuală a utilajului: număr de inventar, model, producător, an de fabricație, număr de serie, fotografii, documentație tehnică atașată, cod QR pentru inventariere.</td></tr>
+  <tr><td><b>Modele și tipuri de utilaje</b></td>
+      <td>Clasificator ierarhic (strunguri, mașini de frezat, echipamente de cusut, tâmplărie etc.) cu parametri tehnici tipizați.</td></tr>
+  <tr><td><b>Locuri de amplasare</b></td>
+      <td>Structura organizației: filiale, ateliere, centre de instruire, încăperi.</td></tr>
+  <tr><td><b>Persoane responsabile și operatori</b></td>
+      <td>Angajați și voluntari cu drept de exploatare; termene de valabilitate a instructajelor SSM.</td></tr>
+  <tr><td><b>Donatori / proiecte / granturi</b></td>
+      <td>Sursele de finanțare a procurării; legătura obligatorie utilaj → proiect → donator pentru raportarea către finanțatori.</td></tr>
+  <tr><td><b>Piese de schimb și consumabile</b></td>
+      <td>Nomenclatorul stocurilor destinate mentenanței, cu norme de consum.</td></tr>
+  <tr><td><b>Furnizori și organizații de service</b></td>
+      <td>Contrapărți pentru procurări, reparații și deservire tehnică.</td></tr>
+</table>
+</div>
+
+<h3>3.2. Documente</h3>
+<div class="tbl-wrap">
+<table>
+  <tr><th>Document</th><th>Destinație</th></tr>
+  <tr><td><b>Recepția utilajului</b></td><td>Intrarea în evidență (procurare din grant, donație în natură, comodat); generarea automată a numărului de inventar.</td></tr>
+  <tr><td><b>Punere în funcțiune</b></td><td>Darea în exploatare, desemnarea persoanei responsabile, începerea calculului uzurii.</td></tr>
+  <tr><td><b>Transfer intern</b></td><td>Mutarea între ateliere/filiale cu semnătura predare-primire.</td></tr>
+  <tr><td><b>Fișă de lucru (comandă de lucru)</b></td><td>Înregistrarea utilizării: operator, beneficiari instruiți, ore de funcționare, produse realizate în atelierul social.</td></tr>
+  <tr><td><b>Mentenanță planificată (PPR)</b></td><td>Lucrări preventive conform graficului; consum de piese; costuri pe proiect.</td></tr>
+  <tr><td><b>Constatare defecțiune / Reparație</b></td><td>Defecte, reparații interne sau prin service extern, timp de staționare.</td></tr>
+  <tr><td><b>Inventariere</b></td><td>Liste de inventariere, scanare coduri QR de pe mobil, constatarea plusurilor/lipsurilor.</td></tr>
+  <tr><td><b>Reevaluare / Modernizare</b></td><td>Majorarea valorii, modernizări din granturi noi.</td></tr>
+  <tr><td><b>Casare</b></td><td>Scoaterea din evidență cu proces-verbal de casare conform legislației RM și, după caz, cu acordul donatorului.</td></tr>
+</table>
+</div>
+
+<h3>3.3. Registre de evidență</h3>
+<ul>
+  <li><b>Registrul parcului de utilaje</b> — starea curentă (în exploatare, în reparație, conservat, casat);</li>
+  <li><b>Registrul orelor de funcționare</b> — pe utilaj, operator, proiect și perioadă;</li>
+  <li><b>Registrul mentenanței</b> — istoricul complet al intervențiilor tehnice;</li>
+  <li><b>Registrul uzurii</b> — calculul lunar al uzurii pe surse de finanțare;</li>
+  <li><b>Registrul instructajelor SSM</b> — cine, când și pentru ce utilaj a fost instruit.</li>
+</ul>
+
+<h3>3.4. Rapoarte</h3>
+<ul>
+  <li><b>Fișa utilajului</b> — cartea tehnică electronică completă a fiecărei mașini-unelte;</li>
+  <li><b>Graficul mentenanței preventive</b> — planificat/realizat, cu alerte de întârziere;</li>
+  <li><b>Raport către donator</b> — utilajele procurate din grant, starea, gradul de utilizare, fotografii;</li>
+  <li><b>Analiza costurilor de exploatare</b> — pe utilaj, atelier, proiect;</li>
+  <li><b>Gradul de încărcare a utilajelor (OEE)</b> — eficiența utilizării parcului;</li>
+  <li><b>Borderoul uzurii</b> — pentru contabilitatea organizației necomerciale;</li>
+  <li><b>Lista de inventariere INV-1</b> și procesele-verbale aferente conform formularelor tipizate din RM.</li>
+</ul>
+
+<h3>3.5. Integrări</h3>
+<ul>
+  <li>modulul de contabilitate UNA.MD ERP (planul de conturi pentru organizații necomerciale din RM);</li>
+  <li>import/export către formatele cerute de donatori (Excel, CSV, PDF);</li>
+  <li>sistemul de tichete de suport <b>OTRS</b> — pentru solicitări de actualizare și asistență;</li>
+  <li>e-Factura și SIA ale Serviciului Fiscal de Stat (pentru activitatea economică statutară, după caz).</li>
+</ul>
+
+<!-- ==================== 4. SPECIFIC ONG ==================== -->
+<h2>4. Particularități pentru organizații necomerciale din Republica Moldova</h2>
+<ul>
+  <li>evidența <b>mijloacelor cu destinație specială</b>: fiecare utilaj este legat de sursa de finanțare, iar uzura se reflectă prin decontarea concomitentă a finanțărilor, conform Indicațiilor metodice privind contabilitatea în organizațiile necomerciale;</li>
+  <li>rapoarte separate <b>pe fiecare grant și donator</b>, cu perioade de raportare configurabile;</li>
+  <li>evidența <b>donațiilor în natură</b> (utilaje primite gratuit) la valoarea justă;</li>
+  <li>evidența utilajelor primite în <b>comodat</b> sau transmise beneficiarilor în folosință temporară;</li>
+  <li>interfață simplă pentru personal necontabil (coordonatori de proiecte, maiștri de atelier, voluntari);</li>
+  <li>toate formularele tipizate — în limba română, conform legislației Republicii Moldova.</li>
+</ul>
+
+<!-- ==================== 5. ORACLE 26AI ==================== -->
+<h2>5. Avantajele Oracle Database 26ai</h2>
+<p>
+Configurația rulează pe <b>Oracle Database 26ai</b> — versiunea cu inteligență artificială
+încorporată direct în nucleul bazei de date. Pentru organizația necomercială aceasta înseamnă:
+</p>
+<div class="tbl-wrap">
+<table>
+  <tr><th>Tehnologie 26ai</th><th>Beneficiu practic pentru modul</th></tr>
+  <tr><td><b>AI Vector Search</b></td>
+      <td>Căutare semantică în documentația tehnică, manuale și istoricul defecțiunilor: «vibrează axul la turații mari» găsește cazuri similare chiar dacă au fost descrise cu alte cuvinte.</td></tr>
+  <tr><td><b>Select AI / interogări în limbaj natural</b></td>
+      <td>Coordonatorul de proiect întreabă în română: «câte ore a lucrat strungul din atelierul Bălți în iulie?» — și primește raportul fără a cunoaște SQL.</td></tr>
+  <tr><td><b>In-Database Machine Learning</b></td>
+      <td>Mentenanță predictivă: prognoza defecțiunilor pe baza orelor de funcționare și a istoricului reparațiilor, direct în baza de date, fără export de date.</td></tr>
+  <tr><td><b>JSON Relational Duality</b></td>
+      <td>Aceleași date accesibile și relațional (rapoarte contabile) și ca JSON (aplicația mobilă de inventariere) — fără duplicare și desincronizare.</td></tr>
+  <tr><td><b>True Cache</b></td>
+      <td>Rapoartele voluminoase pentru donatori nu încetinesc lucrul operativ al atelierelor.</td></tr>
+  <tr><td><b>Blockchain Tables</b></td>
+      <td>Registre de evidență imuabile (recepții, casări) — probă de integritate pentru audit și donatori: înregistrările nu pot fi modificate retroactiv.</td></tr>
+  <tr><td><b>Raft Replication / Data Guard</b></td>
+      <td>Disponibilitate înaltă și recuperare rapidă în caz de avarie, fără pierdere de date.</td></tr>
+  <tr><td><b>SQL Firewall (încorporat)</b></td>
+      <td>Blocarea la nivel de nucleu a interogărilor SQL neautorizate, inclusiv SQL-injection.</td></tr>
+</table>
+</div>
+
+<!-- ==================== 6. OCI SECURITY ==================== -->
+<h2>6. Securitate cibernetică în Oracle Cloud Infrastructure (OCI)</h2>
+<p>
+La livrarea în regim PaaS/SaaS, sistemul este găzduit în <b>Oracle Cloud Infrastructure</b>,
+cu următoarele mecanisme de protecție incluse:
+</p>
+<ul>
+  <li><b>Criptare totală</b> — datele sunt criptate în repaus (TDE — Transparent Data Encryption) și în tranzit (TLS); cheile pot fi gestionate în <b>OCI Vault</b> (HSM);</li>
+  <li><b>OCI IAM</b> — autentificare centralizată, autentificare multi-factor (MFA), principiul privilegiului minim pe compartimente;</li>
+  <li><b>Cloud Guard</b> — monitorizare continuă a posturii de securitate, detectarea automată a configurărilor riscante și a activității anomale;</li>
+  <li><b>Security Zones</b> — politici de securitate obligatorii, imposibil de dezactivat accidental;</li>
+  <li><b>Data Safe</b> — auditul activității în baza de date, evaluarea riscurilor, descoperirea și mascarea datelor cu caracter personal (relevant pentru evidența beneficiarilor ONG conform Legii nr. 133/2011 privind protecția datelor cu caracter personal);</li>
+  <li><b>Database Vault</b> — nici administratorii tehnici nu pot citi datele aplicative fără autorizare;</li>
+  <li><b>WAF și protecție anti-DDoS</b> — protecția interfeței web împotriva atacurilor;</li>
+  <li><b>Copii de rezervă automate</b> — backup zilnic cu păstrare configurabilă și test de restaurare;</li>
+  <li><b>Izolarea rețelei</b> — VCN privat, acces doar prin canale securizate;</li>
+  <li>centre de date certificate <b>ISO 27001, SOC 1/2, GDPR-ready</b> — argument important în fața donatorilor internaționali.</li>
+</ul>
+<div class="note">
+<b>Notă.</b> Pentru organizațiile necomerciale, securitatea cibernetică nu este doar o cerință
+tehnică: donatorii internaționali (UE, USAID, agențiile ONU, fundațiile private) solicită tot
+mai des dovada protecției datelor beneficiarilor. Găzduirea în OCI oferă această dovadă «din
+cutie», fără investiții proprii în infrastructură de securitate.
+</div>
+
+<!-- ==================== ANEXA 1: PAAS ==================== -->
+<div class="anexa">
+  <div class="anexa-title">ANEXA 1. Model de livrare PaaS — Lista de prețuri a serviciilor (2026)</div>
+  <div class="anexa-body">
+    <p>
+    Modulul se livrează în regim <b>PaaS</b> (Platform as a Service) prin partenerii de
+    implementare UNA.MD, după modelul rețelei de parteneri-franciză «1C» din Republica Moldova.
+    Prețurile de mai jos reflectă <b>diapazonul mediu real de piață</b> al serviciilor de
+    implementare din Moldova pentru anul 2026.
+    </p>
+
+    <div class="tbl-wrap">
+    <table>
+      <tr><th>Serviciu</th><th>Conținut</th><th>Preț (fără TVA)</th></tr>
+      <tr>
+        <td><b>Pachet de bază — configurare după scenariu</b></td>
+        <td>Configurarea modulului «Mașini-Unelte și Utilaje» conform scenariului de lucru al organizației: nomenclatoare, roluri, fluxuri de documente, formulare tipizate, rapoarte pentru donatori. Volumul depinde de complexitatea scenariului.</td>
+        <td><span class="price">500 – 1 500 EUR</span> (o singură dată)</td>
+      </tr>
+      <tr>
+        <td><b>Instalare unică + migrarea datelor</b></td>
+        <td>Instalarea și punerea în funcțiune a mediului PaaS. Include <b>migrarea datelor din orice sistem-sursă</b> (1C, Excel, Universal Accounting, WizCount, sisteme proprii etc.): extragere, transformare, încărcare și verificarea integrității.</td>
+        <td><span class="price">200 – 400 EUR</span> (o singură dată)</td>
+      </tr>
+      <tr>
+        <td><b>Grok Builder</b> <span class="tag">opțional recomandat</span></td>
+        <td>Sistem de configurare și dezvoltare ulterioară a configurației (analogul «Configuratorului» 1C): modificarea formularelor, câmpuri noi, rapoarte proprii, automatizări — fără programare clasică. Recomandat organizațiilor care doresc să-și adapteze singure sistemul.</td>
+        <td>conform ofertei partenerului</td>
+      </tr>
+      <tr>
+        <td><b>«Asigurare legislativă»</b> — abonament de actualizări</td>
+        <td>Garanția actualizării configurației la <b>orice modificare a legislației Republicii Moldova</b>: monitorizarea publicațiilor din <b>Monitorul Oficial</b>, livrarea actualizărilor <b>la cerere, prin sistemul de tichete de suport OTRS</b>.</td>
+        <td><span class="price">400 EUR / an</span><br>sau <span class="price">300 EUR / 6 luni</span></td>
+      </tr>
+      <tr>
+        <td><b>Abonament de suport prin chat</b></td>
+        <td>Consultații operative prin chat pe o perioadă de <b>2 săptămâni</b>; durata lucrărilor per solicitare — <b>maximum 15 minute la 1 întrebare</b>. Solicitările care depășesc limita trec pe tariful orar (rândul următor).</td>
+        <td><span class="price">30 EUR / 2 săptămâni</span></td>
+      </tr>
+      <tr>
+        <td><b>Lucrări la tarif orar / pachet de ore</b></td>
+        <td>Lucrări de configurare, consultanță și dezvoltare peste limitele abonamentului, inclusiv <b>pachet de 4 ore</b>, la tariful din lista de prețuri.</td>
+        <td><span class="price">minimum 40 EUR / oră</span> (tarif 2026)</td>
+      </tr>
+    </table>
+    </div>
+
+    <div class="note">
+    <b>Cum funcționează «asigurarea legislativă».</b> Organizația deschide un tichet în OTRS
+    (de exemplu: «s-a modificat modul de casare a mijloacelor fixe procurate din granturi»),
+    iar partenerul livrează actualizarea configurației fără plată suplimentară, în limita
+    abonamentului activ. Fără abonament, aceleași lucrări se facturează la tariful orar.
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ANEXA 2: SAAS ==================== -->
+<div class="anexa">
+  <div class="anexa-title">ANEXA 2. Varianta alternativă de livrare — SaaS (2026)</div>
+  <div class="anexa-body">
+    <p>
+    Pentru organizațiile mici, care nu au nevoie de configurare individuală, modulul se oferă
+    și în regim <b>SaaS</b> (Software as a Service) — configurație tipizată, gata de lucru:
+    </p>
+    <div class="tbl-wrap">
+    <table>
+      <tr><th>Serviciu</th><th>Conținut</th><th>Preț (fără TVA)</th></tr>
+      <tr>
+        <td><b>Conectare SaaS</b></td>
+        <td>Crearea mediului, conturile utilizatorilor, instruire inițială de bază.</td>
+        <td><span class="price">200 EUR</span> (o singură dată)</td>
+      </tr>
+      <tr>
+        <td><b>Abonament lunar SaaS</b></td>
+        <td>Utilizarea configurației tipizate, găzduire OCI, copii de rezervă, actualizări curente ale platformei.</td>
+        <td><span class="price">50 EUR / lună</span></td>
+      </tr>
+    </table>
+    </div>
+    <p>
+    Serviciile opționale din Anexa 1 («asigurarea legislativă», abonamentul de chat, lucrările
+    la tarif orar, Grok Builder) pot fi contractate suplimentar și în varianta SaaS.
+    </p>
+  </div>
+</div>
+
+<div class="warn">
+<b>Important.</b> Toate prețurile din prezentul document sunt indicate <b>fără TVA</b> și
+reprezintă diapazonul mediu de piață pentru anul 2026; oferta finală se stabilește de partenerul
+de implementare în funcție de scenariul concret al organizației. Prezentul document are caracter
+informativ și nu constituie ofertă comercială în sensul legislației civile.
+</div>
+
+<footer>
+  UNA.MD ERP Platform · Modulul «Mașini-Unelte și Utilaje» pentru organizații necomerciale ·
+  Republica Moldova · Ediția 2026<br>
+  Oracle, Oracle Database 26ai și Oracle Cloud Infrastructure sunt mărci înregistrate ale
+  Oracle Corporation. «1C» este marcă înregistrată a companiei «1C». Denumirile sunt utilizate
+  exclusiv în scop de referință comparativă.
+</footer>
+
+</div>
+</body>
+</html>
