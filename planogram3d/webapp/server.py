@@ -70,6 +70,49 @@ def store_live(store_id):
                            store_name=store.name)
 
 
+@app.get("/store/<store_id>/game")
+def store_game(store_id):
+    try:
+        store = network.store(store_id)
+    except KeyError:
+        abort(404)
+    return render_template("game.html", store_id=store_id,
+                           store_name=store.name)
+
+
+@app.get("/api/game/<store_id>/config")
+def game_config(store_id):
+    """Конфигурация игры-тренажёра: реальный зал и товары магазина."""
+    from .instore import ENTRANCE, EXIT, FRIDGES, POS_DESKS, SCO_RECT
+    from .network import price_for
+    try:
+        store = network.store(store_id)
+    except KeyError:
+        abort(404)
+    gondolas = []
+    for g in store.gondolas:
+        products = []
+        for p in store.current_planogram.by_gondola(g.gondola_id):
+            product = store.product(p.sku)
+            products.append({"sku": p.sku, "name": product.name,
+                             "price": round(price_for(product.category,
+                                                      p.sku))})
+        gondolas.append({"x": g.x, "y": g.y, "w": g.width, "d": g.depth,
+                         "name": g.name.split("(")[0].strip(),
+                         "products": products})
+    return jsonify({
+        "store_name": store.name,
+        "gondolas": gondolas,
+        "fridges": [{"id": fid, "x": x, "y": y, "w": w, "d": d}
+                    for fid, x, y, w, d in FRIDGES],
+        "register": {"name": POS_DESKS[0][0], "x": POS_DESKS[0][1],
+                     "y": POS_DESKS[0][2]},
+        "sco": SCO_RECT,
+        "entrance": ENTRANCE, "exit": EXIT,
+        "storeroom": {"x": 6.6, "y": -0.15},
+    })
+
+
 @app.get("/api/instore/<store_id>/state")
 def instore_state(store_id):
     try:

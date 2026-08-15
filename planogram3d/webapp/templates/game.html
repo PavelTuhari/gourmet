@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>{{ store_name }} — тренажёр персонала</title>
+<style>
+  html, body { margin:0; height:100%; font-family:'Segoe UI',system-ui,sans-serif;
+               background:#141d28; color:#23303f; overflow:hidden;
+               user-select:none; }
+  #wrap { display:flex; flex-direction:column; height:100%; }
+
+  /* ---- HUD ---- */
+  #hud { display:flex; align-items:center; gap:14px; padding:8px 16px;
+         background:linear-gradient(90deg,#1d2b3a,#2f4b68); color:#fff; }
+  #hud .cell b { font-size:16px; }
+  #hud .cell span { font-size:10.5px; opacity:.75; display:block; }
+  #hud .money b { color:#ffd54f; }
+  #hud .goalbar { width:170px; height:9px; background:rgba(255,255,255,.18);
+                  border-radius:5px; overflow:hidden; margin-top:2px; }
+  #hud .goalbar i { display:block; height:100%; background:#ffd54f; }
+  #timer b { font-size:19px; }
+  #timer.low b { color:#ff8a80; animation:blink 1s infinite; }
+  @keyframes blink { 50% { opacity:.4; } }
+  #rep b { color:#ff9ab5; }
+  #carry { font-size:15px; }
+  #hint { margin-left:auto; background:rgba(255,213,79,.15); color:#ffd54f;
+          border:1px solid rgba(255,213,79,.4); padding:6px 12px;
+          border-radius:9px; font-size:12.5px; max-width:360px; }
+
+  #stage { flex:1; position:relative; display:flex; align-items:center;
+           justify-content:center; }
+  canvas { max-width:100%; max-height:100%; cursor:pointer; }
+
+  /* ---- оверлеи брифинга/результатов ---- */
+  .overlay { position:absolute; inset:0; background:rgba(16,24,32,.82);
+             display:flex; align-items:center; justify-content:center;
+             z-index:20; }
+  .panel { width:520px; background:#f6f8fb; border-radius:18px;
+           padding:26px 30px; box-shadow:0 16px 60px rgba(0,0,0,.5); }
+  .panel h1 { font-size:21px; margin:0 0 4px; }
+  .panel h2 { font-size:14px; color:#5b6672; margin:0 0 14px;
+              font-weight:600; }
+  .panel ul { margin:10px 0; padding-left:22px; font-size:13.5px;
+              line-height:1.65; }
+  .panel .goal { background:#fff5d6; border:1px solid #f0dd9a;
+                 padding:9px 13px; border-radius:10px; font-size:13.5px;
+                 font-weight:600; margin:12px 0; }
+  .panel button { width:100%; border:0; border-radius:11px; padding:13px;
+                  background:#2f6fed; color:#fff; font-size:15.5px;
+                  font-weight:700; cursor:pointer; margin-top:8px; }
+  .panel button:hover { background:#255cc9; }
+  .stars { text-align:center; font-size:44px; letter-spacing:6px;
+           margin:8px 0 2px; color:#f5a623; text-shadow:0 2px 4px
+           rgba(0,0,0,.15); }
+  .stat { display:flex; justify-content:space-between; font-size:13px;
+          padding:4px 2px; border-bottom:1px dashed #dfe5ec; }
+  .tips { background:#e8f0fe; border-radius:10px; padding:10px 14px;
+          font-size:12.5px; line-height:1.6; margin-top:10px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="hud">
+    <div class="cell money"><b id="h-money">0 ₽</b><span>выручка</span>
+      <div class="goalbar"><i id="h-goal" style="width:0%"></i></div></div>
+    <div class="cell" id="timer"><b id="h-time">0:00</b><span>время смены</span></div>
+    <div class="cell" id="rep"><b id="h-rep">❤❤❤❤</b><span>репутация</span></div>
+    <div class="cell"><b id="h-level">1</b><span>смена</span></div>
+    <div class="cell" id="carry"><b id="h-carry">—</b><span>в руках</span></div>
+    <div id="hint">Загрузка…</div>
+  </div>
+  <div id="stage">
+    <canvas id="cv"></canvas>
+    <div class="overlay" id="brief">
+      <div class="panel">
+        <h1>🎓 Тренажёр персонала магазина</h1>
+        <h2 id="b-store"></h2>
+        <div id="b-body"></div>
+        <button id="b-start">▶ Начать смену</button>
+      </div>
+    </div>
+    <div class="overlay" id="result" style="display:none">
+      <div class="panel">
+        <h1 id="r-title"></h1>
+        <div class="stars" id="r-stars"></div>
+        <div id="r-stats"></div>
+        <div class="tips" id="r-tips"></div>
+        <button id="r-btn"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORE_ID = {{ store_id | tojson }};
+
+/* ================= изометрия и краски (как в симуляции зала) ========= */
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+const DPR = Math.max(1, window.devicePixelRatio || 1);
+const CW = 990, CH = 640;
+cv.style.width = CW + "px"; cv.style.height = CH + "px";
+cv.width = CW * DPR; cv.height = CH * DPR;
+ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+const SX = 56, SY = 28, OX = 430, OY = 128;
+const iso = (x, y, z = 0) => [(x - y) * SX + OX, (x + y) * SY + OY - z * 47];
+
+function unIso(px, py) {           // экран → пол зала (z=0)
+  const a = (px - OX) / SX, b = (py - OY) / SY;
+  return [(a + b) / 2, (b - a) / 2];
+}
+function poly(pts, fill, stroke) {
+  ctx.beginPath();
+  pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+  ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+}
+function shade(color, f) {
+  let r, g, b, a = 1;
+  if (color[0] === "#") {
+    r = parseInt(color.slice(1,3),16); g = parseInt(color.slice(3,5),16);
+    b = parseInt(color.slice(5,7),16);
+  } else { const m = color.match(/[\d.]+/g).map(Number);
+           [r,g,b] = m; if (m.length > 3) a = m[3]; }
+  const c = v => Math.max(0, Math.min(255, Math.round(v * f)));
+  return `rgba(${c(r)},${c(g)},${c(b)},${a})`;
+}
+function vGrad(y0, y1, c0, c1) {
+  const g = ctx.createLinearGradient(0, y0, 0, y1);
+  g.addColorStop(0, c0); g.addColorStop(1, c1); return g;
+}
+function box(x, y, w, d, h, top, left, right) {
+  const [cx, cy] = iso(x + w/2, y + d/2);
+  ctx.fillStyle = "rgba(30,40,50,.13)";
+  ctx.beginPath();
+  ctx.ellipse(cx+4, cy+4, (w+d)*SX*.42, (w+d)*SY*.42, 0, 0, 7); ctx.fill();
+  const zT = iso(x,y,h)[1], zB = iso(x,y+d,0)[1];
+  poly([iso(x,y+d,h),iso(x+w,y+d,h),iso(x+w,y+d,0),iso(x,y+d,0)],
+       vGrad(zT,zB,left,shade(left,.82)));
+  poly([iso(x+w,y,h),iso(x+w,y+d,h),iso(x+w,y+d,0),iso(x+w,y,0)],
+       vGrad(zT,zB,right,shade(right,.78)));
+  poly([iso(x,y,h),iso(x+w,y,h),iso(x+w,y+d,h),iso(x,y+d,h)],
+       vGrad(iso(x,y,h)[1],iso(x,y+d,h)[1],shade(top,1.06),top),
+       "rgba(0,0,0,.18)");
+}
+function label(x, y, z, text, size = 12, color = "#3c4856") {
+  const [sx, sy] = iso(x, y, z);
+  ctx.font = `600 ${size}px 'Segoe UI',sans-serif`;
+  ctx.textAlign = "center"; ctx.fillStyle = color;
+  ctx.fillText(text, sx, sy);
+}
+const fillColor = f => f > .6 ? "#4caf50" : f > .3 ? "#ffb300" : "#e5533d";
+
+/* ================= уровни-смены (сценарий «журнала») ================= */
+const LEVELS = [
+  { goal: 700, time: 150, spawn: [6.5, 9], patience: 2.2,
+    events: {}, title: "Смена 1 · Основы",
+    brief: ["Пополняйте полки со склада 📦 до того, как они опустеют",
+            "Обслуживайте покупателей на кассе — кликните по кассе",
+            "У покупателей есть терпение ❤ — не заставляйте их ждать"] },
+  { goal: 1400, time: 150, spawn: [4.5, 7], patience: 2.8,
+    events: { mess: 18, paper: 1 }, title: "Смена 2 · Чистота и лента",
+    brief: ["Появились новые заботы: разливы на полу 🫗 — убирайте их",
+            "Следите за чековой лентой кассы 🧻 — меняйте вовремя",
+            "Поток покупателей вырос — планируйте цепочки действий"] },
+  { goal: 2100, time: 160, spawn: [3.5, 6], patience: 3.4,
+    events: { mess: 14, paper: 1, fridge: 28 },
+    title: "Смена 3 · Час пик",
+    brief: ["Час пик: покупатели нетерпеливее, поток плотнее",
+            "Холодильники дают сбои 🧊 — реагируйте на тревоги",
+            "Держите репутацию: злые покупатели уходят без покупок"] },
+];
+
+/* ================= состояние игры ==================================== */
+let CFG = null;
+const P = new URLSearchParams(location.search);
+let G = null;
+
+function newGame(level) {
+  const L = LEVELS[level - 1];
+  G = {
+    state: "brief", level, L,
+    time: P.get("time") ? +P.get("time") : L.time,
+    money: 0, rep: 80,
+    player: { x: 5.6, y: 3.2, tasks: [], carry: 0, busy: 0, busyMax: 0,
+              busyLabel: "", busyDone: null },
+    shelves: CFG.gondolas.map(g => ({ ...g, stock: 10, max: 10 })),
+    customers: [], nextSpawn: 1.5, custId: 1,
+    register: { ...CFG.register, paper: 100, queue: [], servingT: 0 },
+    messes: [], nextMess: L.events.mess || 1e9,
+    fridgeAlarm: null, nextFridge: L.events.fridge || 1e9,
+    popups: [],
+    stats: { served: 0, lost: 0, restocks: 0, cleaned: 0, papers: 0,
+             fridges: 0, waits: 0 },
+    tutor: level === 1 ? 0 : -1,
+  };
+  showBrief();
+}
+
+/* ================= брифинг и результаты ============================== */
+function showBrief() {
+  const L = G.L;
+  document.getElementById("b-store").textContent =
+    CFG.store_name + " · " + L.title;
+  document.getElementById("b-body").innerHTML =
+    "<ul>" + L.brief.map(t => `<li>${t}</li>`).join("") + "</ul>" +
+    `<div class="goal">🎯 Цель смены: выручка ${L.goal} ₽ за ` +
+    `${Math.round(G.time / 60 * 10) / 10} мин</div>`;
+  document.getElementById("brief").style.display = "flex";
+  document.getElementById("result").style.display = "none";
+}
+document.getElementById("b-start").onclick = () => {
+  document.getElementById("brief").style.display = "none";
+  G.state = "play";
+};
+
+function endLevel() {
+  G.state = "end";
+  const L = G.L, ok = G.money >= L.goal;
+  const stars = !ok ? 0
+    : (G.money >= L.goal * 1.5 && G.rep >= 70) ? 3
+    : (G.money >= L.goal * 1.2) ? 2 : 1;
+  document.getElementById("r-title").textContent = ok
+    ? "✅ Смена пройдена!" : "❌ План не выполнен";
+  document.getElementById("r-stars").textContent =
+    "★".repeat(stars) + "☆".repeat(3 - stars);
+  const s = G.stats;
+  document.getElementById("r-stats").innerHTML = [
+    ["Выручка", `${G.money} ₽ из ${L.goal} ₽`],
+    ["Обслужено покупателей", s.served],
+    ["Ушли недовольными", s.lost],
+    ["Пополнений полок", s.restocks],
+    ["Убрано разливов", s.cleaned],
+    ["Замен ленты / ремонтов ХВ", `${s.papers} / ${s.fridges}`],
+    ["Репутация", Math.round(G.rep) + "%"],
+  ].map(r => `<div class="stat"><span>${r[0]}</span><b>${r[1]}</b></div>`)
+   .join("");
+  const tips = [];
+  if (s.lost > 2) tips.push("Много потерянных покупателей — обслуживайте " +
+    "кассу раньше, чем кончится терпение.");
+  if (s.restocks < 3) tips.push("Полки пустели: держите запас — берите " +
+    "со склада до out-of-stock.");
+  if (G.rep < 60) tips.push("Репутация страдает от разливов и тревог — " +
+    "реагируйте на события сразу.");
+  if (!tips.length) tips.push("Отличная работа: процессы кассира, " +
+    "мерчандайзера и клининга под контролем!");
+  document.getElementById("r-tips").innerHTML = "💡 " + tips.join("<br>💡 ");
+  const btn = document.getElementById("r-btn");
+  if (ok && G.level < LEVELS.length) {
+    btn.textContent = "▶ Следующая смена";
+    btn.onclick = () => newGame(G.level + 1);
+  } else if (ok) {
+    btn.textContent = "🏆 Обучение пройдено — играть снова";
+    btn.onclick = () => newGame(1);
+  } else {
+    btn.textContent = "↻ Повторить смену";
+    btn.onclick = () => newGame(G.level);
+  }
+  document.getElementById("result").style.display = "flex";
+}
+
+/* ================= подсказки-туториал ================================ */
+const TUTOR = [
+  "Кликните на СКЛАД 📦 (дверь на задней стене справа), чтобы взять товар",
+  "Теперь кликните на стеллаж, чтобы пополнить полку",
+  "Покупатель идёт на кассу — кликните на КАССУ, чтобы обслужить",
+  "Отлично! Следите за полками, кассой и терпением покупателей ❤",
+];
+function hint(text) { document.getElementById("hint").innerHTML = text; }
+
+/* ================= клики ============================================ */
+function clickHall(hx, hy) {
+  if (!G || G.state !== "play") return;
+  const t = { type: "walk", x: hx, y: hy };
+  const near = (x, y, r) => Math.hypot(hx - x, hy - y) < r;
+  // стеллажи (только корпус и фронт, не заходя за заднюю стену)
+  for (const s of G.shelves)
+    if (hx > s.x - 0.2 && hx < s.x + s.w + 0.2 &&
+        hy > s.y - 0.05 && hy < s.y + s.d + 0.7)
+      Object.assign(t, {type: "shelf", shelf: s,
+                        x: Math.max(s.x + 0.3, Math.min(s.x + s.w - 0.3, hx)),
+                        y: s.y + s.d + 0.4});
+  // касса
+  const R = G.register;
+  if (near(R.x, R.y, 0.7)) Object.assign(t, {type: "register",
+    x: R.x - 0.05, y: R.y + 0.02, });
+  // склад (проверяется после стеллажей — приоритетнее при пересечении)
+  const st = CFG.storeroom;
+  if (near(st.x, st.y + 0.35, 0.85)) Object.assign(t, {type: "storeroom",
+    shelf: null, mess: null, x: st.x, y: st.y + 0.45});
+  // разливы
+  for (const m of G.messes)
+    if (near(m.x, m.y, 0.55)) Object.assign(t, {type: "mess", mess: m,
+                                               x: m.x, y: m.y});
+  // холодильник с тревогой
+  if (G.fridgeAlarm) {
+    const f = G.fridgeAlarm;
+    if (hx > f.x - 0.2 && hx < f.x + f.w + 0.2 &&
+        hy > f.y - 0.3 && hy < f.y + f.d + 0.6)
+      Object.assign(t, {type: "fridge", x: f.x + f.w / 2,
+                        y: f.y + f.d + 0.35});
+  }
+  const q = G.player.tasks;
+  if (q.length >= 2) q.length = 1;       // очередь из 2 действий, как в SM
+  q.push(t);
+}
+cv.addEventListener("click", e => {
+  const r = cv.getBoundingClientRect();
+  const [hx, hy] = unIso((e.clientX - r.left) * (CW / r.width),
+                         (e.clientY - r.top) * (CH / r.height));
+  clickHall(hx, hy);
+});
+window.game = { clickHall, get G() { return G; } };   // для авто-тестов
+
+/* ================= логика ============================================ */
+function popup(x, y, text, color) {
+  G.popups.push({x, y, text, color, t: 0});
+}
+
+function spawnCustomer() {
+  const L = G.L;
+  const wants = [];
+  const n = 1 + (Math.random() < 0.55 ? 1 : 0);
+  const order = [...G.shelves].sort(() => Math.random() - 0.5).slice(0, n);
+  for (const s of order) wants.push(s);
+  G.customers.push({
+    id: G.custId++, x: CFG.entrance[0], y: CFG.entrance[1],
+    state: "toShelf", wants, idx: 0, bill: 0, items: 0,
+    patience: 100, tx: 0, ty: 0, waitT: 0, angry: false,
+    icon: ["🧍","🧍‍♀️","🧓","👩","👨"][Math.floor(Math.random() * 5)],
+  });
+}
+
+function custTarget(c) {
+  if (c.state === "toShelf") {
+    const s = c.wants[c.idx];
+    return [s.x + 0.4 + (c.id % 5) * 0.35, s.y + s.d + 0.45];
+  }
+  if (c.state === "toQueue") {
+    const i = G.register.queue.indexOf(c);
+    return [G.register.x, G.register.y + 0.75 + Math.max(0, i) * 0.55];
+  }
+  if (c.state === "exit") return [CFG.exit[0], CFG.exit[1]];
+  return [c.x, c.y];
+}
+
+function updCustomers(dt) {
+  const L = G.L, R = G.register;
+  for (const c of [...G.customers]) {
+    const [tx, ty] = custTarget(c);
+    const d = Math.hypot(tx - c.x, ty - c.y);
+    if (d > 0.06) {
+      c.x += (tx - c.x) / d * Math.min(d, 0.9 * dt);
+      c.y += (ty - c.y) / d * Math.min(d, 0.9 * dt);
+    } else if (c.state === "toShelf") {
+      const s = c.wants[c.idx];
+      if (s.stock > 0) {
+        s.stock--; c.items++; c.bill += (s.products[
+          Math.floor(Math.random() * s.products.length)] || {price: 100})
+          .price;
+        c.idx++;
+        if (c.idx >= c.wants.length) {
+          c.state = "toQueue"; R.queue.push(c);
+        }
+      } else {                                // полка пуста — ждём и злимся
+        c.patience -= L.patience * 1.6 * dt; c.waitT += dt;
+        G.stats.waits += dt;
+      }
+    } else if (c.state === "toQueue") {
+      if (R.queue.indexOf(c) > 0) c.patience -= L.patience * dt;
+    } else if (c.state === "exit" && d <= 0.06) {
+      G.customers.splice(G.customers.indexOf(c), 1);
+    }
+    if (c.patience <= 0 && c.state !== "exit") {   // ушёл злым
+      const qi = R.queue.indexOf(c);
+      if (qi >= 0) R.queue.splice(qi, 1);
+      c.state = "exit"; c.angry = true;
+      G.rep = Math.max(0, G.rep - 8);
+      G.stats.lost++;
+      popup(c.x, c.y, "💢", "#ff8a80");
+    }
+  }
+}
+
+function updRegister(dt) {
+  const R = G.register, p = G.player;
+  const atRegister = Math.hypot(p.x - (R.x - 0.05), p.y - (R.y + 0.02)) < 0.45;
+  if (!atRegister || !R.queue.length || p.busy > 0) { R.servingT = 0; return; }
+  if (R.paper <= 0) {
+    hint("🧻 Кончилась чековая лента! Кликните на кассу, чтобы заменить");
+    return;
+  }
+  const head = R.queue[0];
+  if (Math.hypot(head.x - R.x, head.y - (R.y + 0.75)) > 0.35) return;
+  R.servingT += dt;
+  if (R.servingT >= 1.7) {
+    R.servingT = 0;
+    R.queue.shift();
+    head.state = "exit";
+    G.money += head.bill; G.stats.served++;
+    G.rep = Math.min(100, G.rep + 1.5);
+    R.paper -= G.L.events.paper ? 9 : 0;
+    popup(R.x, R.y, `+${head.bill} ₽`, "#ffd54f");
+    if (G.tutor === 2) G.tutor = 3;
+  }
+}
+
+function performTask(t) {
+  const p = G.player;
+  if (t.type === "storeroom") {
+    p.busyMax = 1.0; p.busyLabel = "берём товар 📦";
+    p.busyDone = () => { p.carry = 3;
+      if (G.tutor === 0) G.tutor = 1; };
+  } else if (t.type === "shelf") {
+    if (p.carry <= 0) { hint("Сначала возьмите товар на складе 📦!");
+                        return; }
+    p.busyMax = 0.9; p.busyLabel = "выкладка…";
+    p.busyDone = () => { p.carry--; t.shelf.stock =
+      Math.min(t.shelf.max, t.shelf.stock + 5);
+      G.stats.restocks++; popup(t.x, t.y, "+товар", "#8bc34a");
+      if (G.tutor === 1) G.tutor = 2; };
+  } else if (t.type === "register") {
+    if (G.register.paper <= 0) {
+      p.busyMax = 1.6; p.busyLabel = "замена ленты 🧻";
+      p.busyDone = () => { G.register.paper = 100; G.stats.papers++;
+                           popup(t.x, t.y, "лента ✓", "#90caf9"); };
+    }
+  } else if (t.type === "mess") {
+    p.busyMax = 1.4; p.busyLabel = "уборка 🧹";
+    p.busyDone = () => { const i = G.messes.indexOf(t.mess);
+      if (i >= 0) G.messes.splice(i, 1);
+      G.stats.cleaned++; G.rep = Math.min(100, G.rep + 2);
+      popup(t.x, t.y, "чисто ✓", "#8bc34a"); };
+  } else if (t.type === "fridge") {
+    p.busyMax = 1.8; p.busyLabel = "ремонт ХВ 🧊";
+    p.busyDone = () => { G.fridgeAlarm = null; G.stats.fridges++;
+      G.rep = Math.min(100, G.rep + 2);
+      popup(t.x, t.y, "холод ✓", "#90caf9"); };
+  }
+  if (p.busyDone) p.busy = 0.0001;
+}
+
+function updPlayer(dt) {
+  const p = G.player;
+  if (p.busy > 0) {
+    p.busy += dt;
+    if (p.busy >= p.busyMax) {
+      const done = p.busyDone; p.busy = 0; p.busyDone = null;
+      p.busyLabel = ""; if (done) done();
+    }
+    return;
+  }
+  const t = p.tasks[0];
+  if (!t) return;
+  const d = Math.hypot(t.x - p.x, t.y - p.y);
+  if (d > 0.12) {
+    let speed = 1.7;
+    for (const m of G.messes)                    // скольжение по разливу
+      if (Math.hypot(p.x - m.x, p.y - m.y) < 0.5) speed = 0.9;
+    p.x += (t.x - p.x) / d * Math.min(d, speed * dt);
+    p.y += (t.y - p.y) / d * Math.min(d, speed * dt);
+  } else {
+    p.tasks.shift();
+    performTask(t);
+  }
+}
+
+function updEvents(dt) {
+  const L = G.L;
+  if (L.events.mess) {
+    G.nextMess -= dt;
+    if (G.nextMess <= 0 && G.messes.length < 3) {
+      G.nextMess = L.events.mess * (0.7 + Math.random() * 0.6);
+      G.messes.push({x: 2 + Math.random() * 4.5,
+                     y: 0.8 + Math.random() * 3.6});
+      popup(G.messes[G.messes.length-1].x, G.messes[G.messes.length-1].y,
+            "разлив! 🫗", "#ff8a80");
+    }
+    G.rep = Math.max(0, G.rep - G.messes.length * 0.25 * dt);
+  }
+  if (L.events.fridge) {
+    G.nextFridge -= dt;
+    if (G.nextFridge <= 0 && !G.fridgeAlarm) {
+      G.nextFridge = L.events.fridge * (0.8 + Math.random() * 0.5);
+      G.fridgeAlarm = CFG.fridges[Math.floor(Math.random()
+                                             * CFG.fridges.length)];
+      popup(G.fridgeAlarm.x + 0.5, G.fridgeAlarm.y, "тревога! 🧊",
+            "#ff8a80");
+    }
+    if (G.fridgeAlarm) G.rep = Math.max(0, G.rep - 0.5 * dt);
+  }
+}
+
+function update(dt) {
+  G.time -= dt;
+  if (G.time <= 0) { endLevel(); return; }
+  const L = G.L;
+  G.nextSpawn -= dt;
+  if (G.nextSpawn <= 0 && G.customers.length < 11) {
+    G.nextSpawn = L.spawn[0] + Math.random() * (L.spawn[1] - L.spawn[0]);
+    spawnCustomer();
+  }
+  updCustomers(dt);
+  updPlayer(dt);
+  updRegister(dt);
+  updEvents(dt);
+  G.popups = G.popups.filter(pp => (pp.t += dt) < 1.4);
+
+  // HUD
+  document.getElementById("h-money").textContent = G.money + " ₽";
+  document.getElementById("h-goal").style.width =
+    Math.min(100, 100 * G.money / L.goal) + "%";
+  const m = Math.floor(G.time / 60), s = Math.floor(G.time % 60);
+  document.getElementById("h-time").textContent = `${m}:${
+    String(s).padStart(2, "0")}`;
+  document.getElementById("timer").className = G.time < 20 ? "cell low"
+                                                           : "cell";
+  document.getElementById("h-rep").textContent =
+    "❤".repeat(Math.max(1, Math.round(G.rep / 25)));
+  document.getElementById("h-level").textContent = G.level;
+  document.getElementById("h-carry").textContent =
+    G.player.carry > 0 ? "📦".repeat(G.player.carry) : "—";
+  if (G.tutor >= 0 && G.tutor < TUTOR.length) hint("👉 " + TUTOR[G.tutor]);
+  else if (G.register.paper <= 0)
+    hint("🧻 Замените ленту: кликните на кассу!");
+  else hint(`Очередь: ${G.register.queue.length} · Кликайте: склад → ` +
+            `полки, касса, уборка`);
+}
+
+/* ================= отрисовка ======================================== */
+function draw() {
+  ctx.clearRect(0, 0, CW, CH);
+  if (!CFG || !G) return;
+
+  poly([iso(-0.7,-0.6), iso(8.1,-0.6), iso(8.1,6.1), iso(-0.7,6.1)],
+       vGrad(iso(3.7,-0.6)[1], iso(3.7,6.1)[1], "#efe9dc", "#e2dccc"));
+  for (let x = -1; x <= 8; x++)
+    for (let y = -1; y <= 6; y++)
+      if ((x + y) % 2 === 0)
+        poly([iso(x,y), iso(x+1,y), iso(x+1,y+1), iso(x,y+1)],
+             "rgba(90,80,60,.025)");
+  const WH = 1.5;
+  poly([iso(-0.7,-0.6,WH), iso(8.1,-0.6,WH), iso(8.1,-0.6,0),
+        iso(-0.7,-0.6,0)],
+       vGrad(iso(3.7,-0.6,WH)[1], iso(3.7,-0.6,0)[1], "#dfe4ea","#c8cfd8"));
+  poly([iso(-0.7,-0.6,WH), iso(-0.7,6.1,WH), iso(-0.7,6.1,0),
+        iso(-0.7,-0.6,0)],
+       vGrad(iso(-0.7,2.7,WH)[1], iso(-0.7,2.7,0)[1], "#d3d9e0","#bcc4cf"));
+
+  // дверь склада на задней стене
+  const st = CFG.storeroom;
+  poly([iso(st.x-0.55,-0.58,1.2), iso(st.x+0.55,-0.58,1.2),
+        iso(st.x+0.55,-0.58,0), iso(st.x-0.55,-0.58,0)], "#8d6e63");
+  label(st.x, -0.15, 0.62, "📦 СКЛАД", 12, "#5d4037");
+
+  const drawables = [];
+
+  for (const s of G.shelves) {
+    drawables.push({ depth: s.x + s.y + s.d, fn: () => {
+      box(s.x, s.y, s.w, s.d, 0.95, "#cfd6de", "#aeb7c2",
+          fillColor(s.stock / s.max));
+      label(s.x + s.w/2, s.y + s.d/2, 1.25,
+            `${s.name} · ${s.stock}/${s.max}`, 11);
+    }});
+  }
+  for (const f of CFG.fridges) {
+    const alarm = G.fridgeAlarm && G.fridgeAlarm.id === f.id;
+    drawables.push({ depth: f.x + f.y + f.d, fn: () => {
+      box(f.x, f.y, f.w, f.d, 0.8, alarm ? "#f3b0ab" : "#ddeef7",
+          "#9fb4c4", "#8aa2b5");
+      label(f.x + f.w/2, f.y + f.d/2, 1.1,
+            alarm ? "⚠ " + f.id : f.id, 10.5,
+            alarm ? "#c62828" : "#1e6fa8");
+    }});
+  }
+  const R = G.register;
+  drawables.push({ depth: R.x + R.y, fn: () => {
+    box(R.x - 0.4, R.y - 0.3, 0.8, 0.6, 0.5, "#b8c4d2", "#93a2b4",
+        "#7e8ca0");
+    box(R.x + 0.15, R.y - 0.25, 0.12, 0.12, 0.85, "#4a5a6e", "#3c4b5e",
+        "#33404f");
+    label(R.x, R.y - 0.35, 0.9, R.name, 11);
+    if (R.paper <= 0)
+      label(R.x, R.y - 0.35, 1.15, "🧻 НЕТ ЛЕНТЫ", 11, "#c62828");
+    if (R.servingT > 0) {
+      const [bx, by] = iso(R.x, R.y, 1.05);
+      ctx.fillStyle = "#dfe5ec"; ctx.fillRect(bx - 22, by - 5, 44, 7);
+      ctx.fillStyle = "#4caf50";
+      ctx.fillRect(bx - 22, by - 5, 44 * (R.servingT / 1.7), 7);
+    }
+  }});
+
+  const en = CFG.entrance, ex = CFG.exit;
+  drawables.push({ depth: en[0] + en[1], fn: () => {
+    poly([iso(en[0]-.5,en[1]-.25), iso(en[0]+.5,en[1]-.25),
+          iso(en[0]+.5,en[1]+.25), iso(en[0]-.5,en[1]+.25)], "#bfe3c4");
+    label(en[0], en[1], .5, "ВХОД", 10.5, "#1d7a3d"); }});
+  drawables.push({ depth: ex[0] + ex[1], fn: () => {
+    poly([iso(ex[0]-.5,ex[1]-.2), iso(ex[0]+.5,ex[1]-.2),
+          iso(ex[0]+.5,ex[1]+.25), iso(ex[0]-.5,ex[1]+.25)], "#f2cdc9");
+    label(ex[0], ex[1], .5, "ВЫХОД", 10.5, "#b03a30"); }});
+
+  for (const m of G.messes)
+    drawables.push({ depth: m.x + m.y - 0.4, fn: () => {
+      const [mx, my] = iso(m.x, m.y);
+      ctx.fillStyle = "rgba(120,160,220,.4)";
+      ctx.beginPath(); ctx.ellipse(mx, my, 21, 9, 0, 0, 7); ctx.fill();
+      ctx.font = "13px sans-serif"; ctx.fillText("🫗", mx - 6, my + 3);
+    }});
+
+  for (const c of G.customers)
+    drawables.push({ depth: c.x + c.y, fn: () => {
+      const [px, py] = iso(c.x, c.y);
+      ctx.fillStyle = "rgba(0,0,0,.18)";
+      ctx.beginPath(); ctx.ellipse(px, py+3, 10, 4, 0, 0, 7); ctx.fill();
+      ctx.font = "20px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(c.angry ? "😡" : c.icon, px, py - 4);
+      if (c.items > 0 && !c.angry)
+        { ctx.font = "12px sans-serif"; ctx.fillText("🛒", px+11, py+1); }
+      if (!c.angry && c.state !== "exit") {
+        const hearts = Math.ceil(c.patience / 20);
+        ctx.font = "9px sans-serif";
+        ctx.fillText("❤".repeat(Math.max(0, hearts)), px, py - 26);
+      }
+    }});
+
+  const p = G.player;
+  drawables.push({ depth: p.x + p.y + 0.01, fn: () => {
+    const [px, py] = iso(p.x, p.y);
+    ctx.fillStyle = "rgba(47,111,237,.28)";
+    ctx.beginPath(); ctx.ellipse(px, py+3, 12, 5, 0, 0, 7); ctx.fill();
+    ctx.font = "22px sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("🧑‍💼", px, py - 4);
+    if (p.carry > 0)
+      { ctx.font = "12px sans-serif"; ctx.fillText("📦", px + 13, py - 8); }
+    if (p.busy > 0) {
+      ctx.fillStyle = "#dfe5ec"; ctx.fillRect(px - 24, py - 34, 48, 7);
+      ctx.fillStyle = "#2f6fed";
+      ctx.fillRect(px - 24, py - 34, 48 * (p.busy / p.busyMax), 7);
+      ctx.font = "600 10px 'Segoe UI'"; ctx.fillStyle = "#3c4856";
+      ctx.fillText(p.busyLabel, px, py - 39);
+    }
+    // очередь задач
+    p.tasks.forEach((t, i) => {
+      const [tx, ty] = iso(t.x, t.y);
+      ctx.strokeStyle = "rgba(47,111,237,.5)"; ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(tx, ty); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "rgba(47,111,237,.8)";
+      ctx.beginPath(); ctx.arc(tx, ty, 6, 0, 7); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.font = "700 9px sans-serif";
+      ctx.fillText(String(i + 1), tx, ty + 3);
+    });
+  }});
+
+  drawables.sort((a, b) => a.depth - b.depth).forEach(d => d.fn());
+
+  for (const pp of G.popups) {
+    const [px, py] = iso(pp.x, pp.y, 0.9);
+    const k = pp.t / 1.4;
+    ctx.globalAlpha = 1 - k;
+    ctx.font = "700 14px 'Segoe UI'"; ctx.textAlign = "center";
+    ctx.lineWidth = 3; ctx.strokeStyle = "rgba(20,30,40,.7)";
+    ctx.strokeText(pp.text, px, py - 38 * k);
+    ctx.fillStyle = pp.color; ctx.fillText(pp.text, px, py - 38 * k);
+    ctx.globalAlpha = 1;
+  }
+}
+
+/* ================= главный цикл ===================================== */
+let lastT = performance.now();
+function loop(now) {
+  requestAnimationFrame(loop);
+  const dt = Math.min(0.1, (now - lastT) / 1000);
+  lastT = now;
+  if (G && G.state === "play") update(dt);
+  draw();
+}
+
+fetch(`/api/game/${STORE_ID}/config`).then(r => r.json()).then(cfg => {
+  CFG = cfg;
+  newGame(P.get("level") ? +P.get("level") : 1);
+  requestAnimationFrame(loop);
+});
+</script>
+</body>
+</html>

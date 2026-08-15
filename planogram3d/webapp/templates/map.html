@@ -240,6 +240,7 @@
     <div class="itabs">
       <button id="tab-plan" class="active">📋 Планограмма 3D</button>
       <button id="tab-live">🎮 Симуляция зала</button>
+      <button id="tab-game">🎓 Тренажёр</button>
     </div>
     <button id="i-back">← Назад на карту</button>
   </header>
@@ -411,14 +412,18 @@ document.getElementById("close").onclick = () => {
 /* ---------- «вход в магазин» как в игре ---------- */
 let savedCamera = null, currentStoreId = null;
 
-function setInteriorTab(live) {
-  document.getElementById("tab-plan").classList.toggle("active", !live);
-  document.getElementById("tab-live").classList.toggle("active", live);
-  document.getElementById("i-frame").src =
-    "/store/" + currentStoreId + (live ? "/live" : "");
+function setInteriorTab(tab) {          // "plan" | "live" | "game"
+  if (tab === true) tab = "live";
+  if (tab === false || !tab) tab = "plan";
+  for (const t of ["plan", "live", "game"])
+    document.getElementById("tab-" + t).classList
+      .toggle("active", t === tab);
+  document.getElementById("i-frame").src = "/store/" + currentStoreId +
+    (tab === "live" ? "/live" : tab === "game" ? "/game" : "");
 }
-document.getElementById("tab-plan").onclick = () => setInteriorTab(false);
-document.getElementById("tab-live").onclick = () => setInteriorTab(true);
+document.getElementById("tab-plan").onclick = () => setInteriorTab("plan");
+document.getElementById("tab-live").onclick = () => setInteriorTab("live");
+document.getElementById("tab-game").onclick = () => setInteriorTab("game");
 
 function enterStore(s) {
   currentStoreId = s.id;
