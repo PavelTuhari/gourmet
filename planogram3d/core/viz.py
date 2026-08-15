@@ -13,13 +13,26 @@ import plotly.graph_objects as go
 
 from .models import Planogram, SalesInfo, Store
 
-FRAME_COLOR = "#8a8f98"       # каркас стеллажа
-SHELF_COLOR = "#c7ccd4"       # полки
+FRAME_COLOR = "#9aa1ab"       # каркас стеллажа
+SHELF_COLOR = "#d4d9e0"       # полки
+EDGE_COLOR = "#6b727c"        # контурные линии каркаса
+FLOOR_COLOR = "#e9e5dc"       # пол торгового зала
 OOS_COLOR = "#d62728"         # out-of-stock
 
 
 def _lerp(a: float, b: float, t: float) -> float:
     return a + (b - a) * t
+
+
+def _shade(hex_or_rgb: str, factor: float) -> str:
+    """Осветлить (>1) или затемнить (<1) цвет '#rrggbb' / 'rgb(r,g,b)'."""
+    if hex_or_rgb.startswith("#"):
+        r, g, b = (int(hex_or_rgb[i:i + 2], 16) for i in (1, 3, 5))
+    else:
+        r, g, b = (int(v) for v in
+                   hex_or_rgb[hex_or_rgb.index("(") + 1:-1].split(","))
+    clamp = lambda v: max(0, min(255, int(v * factor)))
+    return f"rgb({clamp(r)},{clamp(g)},{clamp(b)})"
 
 
 def fill_color(fill_ratio: float) -> str:
@@ -49,16 +62,53 @@ def cuboid(x: float, y: float, z: float,
         name=name, text=hover or name,
         hovertemplate="%{text}<extra></extra>",
         showlegend=False,
-        lighting=dict(ambient=0.55, diffuse=0.7, specular=0.15,
-                      roughness=0.9),
-        lightposition=dict(x=2, y=-4, z=6),
+        lighting=dict(ambient=0.48, diffuse=0.62, specular=0.28,
+                      roughness=0.55, fresnel=0.12),
+        lightposition=dict(x=3, y=-6, z=8),
     )
 
 
-def gondola_traces(store: Store) -> List[go.Mesh3d]:
-    """Каркасы стеллажей: боковины, задняя стенка, полки."""
-    traces: List[go.Mesh3d] = []
+def cuboid_edges(x: float, y: float, z: float,
+                 dx: float, dy: float, dz: float, segments: list) -> None:
+    """Добавить 12 рёбер параллелепипеда в список сегментов (для контура)."""
+    p = [(x, y, z), (x + dx, y, z), (x + dx, y + dy, z), (x, y + dy, z),
+         (x, y, z + dz), (x + dx, y, z + dz), (x + dx, y + dy, z + dz),
+         (x, y + dy, z + dz)]
+    for a, b in ((0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7),
+                 (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)):
+        segments.append((p[a], p[b]))
+
+
+def edges_trace(segments: list, color: str = EDGE_COLOR,
+                width: float = 1.6) -> go.Scatter3d:
+    """Единый трейс контурных линий (сегменты разделяются None)."""
+    xs, ys, zs = [], [], []
+    for a, b in segments:
+        xs += [a[0], b[0], None]
+        ys += [a[1], b[1], None]
+        zs += [a[2], b[2], None]
+    return go.Scatter3d(x=xs, y=ys, z=zs, mode="lines",
+                        line=dict(color=color, width=width),
+                        hoverinfo="skip", showlegend=False)
+
+
+def gondola_traces(store: Store) -> List:
+    """Каркасы стеллажей: пол зала, боковины, задняя стенка, полки,
+    контурные рёбра для чёткости."""
+    traces: List = []
     panel = 0.03  # толщина панелей
+    edges: list = []
+
+    # пол торгового зала под всеми стеллажами
+    if store.gondolas:
+        x0 = min(g.x for g in store.gondolas) - 0.7
+        x1 = max(g.x + g.width for g in store.gondolas) + 0.7
+        y0 = min(g.y for g in store.gondolas) - 0.9
+        y1 = max(g.y + g.depth for g in store.gondolas) + 0.6
+        traces.append(cuboid(x0, y0, -0.025, x1 - x0, y1 - y0, 0.025,
+                             FLOOR_COLOR, "Пол",
+                             f"<b>{store.name}</b>"))
+
     for g in store.gondolas:
         top = max(s.z + s.clearance for s in g.shelves) + 0.05
         hover = f"<b>{g.name}</b><br>{g.width:.1f} × {g.depth:.1f} м"
@@ -67,10 +117,13 @@ def gondola_traces(store: Store) -> List[go.Mesh3d]:
                              FRAME_COLOR, g.name, hover))
         traces.append(cuboid(g.x + g.width, g.y, 0, panel, g.depth, top,
                              FRAME_COLOR, g.name, hover))
+        cuboid_edges(g.x - panel, g.y, 0, panel, g.depth, top, edges)
+        cuboid_edges(g.x + g.width, g.y, 0, panel, g.depth, top, edges)
         # задняя стенка
         traces.append(cuboid(g.x - panel, g.y + g.depth, 0,
                              g.width + 2 * panel, panel, top,
-                             FRAME_COLOR, g.name, hover, opacity=0.55))
+                             _shade(FRAME_COLOR, 1.06), g.name, hover,
+                             opacity=0.6))
         # полки
         for s in g.shelves:
             traces.append(cuboid(
@@ -78,6 +131,11 @@ def gondola_traces(store: Store) -> List[go.Mesh3d]:
                 SHELF_COLOR, g.name,
                 f"<b>{g.name}</b><br>Полка {s.index + 1} "
                 f"(h={s.z:.2f} м)"))
+            # передняя кромка полки — контур для чёткости
+            edges.append(((g.x, g.y, s.z), (g.x + g.width, g.y, s.z)))
+            edges.append(((g.x, g.y, s.z - panel),
+                          (g.x + g.width, g.y, s.z - panel)))
+    traces.append(edges_trace(edges))
     return traces
 
 
@@ -134,6 +192,8 @@ def product_traces(store: Store, planogram: Planogram,
         hover = _product_hover(store, p.sku, p.facings, mode, sales)
         depth = min(product.depth * 3, gondola.depth) * depth_ratio
         for i in range(p.facings):
+            # лёгкая вариация тона между фейсингами — объёмнее выкладка
+            facing_color = _shade(color, 0.96 + 0.08 * ((i * 7 + 3) % 3) / 2)
             traces.append(cuboid(
                 x=gondola.x + p.offset + i * product.width + gap,
                 y=gondola.y + 0.02,
@@ -141,7 +201,7 @@ def product_traces(store: Store, planogram: Planogram,
                 dx=product.width - 2 * gap,
                 dy=depth,
                 dz=product.height,
-                color=color, name=product.name, hover=hover,
+                color=facing_color, name=product.name, hover=hover,
                 opacity=opacity))
     return traces
 
@@ -222,14 +282,24 @@ def build_figure(store: Store) -> go.Figure:
                            {"title.text": title_approved}]),
             ])],
         scene=dict(
-            xaxis=dict(title="X, м", range=[-0.5, 3.5]),
-            yaxis=dict(title="Y, м", range=[-1.0, 5.5]),
-            zaxis=dict(title="Высота, м", range=[0, 2.4]),
+            xaxis=dict(title="", range=[-0.8, 3.6], showbackground=False,
+                       gridcolor="rgba(0,0,0,0.07)", zeroline=False,
+                       tickfont=dict(size=10, color="#9aa1ab")),
+            yaxis=dict(title="", range=[-1.2, 5.6], showbackground=False,
+                       gridcolor="rgba(0,0,0,0.07)", zeroline=False,
+                       tickfont=dict(size=10, color="#9aa1ab")),
+            zaxis=dict(title="Высота, м", range=[-0.03, 2.4],
+                       showbackground=False,
+                       gridcolor="rgba(0,0,0,0.05)", zeroline=False,
+                       tickfont=dict(size=10, color="#9aa1ab"),
+                       title_font=dict(size=11, color="#9aa1ab")),
             aspectmode="data",
-            camera=dict(eye=dict(x=1.9, y=-1.9, z=0.9)),
+            camera=dict(eye=dict(x=1.75, y=-1.65, z=0.75),
+                        center=dict(x=0, y=0, z=-0.12)),
         ),
         legend=dict(x=1.0, y=0.9),
         margin=dict(l=0, r=0, t=90, b=0),
         template="plotly_white",
+        paper_bgcolor="#f7f5f1",
     )
     return fig

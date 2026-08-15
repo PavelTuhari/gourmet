@@ -250,36 +250,58 @@
 <script>
 const CENTER = [35.9040, 56.8590];
 
+const roadW = (z12, z16) =>
+  ["interpolate", ["linear"], ["zoom"], 12, z12, 16, z16];
+
 const style = {
   version: 8,
+  sky: {
+    "sky-color": "#a9cbe8", "horizon-color": "#f2e9da",
+    "fog-color": "#f2e9da", "sky-horizon-blend": 0.6,
+    "horizon-fog-blend": 0.65, "fog-ground-blend": 0.82,
+  },
   sources: { city: { type: "geojson", data: "/static/data/tver_map.geojson" } },
   layers: [
     { id: "bg", type: "background",
-      paint: { "background-color": "#eef0e6" } },
+      paint: { "background-color": "#edefe4" } },
     { id: "park", type: "fill", source: "city",
       filter: ["==", ["get", "kind"], "park"],
-      paint: { "fill-color": "#c9e5b8", "fill-opacity": .9 } },
+      paint: { "fill-color": "#c3e3b0", "fill-opacity": .95 } },
     { id: "water", type: "fill", source: "city",
       filter: ["==", ["get", "kind"], "water"],
-      paint: { "fill-color": "#9fd0ea" } },
+      paint: { "fill-color": "#8cc4e6" } },
+    { id: "water-edge", type: "line", source: "city",
+      filter: ["==", ["get", "kind"], "water"],
+      paint: { "line-color": "#6faed4", "line-width": 1.2 } },
+    { id: "road-casing", type: "line", source: "city",
+      filter: ["==", ["get", "kind"], "road"],
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: { "line-color": "#d4cfc2", "line-width": roadW(1.8, 7) } },
     { id: "road", type: "line", source: "city",
       filter: ["==", ["get", "kind"], "road"],
-      paint: { "line-color": "#ffffff", "line-width":
-        ["interpolate", ["linear"], ["zoom"], 12, 1, 16, 5] } },
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: { "line-color": "#ffffff", "line-width": roadW(1, 5) } },
+    { id: "road-major-casing", type: "line", source: "city",
+      filter: ["==", ["get", "kind"], "road_major"],
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: { "line-color": "#e4b45e", "line-width": roadW(3.2, 11) } },
     { id: "road-major", type: "line", source: "city",
       filter: ["==", ["get", "kind"], "road_major"],
-      paint: { "line-color": "#ffd98e", "line-width":
-        ["interpolate", ["linear"], ["zoom"], 12, 2.2, 16, 9] } },
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: { "line-color": "#ffdf9e", "line-width": roadW(2.2, 9) } },
     { id: "bld2d", type: "fill", source: "city",
       filter: ["==", ["get", "kind"], "building"],
-      paint: { "fill-color": "#d9d3c8", "fill-outline-color": "#bfb9ad" } },
+      paint: { "fill-color": "#d9d3c8", "fill-outline-color": "#b9b2a5" } },
     { id: "bld3d", type: "fill-extrusion", source: "city",
       filter: ["==", ["get", "kind"], "building"],
       layout: { visibility: "none" },
       paint: {
-        "fill-extrusion-color": "#d6cfc2",
+        // тон по этажности: низкие — тёплые светлые, высокие — холоднее
+        "fill-extrusion-color": ["interpolate", ["linear"], ["get", "h"],
+          3, "#e6e0d3", 9, "#d8d1c3", 18, "#c3bdb3", 35, "#aeaaa4"],
         "fill-extrusion-height": ["get", "h"],
-        "fill-extrusion-opacity": .92 } },
+        "fill-extrusion-vertical-gradient": true,
+        "fill-extrusion-opacity": .95 } },
   ]
 };
 
