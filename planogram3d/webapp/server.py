@@ -19,9 +19,11 @@ from flask import Flask, abort, jsonify, render_template
 
 from ..core import build_report_page, check_compliance
 from .network import StoreNetwork
+from .zabbix import create_provider
 
 app = Flask(__name__)
 network = StoreNetwork()
+zabbix, zabbix_mode = create_provider(list(network.stores))
 
 
 @app.get("/")
@@ -31,7 +33,19 @@ def index():
 
 @app.get("/api/state")
 def api_state():
-    return jsonify(network.state())
+    state = network.state()
+    state["zabbix_mode"] = zabbix_mode
+    try:
+        problems = zabbix.problems()
+    except Exception as exc:            # Zabbix недоступен — карта живёт
+        app.logger.warning("Zabbix недоступен: %s", exc)
+        problems = {}
+    for s in state["stores"]:
+        s["zabbix"] = problems.get(
+            s["id"], {"active": 0, "worst": 0, "problems": []})
+    state["totals"]["zabbix_active"] = sum(
+        s["zabbix"]["active"] for s in state["stores"])
+    return jsonify(state)
 
 
 @app.get("/store/<store_id>")
@@ -55,6 +69,10 @@ def main(argv=None) -> int:
 
     network.start()
     print(f"Сеть магазинов: {len(network.stores)} точек, эмуляция запущена")
+    print("Мониторинг Zabbix: "
+          + ("реальный сервер " + str(getattr(zabbix, 'api_url', ''))
+             if zabbix_mode == "zabbix" else
+             "эмуляция (задайте ZABBIX_URL и ZABBIX_TOKEN для реального)"))
     print(f"Карта: http://{args.host}:{args.port}/")
     app.run(host=args.host, port=args.port, threaded=True)
     return 0

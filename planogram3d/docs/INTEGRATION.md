@@ -176,6 +176,34 @@ pip install kaleido
 build_figure(store).write_image("planogram.png", width=1400, height=900)
 ```
 
+### Zabbix: активные проблемы магазинов на карте
+
+Веб-режим (`planogram3d.webapp`) умеет показывать на маркере каждого
+магазина число активных проблем из Zabbix (бейдж с цветом по максимальной
+severity) и их список в карточке. Провайдер выбирается автоматически:
+
+* заданы `ZABBIX_URL` и `ZABBIX_TOKEN` → реальный Zabbix API
+  (JSON-RPC `problem.get`, аутентификация API-токеном, Zabbix ≥ 5.4);
+  соответствие «магазин → хост Zabbix» задаётся через
+  `ZABBIX_HOSTS="st17=store-17.local,st03=store-03.local"`
+  (по умолчанию имя хоста совпадает с id магазина);
+* переменные не заданы → встроенный эмулятор торгового мониторинга.
+
+Модуль `planogram3d.webapp.zabbix` можно использовать и отдельно:
+
+```python
+from planogram3d.webapp.zabbix import ZabbixClient
+
+client = ZabbixClient("https://zabbix.example.com", token,
+                      host_map={"st17": "store-17.local"})
+print(client.problems())
+# {"st17": {"active": 2, "worst": 4, "problems": [
+#     {"name": "Касса №2: нет связи", "severity": 4, "age_sec": 512}, ...]}}
+```
+
+При недоступности Zabbix карта продолжает работать — счётчики проблем
+просто обнуляются, ошибка пишется в лог сервера.
+
 ### Мониторинг и алерты (без визуализации)
 
 Ядро можно использовать и headless — например, в кроне/воркере,

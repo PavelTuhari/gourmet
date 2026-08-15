@@ -72,6 +72,63 @@
   }
   @keyframes rise { to { transform:translate(-50%,-46px); opacity:0; } }
 
+  /* ---- бейдж Zabbix на маркере ---- */
+  .zbx {
+    position:absolute; top:-7px; right:-4px; min-width:20px; height:20px;
+    border-radius:10px; background:#e45959; color:#fff; font-size:11.5px;
+    font-weight:800; display:flex; align-items:center; justify-content:center;
+    padding:0 5px; border:2px solid #fff; box-sizing:border-box;
+    box-shadow:0 2px 5px rgba(0,0,0,.3); display:none;
+  }
+  .zbx.sev1 { background:#7499ff; } .zbx.sev2 { background:#ffc859; color:#5b4400; }
+  .zbx.sev3 { background:#ffa059; } .zbx.sev4 { background:#e97659; }
+  .zbx.sev5 { background:#e45959; animation:zpulse 1s infinite; }
+  @keyframes zpulse { 50% { transform:scale(1.25); } }
+
+  /* ---- проблемы Zabbix в карточке ---- */
+  #c-zbx { margin-top:8px; font-size:12px; }
+  #c-zbx .zhead { font-weight:700; margin-bottom:3px; }
+  #c-zbx .zp { display:flex; gap:6px; align-items:baseline; padding:2px 0; }
+  #c-zbx .dot { width:9px; height:9px; border-radius:50%; flex:0 0 9px;
+                position:relative; top:1px; }
+  #c-zbx .age { color:#8a94a1; margin-left:auto; white-space:nowrap;
+                font-size:11px; }
+
+  /* ---- «вход в магазин» ---- */
+  #enter-fx {
+    position:absolute; inset:0; z-index:30; pointer-events:none; opacity:0;
+    background:radial-gradient(circle at 50% 55%, transparent 0%, #101820 55%);
+    transition:opacity .9s ease;
+  }
+  #enter-fx.on { opacity:1; pointer-events:auto; }
+  #enter-fx .door {
+    position:absolute; left:50%; top:48%; transform:translate(-50%,-50%);
+    text-align:center; color:#fff; font-size:20px; font-weight:700;
+    opacity:0; transition:opacity .5s ease .4s;
+  }
+  #enter-fx.on .door { opacity:1; }
+  #enter-fx .door .d { font-size:64px; display:block; margin-bottom:8px;
+                       animation:knock 1s infinite; }
+  @keyframes knock { 50% { transform:scale(1.12) rotate(-4deg); } }
+
+  #interior {
+    position:absolute; inset:0; z-index:40; background:#fff; display:none;
+    flex-direction:column; opacity:0; transition:opacity .6s ease;
+  }
+  #interior.on { display:flex; opacity:1; }
+  #interior header {
+    display:flex; align-items:center; gap:12px; padding:9px 16px;
+    background:linear-gradient(90deg,#1d2b3a,#2f4b68); color:#fff;
+  }
+  #interior header .t { font-weight:700; font-size:15.5px; }
+  #interior header .z { font-size:12.5px; opacity:.85; }
+  #interior header button {
+    margin-left:auto; border:0; border-radius:9px; padding:8px 16px;
+    background:#2f6fed; color:#fff; font-weight:700; font-size:13.5px;
+    cursor:pointer;
+  }
+  #interior iframe { border:0; flex:1; width:100%; }
+
   /* ---- карточка магазина ---- */
   #card {
     position:absolute; right:12px; top:72px; z-index:10; width:290px;
@@ -104,6 +161,8 @@
     <div class="tot"><b id="t-trx">0</b><span>продаж</span></div>
     <div class="tot"><b id="t-stores">0</b><span>магазинов</span></div>
     <div class="tot"><b id="t-oos">0</b><span>пустых полок</span></div>
+    <div class="tot" style="grid-column:1/-1"><b id="t-zbx">0</b>
+      <span id="t-zbx-label">активных проблем Zabbix</span></div>
   </div>
   <div id="events"></div>
 </div>
@@ -123,8 +182,21 @@
   <div class="kpi"><span>Заполненность полок</span><b id="c-fill"></b></div>
   <div class="kpi"><span>Нарушений (критич.)</span><b id="c-viol"></b></div>
   <div class="oos" id="c-oos"></div>
-  <a class="btn" id="c-link" href="#" target="_blank">
-    Открыть 3D-планограмму →</a>
+  <div id="c-zbx"></div>
+  <a class="btn" id="c-link" href="#">🚪 Войти в магазин</a>
+</div>
+
+<div id="enter-fx"><div class="door"><span class="d">🚪</span>
+  <span id="fx-name"></span><br>входим в магазин…</div></div>
+
+<div id="interior">
+  <header>
+    <span style="font-size:20px">🏪</span>
+    <div><div class="t" id="i-name"></div>
+         <div class="z" id="i-zbx"></div></div>
+    <button id="i-back">← Назад на карту</button>
+  </header>
+  <iframe id="i-frame" src="about:blank"></iframe>
 </div>
 
 <script src="/static/vendor/maplibre-gl.js"></script>
@@ -190,7 +262,7 @@ function markerEl(s) {
   const el = document.createElement("div");
   el.className = "shop " + s.status;
   el.innerHTML =
-    `<div class="icon">🏪</div>` +
+    `<div class="icon">🏪<span class="zbx"></span></div>` +
     `<div class="stars">${"★".repeat(s.level)}${"☆".repeat(5 - s.level)}</div>` +
     `<div class="tag">${s.name.split("·")[0].trim()}</div>`;
   el.onclick = (e) => { e.stopPropagation(); selected = s.id; showCard(); };
@@ -209,6 +281,13 @@ function updateMarker(s) {
   m.el.className = "shop " + s.status;
   m.el.querySelector(".stars").textContent =
     "★".repeat(s.level) + "☆".repeat(5 - s.level);
+  const zbx = m.el.querySelector(".zbx"),
+        z = s.zabbix || { active: 0, worst: 0 };
+  if (z.active > 0) {
+    zbx.style.display = "flex";
+    zbx.className = "zbx sev" + z.worst;
+    zbx.textContent = z.active;
+  } else zbx.style.display = "none";
   if (s.revenue_delta > 0) {                       // монетки как в игре
     const c = document.createElement("div");
     c.className = "coin"; c.textContent = `+${s.revenue_delta} ₽`;
@@ -234,10 +313,69 @@ function showCard() {
   document.getElementById("c-viol").textContent = s.violations_critical;
   document.getElementById("c-oos").textContent = s.oos
     ? "⛔ Пустые полки: " + s.oos_skus.join(", ") : "";
-  document.getElementById("c-link").href = "/store/" + s.id;
+
+  const SEV_COLORS = { 1: "#7499ff", 2: "#ffc859", 3: "#ffa059",
+                       4: "#e97659", 5: "#e45959" };
+  const z = s.zabbix || { active: 0, problems: [] };
+  document.getElementById("c-zbx").innerHTML = z.active
+    ? `<div class="zhead">🛠 Zabbix: ${z.active} актив. проблем</div>` +
+      z.problems.map(p =>
+        `<div class="zp"><span class="dot" style="background:${
+           SEV_COLORS[p.severity] || "#97a4b1"}"></span>` +
+        `<span>${p.name}</span><span class="age">${fmtAge(p.age_sec)}` +
+        `</span></div>`).join("")
+    : `<div class="zhead" style="color:var(--ok)">🛠 Zabbix: проблем нет` +
+      `</div>`;
+
+  const link = document.getElementById("c-link");
+  link.onclick = (e) => { e.preventDefault(); enterStore(s); };
+}
+function fmtAge(sec) {
+  if (sec < 60) return sec + " с";
+  if (sec < 3600) return Math.floor(sec / 60) + " мин";
+  return Math.floor(sec / 3600) + " ч " + Math.floor(sec % 3600 / 60) + " м";
 }
 document.getElementById("close").onclick = () => {
   selected = null; document.getElementById("card").style.display = "none";
+};
+
+/* ---------- «вход в магазин» как в игре ---------- */
+let savedCamera = null;
+
+function enterStore(s) {
+  document.getElementById("card").style.display = "none";
+  savedCamera = { center: map.getCenter(), zoom: map.getZoom(),
+                  pitch: map.getPitch(), bearing: map.getBearing() };
+  document.getElementById("fx-name").textContent = s.name;
+  // 1) подлёт камеры к магазину
+  map.flyTo({ center: [s.lon, s.lat], zoom: 17.8, pitch: 66,
+              bearing: map.getBearing() + 40, speed: 0.75, curve: 1.6,
+              essential: true });
+  // 2) затемнение с «дверью» на подлёте
+  setTimeout(() => document.getElementById("enter-fx").classList.add("on"),
+             1400);
+  // 3) интерьер: 3D-планограмма магазина
+  setTimeout(() => {
+    const z = s.zabbix || { active: 0 };
+    document.getElementById("i-name").textContent = s.name;
+    document.getElementById("i-zbx").textContent =
+      `выручка ${s.revenue.toLocaleString("ru-RU")} ₽ · ` +
+      `полки ${Math.round(s.fill_avg * 100)}% · ` +
+      (z.active ? `Zabbix: ${z.active} актив. проблем ⚠`
+                : "Zabbix: проблем нет ✓");
+    document.getElementById("i-frame").src = "/store/" + s.id;
+    document.getElementById("interior").classList.add("on");
+    document.getElementById("enter-fx").classList.remove("on");
+  }, 3100);
+}
+
+document.getElementById("i-back").onclick = () => {
+  document.getElementById("interior").classList.remove("on");
+  setTimeout(() => {
+    document.getElementById("i-frame").src = "about:blank";
+  }, 650);
+  if (savedCamera) map.flyTo({ ...savedCamera, speed: 0.9,
+                               essential: true });
 };
 
 /* ---------- опрос состояния сети ---------- */
@@ -252,6 +390,11 @@ async function poll() {
       st.totals.stores + (st.totals.critical
         ? ` (⚠ ${st.totals.critical})` : "");
     document.getElementById("t-oos").textContent = st.totals.oos;
+    document.getElementById("t-zbx").textContent =
+      st.totals.zabbix_active ?? 0;
+    document.getElementById("t-zbx-label").textContent =
+      "активных проблем Zabbix" +
+      (st.zabbix_mode === "emulation" ? " (эмуляция)" : "");
     st.stores.forEach(updateMarker);
     if (selected) showCard();
     document.getElementById("events").innerHTML = st.events.map(e =>
