@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Сеть «Гурман» — карта магазинов</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/static/vendor/maplibre-gl.css">
+<style>
+  :root {
+    --panel-bg: rgba(255,255,255,.94);
+    --ink: #23303f;
+    --ok: #2fa14e; --warn: #e6a700; --crit: #d64541;
+  }
+  html, body { margin:0; height:100%; font-family:'Segoe UI',system-ui,sans-serif; color:var(--ink); }
+  #map { position:absolute; inset:0; }
+
+  /* ---- левая панель сети ---- */
+  #hud {
+    position:absolute; top:12px; left:12px; z-index:10; width:295px;
+    background:var(--panel-bg); border-radius:14px; padding:14px 16px;
+    box-shadow:0 6px 24px rgba(20,40,70,.18); backdrop-filter:blur(4px);
+  }
+  #hud h1 { font-size:17px; margin:0 0 2px; }
+  #hud .sub { font-size:12px; color:#6b7683; margin-bottom:10px; }
+  .totals { display:grid; grid-template-columns:1fr 1fr; gap:6px 10px; margin-bottom:10px; }
+  .tot { background:#f2f5f9; border-radius:9px; padding:6px 9px; }
+  .tot b { display:block; font-size:16px; }
+  .tot span { font-size:11px; color:#6b7683; }
+  #events { max-height:180px; overflow:hidden; font-size:11.5px; line-height:1.45; }
+  #events div { border-top:1px dashed #dfe5ec; padding:3px 0; }
+  #events .st { color:#6b7683; }
+
+  /* ---- переключатель 2D/3D ---- */
+  #mode {
+    position:absolute; top:12px; right:12px; z-index:10; display:flex; gap:0;
+    background:var(--panel-bg); border-radius:12px; overflow:hidden;
+    box-shadow:0 6px 24px rgba(20,40,70,.18);
+  }
+  #mode button {
+    border:0; background:transparent; padding:10px 18px; font-size:14px;
+    font-weight:600; cursor:pointer; color:#6b7683;
+  }
+  #mode button.active { background:#2f6fed; color:#fff; }
+
+  /* ---- маркер магазина (стиль игрового симулятора) ---- */
+  .shop { cursor:pointer; text-align:center; user-select:none;
+          filter:drop-shadow(0 4px 6px rgba(20,40,70,.35)); }
+  .shop .icon {
+    width:46px; height:46px; margin:0 auto; border-radius:50% 50% 50% 8px;
+    display:flex; align-items:center; justify-content:center; font-size:24px;
+    background:linear-gradient(180deg,#fff, #e9eef5);
+    border:3px solid var(--ok); transform:rotate(-8deg);
+    transition:border-color .3s;
+  }
+  .shop.warning .icon { border-color:var(--warn); }
+  .shop.critical .icon { border-color:var(--crit); animation:pulse 1.1s infinite; }
+  @keyframes pulse { 50% { transform:rotate(-8deg) scale(1.14); } }
+  .shop .stars { font-size:10px; letter-spacing:-1px; margin-top:1px; color:#f5a623;
+                 text-shadow:0 1px 1px rgba(0,0,0,.4); }
+  .shop .tag {
+    margin-top:1px; font-size:10.5px; font-weight:700; color:#fff;
+    background:#2f6fed; padding:1px 7px; border-radius:8px; display:inline-block;
+    white-space:nowrap;
+  }
+  .shop.warning .tag { background:var(--warn); }
+  .shop.critical .tag { background:var(--crit); }
+  .coin {
+    position:absolute; left:50%; top:-6px; transform:translateX(-50%);
+    font-size:12px; font-weight:800; color:#1d7a3d; pointer-events:none;
+    animation:rise 1.4s ease-out forwards; white-space:nowrap;
+    text-shadow:0 1px 0 #fff;
+  }
+  @keyframes rise { to { transform:translate(-50%,-46px); opacity:0; } }
+
+  /* ---- карточка магазина ---- */
+  #card {
+    position:absolute; right:12px; top:72px; z-index:10; width:290px;
+    background:var(--panel-bg); border-radius:14px; padding:14px 16px;
+    box-shadow:0 6px 24px rgba(20,40,70,.18); display:none;
+  }
+  #card h2 { font-size:15px; margin:0 0 6px; padding-right:20px; }
+  #card .kpi { display:flex; justify-content:space-between; font-size:13px;
+               padding:3px 0; border-bottom:1px dashed #e3e8ef; }
+  #card .oos { color:var(--crit); font-size:12px; margin-top:6px; }
+  #card a.btn {
+    display:block; text-align:center; margin-top:10px; background:#2f6fed;
+    color:#fff; text-decoration:none; font-weight:600; font-size:13.5px;
+    padding:9px; border-radius:9px;
+  }
+  #card #close { position:absolute; right:10px; top:8px; border:0;
+                 background:none; font-size:16px; cursor:pointer; color:#8a94a1; }
+  .lvl { color:#f5a623; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div id="hud">
+  <h1>🏪 Сеть «Гурман» · Тверь</h1>
+  <div class="sub">Эмуляция торгового дня · <b id="clock">—</b>
+    (1 с = 10 мин)</div>
+  <div class="totals">
+    <div class="tot"><b id="t-rev">0 ₽</b><span>выручка сети</span></div>
+    <div class="tot"><b id="t-trx">0</b><span>продаж</span></div>
+    <div class="tot"><b id="t-stores">0</b><span>магазинов</span></div>
+    <div class="tot"><b id="t-oos">0</b><span>пустых полок</span></div>
+  </div>
+  <div id="events"></div>
+</div>
+
+<div id="mode">
+  <button id="btn2d" class="active">2D</button>
+  <button id="btn3d">3D</button>
+</div>
+
+<div id="card">
+  <button id="close">✕</button>
+  <h2 id="c-name"></h2>
+  <div class="kpi"><span>Уровень</span><b class="lvl" id="c-level"></b></div>
+  <div class="kpi"><span>Выручка</span><b id="c-rev"></b></div>
+  <div class="kpi"><span>Продаж</span><b id="c-trx"></b></div>
+  <div class="kpi"><span>Покупателей в зале</span><b id="c-vis"></b></div>
+  <div class="kpi"><span>Заполненность полок</span><b id="c-fill"></b></div>
+  <div class="kpi"><span>Нарушений (критич.)</span><b id="c-viol"></b></div>
+  <div class="oos" id="c-oos"></div>
+  <a class="btn" id="c-link" href="#" target="_blank">
+    Открыть 3D-планограмму →</a>
+</div>
+
+<script src="/static/vendor/maplibre-gl.js"></script>
+<script>
+const CENTER = [35.9040, 56.8590];
+
+const style = {
+  version: 8,
+  sources: { city: { type: "geojson", data: "/static/data/tver_map.geojson" } },
+  layers: [
+    { id: "bg", type: "background",
+      paint: { "background-color": "#eef0e6" } },
+    { id: "park", type: "fill", source: "city",
+      filter: ["==", ["get", "kind"], "park"],
+      paint: { "fill-color": "#c9e5b8", "fill-opacity": .9 } },
+    { id: "water", type: "fill", source: "city",
+      filter: ["==", ["get", "kind"], "water"],
+      paint: { "fill-color": "#9fd0ea" } },
+    { id: "road", type: "line", source: "city",
+      filter: ["==", ["get", "kind"], "road"],
+      paint: { "line-color": "#ffffff", "line-width":
+        ["interpolate", ["linear"], ["zoom"], 12, 1, 16, 5] } },
+    { id: "road-major", type: "line", source: "city",
+      filter: ["==", ["get", "kind"], "road_major"],
+      paint: { "line-color": "#ffd98e", "line-width":
+        ["interpolate", ["linear"], ["zoom"], 12, 2.2, 16, 9] } },
+    { id: "bld2d", type: "fill", source: "city",
+      filter: ["==", ["get", "kind"], "building"],
+      paint: { "fill-color": "#d9d3c8", "fill-outline-color": "#bfb9ad" } },
+    { id: "bld3d", type: "fill-extrusion", source: "city",
+      filter: ["==", ["get", "kind"], "building"],
+      layout: { visibility: "none" },
+      paint: {
+        "fill-extrusion-color": "#d6cfc2",
+        "fill-extrusion-height": ["get", "h"],
+        "fill-extrusion-opacity": .92 } },
+  ]
+};
+
+const map = new maplibregl.Map({
+  container: "map", style, center: CENTER, zoom: 14.2,
+  pitch: 0, bearing: 0, antialias: true, attributionControl: false });
+map.addControl(new maplibregl.NavigationControl({visualizePitch: true}),
+               "bottom-right");
+
+/* ---------- переключение 2D/3D ---------- */
+function setMode(mode3d) {
+  document.getElementById("btn2d").classList.toggle("active", !mode3d);
+  document.getElementById("btn3d").classList.toggle("active", mode3d);
+  map.setLayoutProperty("bld3d", "visibility", mode3d ? "visible" : "none");
+  map.setLayoutProperty("bld2d", "visibility", mode3d ? "none" : "visible");
+  map.easeTo({ pitch: mode3d ? 62 : 0, bearing: mode3d ? -18 : 0,
+               zoom: mode3d ? 15.1 : 14.2, duration: 1300 });
+}
+document.getElementById("btn2d").onclick = () => setMode(false);
+document.getElementById("btn3d").onclick = () => setMode(true);
+
+/* ---------- маркеры магазинов ---------- */
+const markers = {};   // id -> {marker, el, revenue}
+let selected = null;
+
+function markerEl(s) {
+  const el = document.createElement("div");
+  el.className = "shop " + s.status;
+  el.innerHTML =
+    `<div class="icon">🏪</div>` +
+    `<div class="stars">${"★".repeat(s.level)}${"☆".repeat(5 - s.level)}</div>` +
+    `<div class="tag">${s.name.split("·")[0].trim()}</div>`;
+  el.onclick = (e) => { e.stopPropagation(); selected = s.id; showCard(); };
+  return el;
+}
+
+function updateMarker(s) {
+  let m = markers[s.id];
+  if (!m) {
+    const el = markerEl(s);
+    m = markers[s.id] = {
+      el, revenue: 0,
+      marker: new maplibregl.Marker({ element: el, anchor: "bottom" })
+        .setLngLat([s.lon, s.lat]).addTo(map) };
+  }
+  m.el.className = "shop " + s.status;
+  m.el.querySelector(".stars").textContent =
+    "★".repeat(s.level) + "☆".repeat(5 - s.level);
+  if (s.revenue_delta > 0) {                       // монетки как в игре
+    const c = document.createElement("div");
+    c.className = "coin"; c.textContent = `+${s.revenue_delta} ₽`;
+    m.el.appendChild(c); setTimeout(() => c.remove(), 1400);
+  }
+  m.data = s;
+}
+
+/* ---------- карточка магазина ---------- */
+function showCard() {
+  const m = markers[selected]; if (!m || !m.data) return;
+  const s = m.data;
+  document.getElementById("card").style.display = "block";
+  document.getElementById("c-name").textContent = s.name;
+  document.getElementById("c-level").textContent =
+    "★".repeat(s.level) + "☆".repeat(5 - s.level);
+  document.getElementById("c-rev").textContent =
+    s.revenue.toLocaleString("ru-RU") + " ₽";
+  document.getElementById("c-trx").textContent = s.transactions;
+  document.getElementById("c-vis").textContent = s.visitors;
+  document.getElementById("c-fill").textContent =
+    Math.round(s.fill_avg * 100) + "%";
+  document.getElementById("c-viol").textContent = s.violations_critical;
+  document.getElementById("c-oos").textContent = s.oos
+    ? "⛔ Пустые полки: " + s.oos_skus.join(", ") : "";
+  document.getElementById("c-link").href = "/store/" + s.id;
+}
+document.getElementById("close").onclick = () => {
+  selected = null; document.getElementById("card").style.display = "none";
+};
+
+/* ---------- опрос состояния сети ---------- */
+async function poll() {
+  try {
+    const st = await (await fetch("/api/state")).json();
+    document.getElementById("clock").textContent = st.sim_clock;
+    document.getElementById("t-rev").textContent =
+      st.totals.revenue.toLocaleString("ru-RU") + " ₽";
+    document.getElementById("t-trx").textContent = st.totals.transactions;
+    document.getElementById("t-stores").textContent =
+      st.totals.stores + (st.totals.critical
+        ? ` (⚠ ${st.totals.critical})` : "");
+    document.getElementById("t-oos").textContent = st.totals.oos;
+    st.stores.forEach(updateMarker);
+    if (selected) showCard();
+    document.getElementById("events").innerHTML = st.events.map(e =>
+      `<div><span class="st">${e.store.replace("«Гурман» ", "")}:</span> ` +
+      `${e.text}</div>`).join("");
+  } catch (e) { /* сервер перезапускается — молча ждём */ }
+}
+map.on("load", () => { poll(); setInterval(poll, 2000); });
+</script>
+</body>
+</html>

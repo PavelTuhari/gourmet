@@ -1,1 +1,2 @@
 plotly>=5.0
+flask>=2.0  # для веб-режима «сеть магазинов» (planogram3d.webapp)
