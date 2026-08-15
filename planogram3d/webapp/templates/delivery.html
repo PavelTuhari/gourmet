@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Интернет-заказы и доставка — сеть «Гурман»</title>
+<link rel="stylesheet" href="/static/vendor/maplibre-gl.css">
+<style>
+  html, body { margin:0; height:100%;
+               font-family:'Segoe UI',system-ui,sans-serif;
+               color:#23303f; background:#f0f2f5; overflow:hidden; }
+  #layout { display:grid; height:100%;
+            grid-template-columns: 320px 1fr;
+            grid-template-rows: 46px 1fr 250px; }
+  header { grid-column:1/3; display:flex; align-items:center; gap:14px;
+           padding:0 16px;
+           background:linear-gradient(90deg,#1d2b3a,#2f4b68); color:#fff; }
+  header .t { font-weight:700; font-size:15.5px; }
+  header .k { font-size:12px; opacity:.85; }
+  header .k b { color:#ffd54f; }
+  header a { color:#9ec2ff; font-size:12.5px; margin-left:auto; }
+
+  #side { overflow-y:auto; background:#fff; border-right:1px solid #dde3ea;
+          padding:10px 12px; }
+  #side h3 { font-size:12.5px; margin:10px 0 6px; color:#5b6672;
+             text-transform:uppercase; letter-spacing:.4px; }
+  .ord { border:1px solid #e3e8ef; border-radius:9px; padding:6px 9px;
+         margin-bottom:6px; font-size:12px; line-height:1.45; }
+  .ord .st { float:right; font-weight:700; font-size:11px; }
+  .st.new, .st.picking { color:#e6a700; } .st.packed { color:#2f6fed; }
+  .st.routed { color:#7b1fa2; } .st.delivered { color:#2fa14e; }
+  .route { border:1.5px solid #cdd8ea; border-radius:10px;
+           padding:7px 10px; margin-bottom:8px; font-size:12px;
+           background:#f7f9fd; }
+  .route .rt { font-weight:700; }
+  .route .app { font-size:11px; color:#5b6672; }
+  .route .gps { font-size:10.5px; color:#8a94a1; }
+  .ev { font-size:11.5px; border-top:1px dashed #e3e8ef; padding:3px 0;
+        line-height:1.45; }
+
+  #map { position:relative; }
+  .courier-mark { font-size:26px;
+                  filter:drop-shadow(0 3px 4px rgba(0,0,0,.4)); }
+  .courier-tag { font-size:10px; font-weight:700; color:#fff;
+                 background:#7b1fa2; padding:1px 6px; border-radius:7px;
+                 text-align:center; }
+  .stop-mark { width:20px; height:20px; border-radius:50%;
+               border:3px solid #fff; background:#e6a700;
+               box-shadow:0 2px 5px rgba(0,0,0,.35); }
+  .stop-mark.done { background:#2fa14e; }
+  .stop-mark.handover { background:#e5533d; animation:hp 1s infinite; }
+  @keyframes hp { 50% { transform:scale(1.3); } }
+  .shopdot { font-size:20px;
+             filter:drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+
+  #bottom { grid-column:1/3; background:#fff; border-top:1px solid #dde3ea;
+            display:grid; grid-template-columns: 1fr 330px; }
+  #gantt { overflow:auto; padding:8px 14px; }
+  #gantt h3, #receipts h3 { font-size:12.5px; margin:2px 0 8px;
+      color:#5b6672; text-transform:uppercase; letter-spacing:.4px; }
+  .grow { display:flex; align-items:center; height:24px; margin:3px 0; }
+  .glabel { width:210px; flex:0 0 210px; font-size:11.5px;
+            white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .gtrack { position:relative; flex:1; height:18px; background:#f1f4f8;
+            border-radius:4px; overflow:hidden; }
+  .gbar { position:absolute; top:0; height:100%; border-radius:3px; }
+  .gplan { background:#ccd8e8; }
+  .gtravel { background:#7ba3e0; top:3px; height:12px; }
+  .ghand { background:#59b26a; top:3px; height:12px; }
+  .glate { background:#e5533d; }
+  .gnow { position:absolute; top:-2px; bottom:-2px; width:2px;
+          background:#e5533d; }
+  #receipts { border-left:1px solid #e6ebf1; padding:8px 14px;
+              overflow-y:auto; }
+  .rc { font-size:11.5px; border-bottom:1px dashed #e3e8ef;
+        padding:4px 0; line-height:1.5; }
+  .rc a { color:#2f6fed; font-weight:700; text-decoration:none; }
+  .rc .w { color:#8a94a1; font-size:10.5px; }
+</style>
+</head>
+<body>
+<div id="layout">
+  <header>
+    <span class="t">🛵 Интернет-заказы и доставка</span>
+    <span class="k">сборка: <b id="k-new">0</b></span>
+    <span class="k">готово: <b id="k-packed">0</b></span>
+    <span class="k">в доставке: <b id="k-del">0</b></span>
+    <span class="k">доставлено: <b id="k-done">0</b></span>
+    <span class="k">чеков: <b id="k-rc">0</b></span>
+    <a href="/">← карта сети</a>
+  </header>
+
+  <div id="side">
+    <h3>Маршруты и курьеры</h3>
+    <div id="routes"></div>
+    <h3>Заказы</h3>
+    <div id="orders"></div>
+    <h3>События</h3>
+    <div id="events"></div>
+  </div>
+
+  <div id="map"></div>
+
+  <div id="bottom">
+    <div id="gantt"><h3>Диаграмма Ганта — доставка по маршрутам
+      (план / факт)</h3><div id="gantt-rows"></div></div>
+    <div id="receipts"><h3>🧾 Чеки при вручении</h3>
+      <div id="rc-rows"></div></div>
+  </div>
+</div>
+
+<script src="/static/vendor/maplibre-gl.js"></script>
+<script>
+const style = {
+  version: 8,
+  sources: { city: { type: "geojson",
+                     data: "/static/data/tver_map.geojson" } },
+  layers: [
+    { id: "bg", type: "background",
+      paint: { "background-color": "#edefe4" } },
+    { id: "park", type: "fill", source: "city",
+      filter: ["==", ["get", "kind"], "park"],
+      paint: { "fill-color": "#c3e3b0" } },
+    { id: "water", type: "fill", source: "city",
+      filter: ["==", ["get", "kind"], "water"],
+      paint: { "fill-color": "#8cc4e6" } },
+    { id: "road", type: "line", source: "city",
+      filter: ["==", ["get", "kind"], "road"],
+      paint: { "line-color": "#ffffff", "line-width":
+        ["interpolate", ["linear"], ["zoom"], 12, 1, 16, 5] } },
+    { id: "road-major", type: "line", source: "city",
+      filter: ["==", ["get", "kind"], "road_major"],
+      paint: { "line-color": "#ffdf9e", "line-width":
+        ["interpolate", ["linear"], ["zoom"], 12, 2.2, 16, 9] } },
+    { id: "bld", type: "fill", source: "city",
+      filter: ["==", ["get", "kind"], "building"],
+      paint: { "fill-color": "#d9d3c8", "fill-outline-color": "#b9b2a5" } },
+  ]
+};
+const map = new maplibregl.Map({ container: "map", style,
+  center: [35.9000, 56.8600], zoom: 13.6, attributionControl: false });
+map.addControl(new maplibregl.NavigationControl(), "bottom-right");
+
+let routeLinesReady = false;
+map.on("load", () => {
+  map.addSource("routelines", { type: "geojson",
+    data: { type: "FeatureCollection", features: [] } });
+  map.addLayer({ id: "routelines", type: "line", source: "routelines",
+    paint: { "line-color": ["get", "color"], "line-width": 3,
+             "line-dasharray": [2, 1.5] } });
+  routeLinesReady = true;
+});
+
+const courierMarks = {}, stopMarks = {}, shopMarks = {};
+const ROUTE_COLORS = ["#7b1fa2", "#2f6fed", "#e5533d", "#00897b"];
+
+function fmtT(ts) {
+  const d = new Date(ts * 1000);
+  return d.toLocaleTimeString("ru-RU", {hour: "2-digit",
+                                        minute: "2-digit"});
+}
+
+async function poll() {
+  let st;
+  try { st = await (await fetch("/api/delivery/state")).json(); }
+  catch (e) { return; }
+
+  for (const k of ["new", "packed"])
+    document.getElementById("k-" + (k === "new" ? "new" : "packed"))
+      .textContent = st.counters[k];
+  document.getElementById("k-del").textContent = st.counters.delivering;
+  document.getElementById("k-done").textContent = st.counters.delivered;
+  document.getElementById("k-rc").textContent = st.counters.receipts;
+
+  /* --- маршруты, курьеры, линии, точки --- */
+  document.getElementById("routes").innerHTML = st.routes.map((r, i) => {
+    const c = r.courier;
+    const cur = r.stops.filter(s => s.status === "done").length;
+    return `<div class="route" style="border-color:${
+        ROUTE_COLORS[i % 4]}">
+      <span class="rt">${r.id}</span> · ${r.store_name} ·
+      ${cur}/${r.stops.length} адресов<br>
+      <span class="app">${c.name} · ${c.app_title} · 🔋${c.battery}%</span>
+      <br><span class="gps">GPS: ${c.lat ? c.lat.toFixed(5) + ", "
+        + c.lon.toFixed(5) : "—"} · ${c.gps_source}</span></div>`;
+  }).join("") || "<div class='ev'>ожидание сборки заказов…</div>";
+
+  const lines = [], seenC = new Set(), seenS = new Set();
+  st.routes.forEach((r, i) => {
+    const color = ROUTE_COLORS[i % 4];
+    if (r.status === "active") {
+      const coords = [[r.store_lon, r.store_lat],
+        ...r.stops.map(s => [s.lon, s.lat])];
+      lines.push({ type: "Feature", properties: { color },
+        geometry: { type: "LineString", coordinates: coords } });
+    }
+    // магазин
+    if (!shopMarks[r.store_id]) {
+      const el = document.createElement("div");
+      el.className = "shopdot"; el.textContent = "🏪";
+      shopMarks[r.store_id] = new maplibregl.Marker({element: el})
+        .setLngLat([r.store_lon, r.store_lat]).addTo(map);
+    }
+    // остановки
+    for (const s of r.stops) {
+      const key = r.id + s.order;
+      seenS.add(key);
+      if (!stopMarks[key]) {
+        const el = document.createElement("div");
+        stopMarks[key] = { el, marker:
+          new maplibregl.Marker({element: el})
+            .setLngLat([s.lon, s.lat]).addTo(map) };
+      }
+      stopMarks[key].el.className = "stop-mark " + s.status;
+      stopMarks[key].el.title = `${s.order} · ${s.customer}, ${s.address}`;
+    }
+    // курьер
+    const c = r.courier;
+    if (c.lat != null && r.status === "active") {
+      seenC.add(c.id);
+      if (!courierMarks[c.id]) {
+        const el = document.createElement("div");
+        el.innerHTML = `<div class="courier-mark">🛵</div>` +
+          `<div class="courier-tag">${c.name.split(" ")[1]}</div>`;
+        courierMarks[c.id] = { el, marker:
+          new maplibregl.Marker({element: el})
+            .setLngLat([c.lon, c.lat]).addTo(map) };
+      } else courierMarks[c.id].marker.setLngLat([c.lon, c.lat]);
+      courierMarks[c.id].el.querySelector(".courier-tag")
+        .style.background = ROUTE_COLORS[i % 4];
+    }
+  });
+  for (const id of Object.keys(courierMarks))
+    if (!seenC.has(id)) { courierMarks[id].marker.remove();
+                          delete courierMarks[id]; }
+  for (const key of Object.keys(stopMarks))
+    if (!seenS.has(key)) { stopMarks[key].marker.remove();
+                           delete stopMarks[key]; }
+  if (routeLinesReady)
+    map.getSource("routelines").setData(
+      { type: "FeatureCollection", features: lines });
+
+  /* --- заказы и события --- */
+  const ST_TITLES = { new: "новый", picking: "сборка", packed: "собран",
+                      routed: "в доставке", delivered: "доставлен" };
+  document.getElementById("orders").innerHTML = st.orders.slice(0, 12)
+    .map(o => `<div class="ord"><span class="st ${o.status}">
+      ${ST_TITLES[o.status]}</span><b>${o.id}</b> · ${o.total} ₽<br>
+      ${o.customer} · ${o.address}<br>
+      <span style="color:#8a94a1">${o.store_name}${
+        o.route ? " · " + o.route : ""}</span></div>`).join("");
+  document.getElementById("events").innerHTML = st.events.map(e =>
+    `<div class="ev">${e.text}</div>`).join("");
+
+  /* --- диаграмма Ганта --- */
+  const rows = [];
+  const active = st.routes.filter(r => r.stops.length);
+  if (active.length) {
+    const t0 = Math.min(...active.map(r => r.stops[0].plan_start));
+    const t1 = Math.max(...active.map(r =>
+      Math.max(r.stops[r.stops.length - 1].plan_done,
+               ...(r.stops.map(s => s.actual_done || 0))))) + 20;
+    const span = Math.max(60, t1 - t0);
+    const pct = ts => Math.max(0, Math.min(100, 100 * (ts - t0) / span));
+    for (const r of active) {
+      rows.push(`<div class="grow"><div class="glabel"><b>${r.id}</b> · ${
+        r.courier.name} · ${r.store_name}</div>
+        <div class="gtrack"><div class="gnow" style="left:${
+          pct(st.now)}%"></div></div></div>`);
+      for (const s of r.stops) {
+        let bars = `<div class="gbar gplan" style="left:${
+          pct(s.plan_start)}%;width:${
+          pct(s.plan_done) - pct(s.plan_start)}%"></div>`;
+        if (s.actual_start) {
+          const tEnd = s.actual_arrive || st.now;
+          bars += `<div class="gbar gtravel" style="left:${
+            pct(s.actual_start)}%;width:${
+            Math.max(0.6, pct(tEnd) - pct(s.actual_start))}%"></div>`;
+        }
+        if (s.actual_arrive) {
+          const hEnd = s.actual_done || st.now;
+          const late = s.actual_done && s.actual_done > s.plan_done + 15;
+          bars += `<div class="gbar ghand ${late ? "glate" : ""}"
+            style="left:${pct(s.actual_arrive)}%;width:${
+            Math.max(0.6, pct(hEnd) - pct(s.actual_arrive))}%"></div>`;
+        }
+        rows.push(`<div class="grow"><div class="glabel" style=
+          "padding-left:16px">↳ ${s.order} · ${s.customer} · план ${
+          fmtT(s.plan_arrive)}</div>
+          <div class="gtrack">${bars}<div class="gnow" style="left:${
+          pct(st.now)}%"></div></div></div>`);
+      }
+    }
+  }
+  document.getElementById("gantt-rows").innerHTML = rows.join("")
+    || "<div class='ev'>маршруты появятся после сборки заказов</div>";
+
+  /* --- чеки --- */
+  document.getElementById("rc-rows").innerHTML = st.receipts.map(r =>
+    `<div class="rc"><a href="/receipt/${r.id}" target="_blank">
+      🧾 ${r.id}</a> · ${r.order} · ${r.total} ₽ · ${fmtT(r.printed_at)}
+      <br><span class="w">${r.print_way}</span></div>`).join("")
+    || "<div class='ev'>чеки появятся при вручении заказов</div>";
+}
+setInterval(poll, 1500); poll();
+</script>
+</body>
+</html>

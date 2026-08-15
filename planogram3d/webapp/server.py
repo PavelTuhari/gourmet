@@ -18,6 +18,7 @@ import argparse
 from flask import Flask, abort, jsonify, render_template, request
 
 from ..core import build_report_page, check_compliance
+from .delivery import DeliveryHub
 from .instore import InstoreHub
 from .network import StoreNetwork
 from .roblox import TeamHub
@@ -28,6 +29,35 @@ network = StoreNetwork()
 zabbix, zabbix_mode = create_provider(list(network.stores))
 instore = InstoreHub()
 team = TeamHub()
+delivery = DeliveryHub(network)
+
+
+@app.get("/delivery")
+def delivery_page():
+    return render_template("delivery.html")
+
+
+@app.get("/api/delivery/state")
+def delivery_state():
+    return jsonify(delivery.state())
+
+
+@app.post("/api/delivery/gps")
+def delivery_gps():
+    """Телеметрия курьерского приложения: GPS-координаты, батарея."""
+    d = request.get_json(silent=True) or {}
+    ok = delivery.ingest_gps(d.get("courier", ""),
+                             d.get("lat"), d.get("lon"),
+                             d.get("battery"))
+    return jsonify({"accepted": bool(ok)})
+
+
+@app.get("/receipt/<receipt_id>")
+def receipt_page(receipt_id):
+    r = delivery.receipt(receipt_id)
+    if r is None:
+        abort(404)
+    return render_template("receipt.html", r=r)
 
 
 @app.post("/api/roblox/register")

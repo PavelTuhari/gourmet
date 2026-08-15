@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Чек {{ r.id }}</title>
+<style>
+  body { background:#3a4450; margin:0; padding:30px 0;
+         display:flex; flex-direction:column; align-items:center;
+         font-family:'Courier New',monospace; }
+  .tape { width:302px; background:#fdfdf8; padding:18px 16px;
+          box-shadow:0 8px 30px rgba(0,0,0,.4); color:#222;
+          font-size:12.5px; line-height:1.5; }
+  .c { text-align:center; }
+  .b { font-weight:700; }
+  hr { border:none; border-top:1px dashed #999; margin:8px 0; }
+  .row { display:flex; justify-content:space-between; }
+  .qr { width:132px; height:132px; margin:10px auto 4px;
+        background:
+          repeating-linear-gradient(0deg,#111 0 6px,transparent 6px 12px),
+          repeating-linear-gradient(90deg,#111 0 6px,#fff 6px 12px);
+        border:6px solid #fff; outline:1px solid #ccc; }
+  .qrtext { font-size:8.5px; word-break:break-all; color:#555;
+            text-align:center; }
+  #print { margin-top:18px; border:0; border-radius:9px; padding:11px 26px;
+           background:#2f6fed; color:#fff; font-size:14px; font-weight:700;
+           cursor:pointer; font-family:'Segoe UI',sans-serif; }
+  @media print { body { background:#fff; padding:0; }
+                 .tape { box-shadow:none; } #print { display:none; } }
+</style>
+</head>
+<body>
+<div class="tape">
+  <div class="c b">ООО «Гурман Ритейл»</div>
+  <div class="c">Тверь, доставка интернет-заказов</div>
+  <div class="c">КАССОВЫЙ ЧЕК · ПРИХОД</div>
+  <hr>
+  <div>Заказ: {{ r.order }} · Маршрут: {{ r.route }}</div>
+  <div>Получатель: {{ r.customer }}</div>
+  <div>Адрес: {{ r.address }}</div>
+  <div>Курьер: {{ r.courier }}</div>
+  <div>Касса: {{ r.app_title }}</div>
+  <hr>
+  {% for it in r["items"] %}
+  <div class="row"><span>{{ it.name }}</span></div>
+  <div class="row"><span>{{ it.qty }} × {{ it.price }}.00</span>
+    <span>{{ it.qty * it.price }}.00</span></div>
+  {% endfor %}
+  <hr>
+  <div class="row b"><span>ИТОГО</span><span>{{ r.total }}.00 ₽</span></div>
+  <div class="row"><span>БЕЗНАЛИЧНЫМИ</span><span>{{ r.total }}.00</span></div>
+  <hr>
+  <div class="row"><span>ФН</span><span>{{ r.fn }}</span></div>
+  <div class="row"><span>ФД</span><span>{{ r.fd }}</span></div>
+  <div class="row"><span>ФП</span><span>{{ r.fp }}</span></div>
+  <div>{{ r.print_way }}</div>
+  <div class="qr"></div>
+  <div class="qrtext">{{ r.qr }}</div>
+  <div class="c">Спасибо за покупку!</div>
+</div>
+<button id="print" onclick="window.print()">🖨 Печать чека</button>
+</body>
+</html>
