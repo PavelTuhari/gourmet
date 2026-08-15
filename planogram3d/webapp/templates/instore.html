@@ -29,6 +29,22 @@
   #feed div { border-bottom:1px dashed #dfe5ec; padding:4px 0; }
   #feed .src { font-size:10px; color:#8a94a1; margin-left:4px; }
   #feed .pos { color:#1d7a3d; font-weight:600; }
+  #feed .alarm { color:#c62828; font-weight:600; }
+
+  #est { margin:0 12px 4px; padding:7px 10px; background:#e9eef7;
+         border-radius:9px; font-size:11.5px; line-height:1.5; }
+  #est label { display:flex; gap:6px; align-items:center; cursor:pointer;
+               font-weight:600; }
+  .cons { margin:6px 12px 8px; background:#fff; border-radius:9px;
+          padding:8px 10px; box-shadow:0 1px 3px rgba(20,40,70,.08);
+          font-size:11.5px; }
+  .cons .t { font-weight:700; margin-bottom:4px; }
+  .cons .row { display:flex; align-items:center; gap:6px; padding:1.5px 0; }
+  .cons .row span:first-child { width:64px; color:#5b6672; }
+  .cons .bar { flex:1; height:7px; background:#e6ebf1; border-radius:4px;
+               overflow:hidden; }
+  .cons .bar i { display:block; height:100%; border-radius:4px; }
+  .cons .pct { width:36px; text-align:right; font-weight:700; }
 </style>
 </head>
 <body>
@@ -46,6 +62,15 @@
       <div class="kpi"><b id="k-rev">0 ₽</b><span>выручка касс</span></div>
       <div class="kpi"><b id="k-sco">0%</b><span>доля СКО</span></div>
       <div class="kpi"><b id="k-wg">0</b><span>взвешиваний</span></div>
+    </div>
+    <div id="est">
+      <label><input type="checkbox" id="ghosts-toggle" checked>
+        👥 Оценка по датчикам входа/выхода</label>
+      <span id="est-text">—</span>
+    </div>
+    <div class="cons">
+      <div class="t">🧻 Расходники</div>
+      <div id="cons-rows"></div>
     </div>
     <div id="feed"></div>
   </div>
@@ -89,6 +114,7 @@ let layout = null, counters = {}, lastEvent = 0;
 let agents = {};                       // id -> {from:{x,y}, to:{x,y}, t0, state, cart}
 let popups = [];                       // {x,y,text,color,t0}
 let gateFlash = 0;
+let queues = [], fridges = [], tsd = [], estimate = null;
 
 async function poll() {
   try {
@@ -112,9 +138,35 @@ async function poll() {
     for (const id of Object.keys(agents))
       if (!seen.has(+id)) delete agents[id];
 
+    queues = st.queues || []; fridges = st.fridges || [];
+    tsd = st.tsd || []; estimate = st.estimate;
+
     for (const e of st.events) { lastEvent = e.id; onEvent(e); }
     renderKpis();
+    renderSide(st);
   } catch (err) { /* сервер занят — попробуем позже */ }
+}
+
+function renderSide(st) {
+  if (estimate)
+    document.getElementById("est-text").textContent =
+      `в зале ~${estimate.in_store}, в очередях ${estimate.in_queues}, ` +
+      `по залу ${estimate.on_floor}`;
+  const c = st.consumables || {paper: {}, veg_bags: 0};
+  const rows = [];
+  for (const [dev, pct] of Object.entries(c.paper)) {
+    const col = pct < 15 ? "#e5533d" : pct < 35 ? "#ffb300" : "#4caf50";
+    rows.push(`<div class="row"><span>${dev}</span>` +
+      `<span class="bar"><i style="width:${pct}%;background:${col}"></i>` +
+      `</span><span class="pct" style="color:${col}">${pct}%</span></div>`);
+  }
+  const bagsCol = c.veg_bags < 40 ? "#e5533d"
+                : c.veg_bags < 120 ? "#ffb300" : "#4caf50";
+  rows.push(`<div class="row"><span>Кульки</span>` +
+    `<span class="bar"><i style="width:${
+      Math.min(100, c.veg_bags / 5)}%;background:${bagsCol}"></i></span>` +
+    `<span class="pct" style="color:${bagsCol}">${c.veg_bags}</span></div>`);
+  document.getElementById("cons-rows").innerHTML = rows.join("");
 }
 setInterval(poll, 1000); poll();
 
@@ -134,15 +186,20 @@ const EVENT_FMT = {
   sco_out: e => ["🚧", "Выход из зоны СКО"],
   pos:     e => ["🧾", `${e.data.register}: чек ${e.data.total} ₽ ` +
                        `(${e.data.items} поз.)`],
+  fridge_alarm: e => ["🧊", `${e.data.id}: ТРЕВОГА — температура ` +
+                            `${e.data.temp_c}°C`],
+  consumable:   e => ["🧻", `${e.data.device}: ${e.data.text}`],
 };
 
 function onEvent(e) {
   const fmt = EVENT_FMT[e.type];
   if (!fmt) return;
   const [icon, text] = fmt(e);
+  const cls = e.type === "pos" ? "pos"
+            : e.type === "fridge_alarm" ? "alarm" : "";
   const feed = document.getElementById("feed");
   const div = document.createElement("div");
-  div.innerHTML = `${icon} <span class="${e.type === "pos" ? "pos" : ""}">` +
+  div.innerHTML = `${icon} <span class="${cls}">` +
     `${text}</span><span class="src">${
       e.source === "real" ? "поток" : "тест"}</span>`;
   feed.prepend(div);
@@ -189,6 +246,18 @@ function draw() {
   for (let y = 0; y <= 6; y++)
     poly([iso(-0.7,y), iso(8.1,y)], null, "rgba(0,0,0,.05)");
 
+  // зоны скоропортящихся продуктов — особое выделение
+  for (const z of layout.perishable_zones || []) {
+    poly([iso(z.x,z.y), iso(z.x+z.w,z.y), iso(z.x+z.w,z.y+z.d),
+          iso(z.x,z.y+z.d)], "rgba(64,170,220,.13)");
+    ctx.setLineDash([6, 4]);
+    poly([iso(z.x,z.y), iso(z.x+z.w,z.y), iso(z.x+z.w,z.y+z.d),
+          iso(z.x,z.y+z.d)], null, "rgba(30,130,190,.55)");
+    ctx.setLineDash([]);
+    label(z.x + z.w/2, z.y + z.d - 0.12, 0, "❄ " + z.label, 10.5,
+          "#1e82be");
+  }
+
   // зона СКО (подсветка пола + вспышка ворот)
   const [sx, sy, sw, sd] = layout.sco;
   poly([iso(sx,sy), iso(sx+sw,sy), iso(sx+sw,sy+sd), iso(sx,sy+sd)],
@@ -212,7 +281,8 @@ function draw() {
             11);
     }});
   }
-  // кассы
+  // кассы (+ длина очереди в реальном времени)
+  const queueOf = n => (queues.find(q => q.name === n) || {len: 0}).len;
   for (const p of layout.pos) {
     drawables.push({ depth: p.x + p.y, fn: () => {
       box(p.x - 0.4, p.y - 0.3, 0.8, 0.6, 0.5, "#b8c4d2", "#93a2b4",
@@ -220,6 +290,31 @@ function draw() {
       box(p.x + 0.15, p.y - 0.25, 0.12, 0.12, 0.85, "#4a5a6e", "#3c4b5e",
           "#33404f");
       label(p.x, p.y - 0.35, 0.9, p.name, 11);
+      const q = queueOf(p.name);
+      if (q > 0)
+        label(p.x, p.y + 0.75, 0.85, `👥 очередь: ${q}`, 11.5,
+              q >= 3 ? "#c62828" : "#3c4856");
+    }});
+  }
+  const scoQ = queueOf("СКО");
+  if (scoQ > 0)
+    drawables.push({ depth: sx + sy + 3, fn: () =>
+      label(sx + sw/2, sy - 0.25, 0.9, `👥 очередь СКО: ${scoQ}`, 11.5,
+            scoQ >= 3 ? "#c62828" : "#2f6fed") });
+
+  // холодильные витрины: температура и состояние
+  for (const f of fridges) {
+    drawables.push({ depth: f.x + f.y + f.d, fn: () => {
+      const top = f.state === "alarm" ? "#f3b0ab"
+                : f.state === "warn" ? "#ffe1a8" : "#ddeef7";
+      box(f.x, f.y, f.w, f.d, 0.8, top, "#9fb4c4", "#8aa2b5");
+      const tCol = f.state === "alarm" ? "#c62828"
+                 : f.state === "warn" ? "#c77700" : "#1e6fa8";
+      label(f.x + f.w/2, f.y + f.d/2, 1.12,
+            `${f.id} · ${f.temp}°C${f.door_open ? " · дверца!" : ""}` +
+            `${f.compressor ? " ❄" : ""}`, 10.5, tCol);
+      if (f.state === "alarm")
+        label(f.x + f.w/2, f.y + f.d/2, 1.38, "⚠ ТРЕВОГА", 11, "#c62828");
     }});
   }
   // весы
@@ -257,6 +352,41 @@ function draw() {
                     ctx.fillText("🛒", px + 11, py + 1); }
       if (a.state === "pay") { ctx.font = "12px sans-serif";
                                ctx.fillText("💳", px - 12, py - 18); }
+    }});
+  }
+
+  // оценка покупателей по датчикам входа/выхода («призраки»)
+  if (estimate && document.getElementById("ghosts-toggle").checked) {
+    for (const gh of estimate.ghosts) {
+      drawables.push({ depth: gh.x + gh.y, fn: () => {
+        const [px, py] = iso(gh.x, gh.y);
+        ctx.globalAlpha = 0.38;
+        ctx.fillStyle = "rgba(0,0,0,.2)";
+        ctx.beginPath(); ctx.ellipse(px, py + 3, 8, 3.4, 0, 0, 7);
+        ctx.fill();
+        ctx.font = "17px sans-serif"; ctx.textAlign = "center";
+        ctx.fillText("👤", px, py - 3);
+        ctx.globalAlpha = 1;
+      }});
+    }
+  }
+
+  // ТСД: позиция по BLE/LoRa с кругом точности
+  for (const d of tsd) {
+    drawables.push({ depth: d.x + d.y + 0.1, fn: () => {
+      const [px, py] = iso(d.x, d.y);
+      const col = d.src === "BLE" ? "rgba(47,111,237," : "rgba(142,68,173,";
+      ctx.fillStyle = col + ".12)";
+      ctx.strokeStyle = col + ".5)";
+      ctx.beginPath();
+      ctx.ellipse(px, py, d.acc * SX * 0.5, d.acc * SY * 0.5, 0, 0, 7);
+      ctx.fill(); ctx.stroke();
+      ctx.font = "15px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("📟", px, py - 2);
+      ctx.font = "700 9.5px 'Segoe UI',sans-serif";
+      ctx.fillStyle = d.src === "BLE" ? "#2f6fed" : "#8e44ad";
+      ctx.fillText(`${d.id} · ${d.src} ±${d.acc} м · 🔋${d.battery}%`,
+                   px, py + 14);
     }});
   }
 

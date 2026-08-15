@@ -7,6 +7,7 @@
 и пополнения, ведёт ленту событий — в духе игровых симуляторов магазинов.
 """
 
+import os
 import random
 import threading
 import time
@@ -44,6 +45,89 @@ def price_for(category: str, sku: str) -> float:
     return round(base * (0.8 + (hash(sku) % 41) / 100.0), 2)
 
 
+class DistributionCenter:
+    """Логистический центр (РЦ) — буфер между поставщиками и магазинами.
+
+    Магазины при out-of-stock заказывают товар не напрямую у поставщика,
+    а в РЦ: отгрузка едет «грузовиком» (видна на карте города), склад РЦ
+    списывается, а при падении ниже точки перезаказа РЦ сам заказывает
+    партию у поставщика (более долгое плечо). Если товара на РЦ нет,
+    магазин получает прямую поставку от поставщика с большим сроком.
+    """
+
+    LOCATION = (56.8478, 35.8842)   # промзона на юго-западе Твери
+    REORDER_POINT = 45
+    REORDER_QTY = 140
+
+    def __init__(self, skus, rng: random.Random):
+        self.name = "РЦ «Гурман» Тверь"
+        self.lat, self.lon = self.LOCATION
+        self.rng = rng
+        self.stock: Dict[str, int] = {sku: rng.randint(70, 160)
+                                      for sku in skus}
+        self.outbound: List[dict] = []   # отгрузки в магазины (грузовики)
+        self.inbound: List[dict] = []    # поставки от поставщиков в РЦ
+
+    def order(self, store_title: str, store_id: str, lat: float, lon: float,
+              sku: str, sku_name: str, qty: int, now: float,
+              events: Deque) -> Optional[Tuple[float, int]]:
+        """Заказ магазина. Возвращает (eta, отгружено) или None (нет товара)."""
+        available = self.stock.get(sku, 0)
+        shipped = min(qty, available)
+        self._maybe_reorder(sku, sku_name, now, events)
+        if shipped <= 0:
+            events.appendleft((now, self.name,
+                               f"🏭 Нет остатка «{sku_name}» — {store_title} "
+                               f"получит прямую поставку от поставщика"))
+            return None
+        self.stock[sku] = available - shipped
+        depart = now + 3.0
+        eta = depart + self.rng.uniform(30, 70)
+        self.outbound.append({"store_id": store_id, "sku": sku,
+                              "sku_name": sku_name, "qty": shipped,
+                              "depart": depart, "eta": eta,
+                              "to": [lat, lon]})
+        events.appendleft((now, self.name,
+                           f"🚚 Отгрузка в {store_title}: {sku_name} "
+                           f"× {shipped}"))
+        return eta, shipped
+
+    def _maybe_reorder(self, sku: str, sku_name: str, now: float,
+                       events: Deque) -> None:
+        if (self.stock.get(sku, 0) < self.REORDER_POINT
+                and not any(o["sku"] == sku for o in self.inbound)):
+            self.inbound.append({"sku": sku, "sku_name": sku_name,
+                                 "qty": self.REORDER_QTY,
+                                 "eta": now + self.rng.uniform(70, 140)})
+            events.appendleft((now, self.name,
+                               f"📦 Заказ поставщику: {sku_name} "
+                               f"× {self.REORDER_QTY}"))
+
+    def tick(self, now: float, events: Deque) -> None:
+        for o in [o for o in self.inbound if now >= o["eta"]]:
+            self.inbound.remove(o)
+            self.stock[o["sku"]] = self.stock.get(o["sku"], 0) + o["qty"]
+            events.appendleft((now, self.name,
+                               f"🏭 Приход от поставщика: {o['sku_name']} "
+                               f"× {o['qty']}"))
+        self.outbound = [o for o in self.outbound if now <= o["eta"] + 3]
+
+    def snapshot(self, now: float) -> dict:
+        return {
+            "name": self.name, "lat": self.lat, "lon": self.lon,
+            "stock_total": sum(self.stock.values()),
+            "sku_low": sum(1 for v in self.stock.values()
+                           if v < self.REORDER_POINT),
+            "outbound": [{"store_id": o["store_id"], "sku": o["sku_name"],
+                          "qty": o["qty"], "depart": o["depart"],
+                          "eta": o["eta"], "to": o["to"]}
+                         for o in self.outbound],
+            "inbound": [{"sku": o["sku_name"], "qty": o["qty"],
+                         "eta_sec": max(0, round(o["eta"] - now))}
+                        for o in self.inbound],
+        }
+
+
 @dataclass
 class EmulatedStore:
     """Один магазин сети с «живым» торговым состоянием."""
@@ -56,9 +140,32 @@ class EmulatedStore:
     revenue: float = 0.0
     transactions: int = 0
     visitors: int = 15
-    restock_at: Dict[str, float] = field(default_factory=dict)
+    restock_at: Dict[str, dict] = field(default_factory=dict)
     last_tick_revenue: float = 0.0
     critical_violations: int = 0
+    dc: Optional["DistributionCenter"] = None
+
+    def _order_restock(self, sku: str, now: float, events: Deque) -> None:
+        """Заказ пополнения: через РЦ (если подключён) или напрямую."""
+        product = self.store.product(sku)
+        capacity = self.store.sales[sku].capacity
+        if self.dc is not None:
+            shipped = self.dc.order(self.title, self.store_id,
+                                    self.lat, self.lon, sku, product.name,
+                                    capacity, now, events)
+            if shipped is not None:
+                eta, qty = shipped
+                self.restock_at[sku] = {"due": eta, "qty": qty}
+                return
+            # на РЦ пусто — прямая поставка от поставщика, дольше
+            self.restock_at[sku] = {"due": now + self.rng.uniform(90, 150),
+                                    "qty": capacity}
+            return
+        self.restock_at[sku] = {"due": now + self.rng.uniform(25, 80),
+                                "qty": capacity}
+        events.appendleft((now, self.title,
+                           f"⛔ {product.name}: полка пуста, заказано "
+                           f"пополнение"))
 
     def tick(self, dt: float, now: float, events: Deque) -> None:
         """Один шаг эмуляции: продажи, OOS, пополнения, посетители."""
@@ -72,10 +179,7 @@ class EmulatedStore:
             if n <= 0 or info.stock <= 0:
                 # магазин с пустой полкой теряет продажи
                 if info.stock <= 0 and sku not in self.restock_at:
-                    self.restock_at[sku] = now + self.rng.uniform(25, 80)
-                    events.appendleft((now, self.title,
-                                       f"⛔ {product.name}: полка пуста, "
-                                       f"заказано пополнение"))
+                    self._order_restock(sku, now, events)
                 continue
             n = min(n, info.stock)
             info.stock -= n
@@ -83,19 +187,20 @@ class EmulatedStore:
             self.transactions += n
             sold_value += n * price_for(product.category, sku)
             if info.stock == 0:
-                self.restock_at[sku] = now + self.rng.uniform(25, 80)
                 events.appendleft((now, self.title,
                                    f"⛔ {product.name}: OUT-OF-STOCK"))
+                self._order_restock(sku, now, events)
 
         # приезд пополнений
-        for sku, due in list(self.restock_at.items()):
-            if now >= due:
+        for sku, order in list(self.restock_at.items()):
+            if now >= order["due"]:
                 info = self.store.sales[sku]
-                info.stock = info.capacity
+                info.stock = min(info.capacity, info.stock + order["qty"])
                 del self.restock_at[sku]
                 events.appendleft((now, self.title,
                                    f"📦 {self.store.product(sku).name}: "
-                                   f"полка пополнена"))
+                                   f"полка пополнена "
+                                   f"(+{order['qty']} шт.)"))
 
         self.revenue += sold_value
         self.last_tick_revenue = sold_value
@@ -164,13 +269,20 @@ class EmulatedStore:
 class StoreNetwork:
     """Сеть магазинов с фоновым тикером эмуляции."""
 
-    def __init__(self, tick_seconds: float = 2.0):
+    def __init__(self, tick_seconds: float = 2.0,
+                 dc_enabled: Optional[bool] = None):
         self.tick_seconds = tick_seconds
         self.events: Deque = deque(maxlen=40)
         self.started_at = time.time()
         self._lock = threading.Lock()
         self._thread: Optional[threading.Thread] = None
         self._stop = threading.Event()
+
+        # логистический центр опционален: PLANOGRAM_DC=0 отключает его,
+        # тогда магазины снабжаются напрямую от поставщиков
+        if dc_enabled is None:
+            dc_enabled = os.environ.get("PLANOGRAM_DC", "1") != "0"
+        self.dc: Optional[DistributionCenter] = None
 
         self.stores: Dict[str, EmulatedStore] = {}
         for store_id, title, lat, lon, seed in NETWORK_LAYOUT:
@@ -183,6 +295,13 @@ class StoreNetwork:
                 1 for v in check_compliance(store)
                 if v.severity == "critical")
             self.stores[store_id] = emu
+
+        if dc_enabled:
+            first = next(iter(self.stores.values())).store
+            self.dc = DistributionCenter(list(first.products),
+                                         random.Random(20260815))
+            for emu in self.stores.values():
+                emu.dc = self.dc
 
     # ----- жизненный цикл -------------------------------------------------
     def start(self) -> None:
@@ -202,16 +321,22 @@ class StoreNetwork:
             with self._lock:
                 for emu in self.stores.values():
                     emu.tick(now - last, now, self.events)
+                if self.dc is not None:
+                    self.dc.tick(now, self.events)
             last = now
 
     # ----- API ------------------------------------------------------------
     def state(self) -> dict:
+        now = time.time()
         with self._lock:
             stores = [e.snapshot() for e in self.stores.values()]
             events = [{"t": round(t - self.started_at), "store": s,
                        "text": txt} for t, s, txt in list(self.events)[:20]]
-        sim_seconds = (time.time() - self.started_at) * TIME_SCALE
+            dc = self.dc.snapshot(now) if self.dc is not None else None
+        sim_seconds = (now - self.started_at) * TIME_SCALE
         return {
+            "now": now,
+            "dc": dc,
             "sim_clock": "%02d:%02d" % (8 + int(sim_seconds // 3600) % 14,
                                         int(sim_seconds // 60) % 60),
             "time_scale": TIME_SCALE,
