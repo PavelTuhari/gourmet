@@ -1,0 +1,392 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Workspace" referent="RBX153">
+		<Properties>
+			<string name="Name">Workspace</string>
+		</Properties>
+		<Item class="Part" referent="RBX123">
+			<Properties>
+				<string name="Name">Ground</string>
+				<CoordinateFrame name="CFrame"><X>0</X><Y>-1</Y><Z>0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+				<Vector3 name="size"><X>5200</X><Y>2</Y><Z>5200</Z></Vector3>
+				<Color3uint8 name="Color3uint8">4291814328</Color3uint8>
+				<token name="Material">256</token>
+				<bool name="Anchored">true</bool>
+				<bool name="CanCollide">true</bool>
+				<token name="shape">1</token>
+				<float name="Transparency">0.0</float>
+				<token name="TopSurface">0</token>
+				<token name="BottomSurface">0</token>
+			</Properties>
+		</Item>
+		<Item class="Model" referent="RBX124">
+			<Properties>
+				<string name="Name">Stores</string>
+			</Properties>
+			<Item class="Part" referent="RBX125">
+				<Properties>
+					<string name="Name">«Гурман» №17 · Трёхсвятская</string>
+					<CoordinateFrame name="CFrame"><X>5.1</X><Y>18</Y><Z>49.3</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+					<Vector3 name="size"><X>36</X><Y>36</Y><Z>36</Z></Vector3>
+					<Color3uint8 name="Color3uint8">4293441100</Color3uint8>
+					<token name="Material">848</token>
+					<bool name="Anchored">true</bool>
+					<bool name="CanCollide">true</bool>
+					<token name="shape">1</token>
+					<float name="Transparency">0.0</float>
+					<token name="TopSurface">0</token>
+					<token name="BottomSurface">0</token>
+				</Properties>
+				<Item class="BillboardGui" referent="RBX126">
+					<Properties>
+						<string name="Name">Label</string>
+						<UDim2 name="Size"><XS>0</XS><XO>320</XO><YS>0</YS><YO>48</YO></UDim2>
+						<Vector3 name="StudsOffset"><X>0</X><Y>24</Y><Z>0</Z></Vector3>
+						<bool name="AlwaysOnTop">true</bool>
+						<float name="LightInfluence">0</float>
+						<float name="MaxDistance">220</float>
+						<bool name="Active">true</bool>
+					</Properties>
+					<Item class="TextLabel" referent="RBX127">
+						<Properties>
+							<string name="Name">Text</string>
+							<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+							<float name="BackgroundTransparency">1</float>
+							<string name="Text">🏪 «Гурман» №17 · Трёхсвятская</string>
+							<bool name="TextScaled">true</bool>
+							<Color3 name="TextColor3"><R>1</R><G>0.85</G><B>0.4</B></Color3>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="ProximityPrompt" referent="RBX128">
+					<Properties>
+						<string name="Name">Prompt</string>
+						<string name="ActionText">Открыть тренажёр</string>
+						<string name="ObjectText">«Гурман» №17 · Трёхсвятская</string>
+						<float name="HoldDuration">0.5</float>
+						<float name="MaxActivationDistance">8.0</float>
+						<bool name="RequiresLineOfSight">false</bool>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX129">
+				<Properties>
+					<string name="Name">«Гурман» №3 · пл. Ленина</string>
+					<CoordinateFrame name="CFrame"><X>50.7</X><Y>18</Y><Z>-17.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+					<Vector3 name="size"><X>36</X><Y>36</Y><Z>36</Z></Vector3>
+					<Color3uint8 name="Color3uint8">4293441100</Color3uint8>
+					<token name="Material">848</token>
+					<bool name="Anchored">true</bool>
+					<bool name="CanCollide">true</bool>
+					<token name="shape">1</token>
+					<float name="Transparency">0.0</float>
+					<token name="TopSurface">0</token>
+					<token name="BottomSurface">0</token>
+				</Properties>
+				<Item class="BillboardGui" referent="RBX130">
+					<Properties>
+						<string name="Name">Label</string>
+						<UDim2 name="Size"><XS>0</XS><XO>320</XO><YS>0</YS><YO>48</YO></UDim2>
+						<Vector3 name="StudsOffset"><X>0</X><Y>24</Y><Z>0</Z></Vector3>
+						<bool name="AlwaysOnTop">true</bool>
+						<float name="LightInfluence">0</float>
+						<float name="MaxDistance">220</float>
+						<bool name="Active">true</bool>
+					</Properties>
+					<Item class="TextLabel" referent="RBX131">
+						<Properties>
+							<string name="Name">Text</string>
+							<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+							<float name="BackgroundTransparency">1</float>
+							<string name="Text">🏪 «Гурман» №3 · пл. Ленина</string>
+							<bool name="TextScaled">true</bool>
+							<Color3 name="TextColor3"><R>1</R><G>0.85</G><B>0.4</B></Color3>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="ProximityPrompt" referent="RBX132">
+					<Properties>
+						<string name="Name">Prompt</string>
+						<string name="ActionText">Открыть тренажёр</string>
+						<string name="ObjectText">«Гурман» №3 · пл. Ленина</string>
+						<float name="HoldDuration">0.5</float>
+						<float name="MaxActivationDistance">8.0</float>
+						<bool name="RequiresLineOfSight">false</bool>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX133">
+				<Properties>
+					<string name="Name">«Гурман» №8 · Набережная</string>
+					<CoordinateFrame name="CFrame"><X>119.2</X><Y>18</Y><Z>-83.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+					<Vector3 name="size"><X>36</X><Y>36</Y><Z>36</Z></Vector3>
+					<Color3uint8 name="Color3uint8">4293441100</Color3uint8>
+					<token name="Material">848</token>
+					<bool name="Anchored">true</bool>
+					<bool name="CanCollide">true</bool>
+					<token name="shape">1</token>
+					<float name="Transparency">0.0</float>
+					<token name="TopSurface">0</token>
+					<token name="BottomSurface">0</token>
+				</Properties>
+				<Item class="BillboardGui" referent="RBX134">
+					<Properties>
+						<string name="Name">Label</string>
+						<UDim2 name="Size"><XS>0</XS><XO>320</XO><YS>0</YS><YO>48</YO></UDim2>
+						<Vector3 name="StudsOffset"><X>0</X><Y>24</Y><Z>0</Z></Vector3>
+						<bool name="AlwaysOnTop">true</bool>
+						<float name="LightInfluence">0</float>
+						<float name="MaxDistance">220</float>
+						<bool name="Active">true</bool>
+					</Properties>
+					<Item class="TextLabel" referent="RBX135">
+						<Properties>
+							<string name="Name">Text</string>
+							<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+							<float name="BackgroundTransparency">1</float>
+							<string name="Text">🏪 «Гурман» №8 · Набережная</string>
+							<bool name="TextScaled">true</bool>
+							<Color3 name="TextColor3"><R>1</R><G>0.85</G><B>0.4</B></Color3>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="ProximityPrompt" referent="RBX136">
+					<Properties>
+						<string name="Name">Prompt</string>
+						<string name="ActionText">Открыть тренажёр</string>
+						<string name="ObjectText">«Гурман» №8 · Набережная</string>
+						<float name="HoldDuration">0.5</float>
+						<float name="MaxActivationDistance">8.0</float>
+						<bool name="RequiresLineOfSight">false</bool>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX137">
+				<Properties>
+					<string name="Name">«Гурман» №21 · Заволжье</string>
+					<CoordinateFrame name="CFrame"><X>-17.8</X><Y>18</Y><Z>-185.6</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+					<Vector3 name="size"><X>36</X><Y>36</Y><Z>36</Z></Vector3>
+					<Color3uint8 name="Color3uint8">4293441100</Color3uint8>
+					<token name="Material">848</token>
+					<bool name="Anchored">true</bool>
+					<bool name="CanCollide">true</bool>
+					<token name="shape">1</token>
+					<float name="Transparency">0.0</float>
+					<token name="TopSurface">0</token>
+					<token name="BottomSurface">0</token>
+				</Properties>
+				<Item class="BillboardGui" referent="RBX138">
+					<Properties>
+						<string name="Name">Label</string>
+						<UDim2 name="Size"><XS>0</XS><XO>320</XO><YS>0</YS><YO>48</YO></UDim2>
+						<Vector3 name="StudsOffset"><X>0</X><Y>24</Y><Z>0</Z></Vector3>
+						<bool name="AlwaysOnTop">true</bool>
+						<float name="LightInfluence">0</float>
+						<float name="MaxDistance">220</float>
+						<bool name="Active">true</bool>
+					</Properties>
+					<Item class="TextLabel" referent="RBX139">
+						<Properties>
+							<string name="Name">Text</string>
+							<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+							<float name="BackgroundTransparency">1</float>
+							<string name="Text">🏪 «Гурман» №21 · Заволжье</string>
+							<bool name="TextScaled">true</bool>
+							<Color3 name="TextColor3"><R>1</R><G>0.85</G><B>0.4</B></Color3>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="ProximityPrompt" referent="RBX140">
+					<Properties>
+						<string name="Name">Prompt</string>
+						<string name="ActionText">Открыть тренажёр</string>
+						<string name="ObjectText">«Гурман» №21 · Заволжье</string>
+						<float name="HoldDuration">0.5</float>
+						<float name="MaxActivationDistance">8.0</float>
+						<bool name="RequiresLineOfSight">false</bool>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX141">
+				<Properties>
+					<string name="Name">«Гурман» №12 · Тверской пр-т</string>
+					<CoordinateFrame name="CFrame"><X>88.8</X><Y>18</Y><Z>146.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+					<Vector3 name="size"><X>36</X><Y>36</Y><Z>36</Z></Vector3>
+					<Color3uint8 name="Color3uint8">4293441100</Color3uint8>
+					<token name="Material">848</token>
+					<bool name="Anchored">true</bool>
+					<bool name="CanCollide">true</bool>
+					<token name="shape">1</token>
+					<float name="Transparency">0.0</float>
+					<token name="TopSurface">0</token>
+					<token name="BottomSurface">0</token>
+				</Properties>
+				<Item class="BillboardGui" referent="RBX142">
+					<Properties>
+						<string name="Name">Label</string>
+						<UDim2 name="Size"><XS>0</XS><XO>320</XO><YS>0</YS><YO>48</YO></UDim2>
+						<Vector3 name="StudsOffset"><X>0</X><Y>24</Y><Z>0</Z></Vector3>
+						<bool name="AlwaysOnTop">true</bool>
+						<float name="LightInfluence">0</float>
+						<float name="MaxDistance">220</float>
+						<bool name="Active">true</bool>
+					</Properties>
+					<Item class="TextLabel" referent="RBX143">
+						<Properties>
+							<string name="Name">Text</string>
+							<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+							<float name="BackgroundTransparency">1</float>
+							<string name="Text">🏪 «Гурман» №12 · Тверской пр-т</string>
+							<bool name="TextScaled">true</bool>
+							<Color3 name="TextColor3"><R>1</R><G>0.85</G><B>0.4</B></Color3>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="ProximityPrompt" referent="RBX144">
+					<Properties>
+						<string name="Name">Prompt</string>
+						<string name="ActionText">Открыть тренажёр</string>
+						<string name="ObjectText">«Гурман» №12 · Тверской пр-т</string>
+						<float name="HoldDuration">0.5</float>
+						<float name="MaxActivationDistance">8.0</float>
+						<bool name="RequiresLineOfSight">false</bool>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX145">
+				<Properties>
+					<string name="Name">«Гурман» №5 · Пролетарка</string>
+					<CoordinateFrame name="CFrame"><X>-246.0</X><Y>18</Y><Z>90.7</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+					<Vector3 name="size"><X>36</X><Y>36</Y><Z>36</Z></Vector3>
+					<Color3uint8 name="Color3uint8">4293441100</Color3uint8>
+					<token name="Material">848</token>
+					<bool name="Anchored">true</bool>
+					<bool name="CanCollide">true</bool>
+					<token name="shape">1</token>
+					<float name="Transparency">0.0</float>
+					<token name="TopSurface">0</token>
+					<token name="BottomSurface">0</token>
+				</Properties>
+				<Item class="BillboardGui" referent="RBX146">
+					<Properties>
+						<string name="Name">Label</string>
+						<UDim2 name="Size"><XS>0</XS><XO>320</XO><YS>0</YS><YO>48</YO></UDim2>
+						<Vector3 name="StudsOffset"><X>0</X><Y>24</Y><Z>0</Z></Vector3>
+						<bool name="AlwaysOnTop">true</bool>
+						<float name="LightInfluence">0</float>
+						<float name="MaxDistance">220</float>
+						<bool name="Active">true</bool>
+					</Properties>
+					<Item class="TextLabel" referent="RBX147">
+						<Properties>
+							<string name="Name">Text</string>
+							<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+							<float name="BackgroundTransparency">1</float>
+							<string name="Text">🏪 «Гурман» №5 · Пролетарка</string>
+							<bool name="TextScaled">true</bool>
+							<Color3 name="TextColor3"><R>1</R><G>0.85</G><B>0.4</B></Color3>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="ProximityPrompt" referent="RBX148">
+					<Properties>
+						<string name="Name">Prompt</string>
+						<string name="ActionText">Открыть тренажёр</string>
+						<string name="ObjectText">«Гурман» №5 · Пролетарка</string>
+						<float name="HoldDuration">0.5</float>
+						<float name="MaxActivationDistance">8.0</float>
+						<bool name="RequiresLineOfSight">false</bool>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX149">
+			<Properties>
+				<string name="Name">РЦ «Гурман»</string>
+				<CoordinateFrame name="CFrame"><X>-303.8</X><Y>24</Y><Z>303.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+				<Vector3 name="size"><X>90</X><Y>48</Y><Z>60</Z></Vector3>
+				<Color3uint8 name="Color3uint8">4287603640</Color3uint8>
+				<token name="Material">1088</token>
+				<bool name="Anchored">true</bool>
+				<bool name="CanCollide">true</bool>
+				<token name="shape">1</token>
+				<float name="Transparency">0.0</float>
+				<token name="TopSurface">0</token>
+				<token name="BottomSurface">0</token>
+			</Properties>
+			<Item class="BillboardGui" referent="RBX150">
+				<Properties>
+					<string name="Name">Label</string>
+					<UDim2 name="Size"><XS>0</XS><XO>340</XO><YS>0</YS><YO>52</YO></UDim2>
+					<Vector3 name="StudsOffset"><X>0</X><Y>32</Y><Z>0</Z></Vector3>
+					<bool name="AlwaysOnTop">true</bool>
+					<float name="LightInfluence">0</float>
+					<float name="MaxDistance">220</float>
+					<bool name="Active">true</bool>
+				</Properties>
+				<Item class="TextLabel" referent="RBX151">
+					<Properties>
+						<string name="Name">Text</string>
+						<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+						<float name="BackgroundTransparency">1</float>
+						<string name="Text">🏭 Логистический центр</string>
+						<bool name="TextScaled">true</bool>
+						<Color3 name="TextColor3"><R>0.75</R><G>0.85</G><B>1</B></Color3>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="SpawnLocation" referent="RBX152">
+			<Properties>
+				<string name="Name">Spawn</string>
+				<CoordinateFrame name="CFrame"><X>0</X><Y>1</Y><Z>0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+				<Vector3 name="size"><X>8</X><Y>1</Y><Z>8</Z></Vector3>
+				<Color3uint8 name="Color3uint8">4294967295</Color3uint8>
+				<token name="Material">272</token>
+				<bool name="Anchored">true</bool>
+				<bool name="CanCollide">true</bool>
+				<token name="shape">1</token>
+				<float name="Transparency">0.0</float>
+				<token name="TopSurface">0</token>
+				<token name="BottomSurface">0</token>
+				<bool name="Neutral">true</bool>
+			</Properties>
+		</Item>
+	</Item>
+	<Item class="Lighting" referent="RBX154">
+		<Properties>
+			<string name="Name">Lighting</string>
+		</Properties>
+	</Item>
+	<Item class="Players" referent="RBX155">
+		<Properties>
+			<string name="Name">Players</string>
+		</Properties>
+	</Item>
+	<Item class="Teams" referent="RBX156">
+		<Properties>
+			<string name="Name">Teams</string>
+		</Properties>
+	</Item>
+	<Item class="SoundService" referent="RBX157">
+		<Properties>
+			<string name="Name">SoundService</string>
+		</Properties>
+	</Item>
+	<Item class="ReplicatedStorage" referent="RBX158">
+		<Properties>
+			<string name="Name">ReplicatedStorage</string>
+		</Properties>
+	</Item>
+	<Item class="ServerScriptService" referent="RBX159">
+		<Properties>
+			<string name="Name">ServerScriptService</string>
+		</Properties>
+	</Item>
+	<Item class="StarterGui" referent="RBX160">
+		<Properties>
+			<string name="Name">StarterGui</string>
+		</Properties>
+	</Item>
+</roblox>

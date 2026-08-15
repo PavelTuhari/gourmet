@@ -1,0 +1,1543 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Workspace" referent="RBX115">
+		<Properties>
+			<string name="Name">Workspace</string>
+		</Properties>
+		<Item class="Part" referent="RBX1">
+			<Properties>
+				<string name="Name">Floor</string>
+				<CoordinateFrame name="CFrame"><X>14.8</X><Y>-0.5</Y><Z>11.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+				<Vector3 name="size"><X>37.6</X><Y>1</Y><Z>29.2</Z></Vector3>
+				<Color3uint8 name="Color3uint8">4292465348</Color3uint8>
+				<token name="Material">784</token>
+				<bool name="Anchored">true</bool>
+				<bool name="CanCollide">true</bool>
+				<token name="shape">1</token>
+				<float name="Transparency">0.0</float>
+				<token name="TopSurface">0</token>
+				<token name="BottomSurface">0</token>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX2">
+			<Properties>
+				<string name="Name">WallBack</string>
+				<CoordinateFrame name="CFrame"><X>14.8</X><Y>6.4</Y><Z>-2.8</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+				<Vector3 name="size"><X>37.6</X><Y>12.8</Y><Z>1</Z></Vector3>
+				<Color3uint8 name="Color3uint8">4291811038</Color3uint8>
+				<token name="Material">816</token>
+				<bool name="Anchored">true</bool>
+				<bool name="CanCollide">true</bool>
+				<token name="shape">1</token>
+				<float name="Transparency">0.0</float>
+				<token name="TopSurface">0</token>
+				<token name="BottomSurface">0</token>
+			</Properties>
+		</Item>
+		<Item class="Part" referent="RBX3">
+			<Properties>
+				<string name="Name">WallLeft</string>
+				<CoordinateFrame name="CFrame"><X>-3.6</X><Y>6.4</Y><Z>11.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+				<Vector3 name="size"><X>1</X><Y>12.8</Y><Z>29.2</Z></Vector3>
+				<Color3uint8 name="Color3uint8">4291218902</Color3uint8>
+				<token name="Material">816</token>
+				<bool name="Anchored">true</bool>
+				<bool name="CanCollide">true</bool>
+				<token name="shape">1</token>
+				<float name="Transparency">0.0</float>
+				<token name="TopSurface">0</token>
+				<token name="BottomSurface">0</token>
+			</Properties>
+		</Item>
+		<Item class="Model" referent="RBX4">
+			<Properties>
+				<string name="Name">PerishableZones</string>
+			</Properties>
+			<Item class="Part" referent="RBX5">
+				<Properties>
+					<string name="Name">Perishable1</string>
+					<CoordinateFrame name="CFrame"><X>4.8</X><Y>0.08</Y><Z>17.9</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+					<Vector3 name="size"><X>11.6</X><Y>0.15</Y><Z>5.8</Z></Vector3>
+					<Color3uint8 name="Color3uint8">4288664815</Color3uint8>
+					<token name="Material">1536</token>
+					<bool name="Anchored">true</bool>
+					<bool name="CanCollide">false</bool>
+					<token name="shape">1</token>
+					<float name="Transparency">0.55</float>
+					<token name="TopSurface">0</token>
+					<token name="BottomSurface">0</token>
+				</Properties>
+				<Item class="BillboardGui" referent="RBX6">
+					<Properties>
+						<string name="Name">Label</string>
+						<UDim2 name="Size"><XS>0</XS><XO>160</XO><YS>0</YS><YO>36</YO></UDim2>
+						<Vector3 name="StudsOffset"><X>0</X><Y>1.2</Y><Z>0</Z></Vector3>
+						<bool name="AlwaysOnTop">true</bool>
+						<float name="LightInfluence">0</float>
+						<float name="MaxDistance">220</float>
+						<bool name="Active">true</bool>
+					</Properties>
+					<Item class="TextLabel" referent="RBX7">
+						<Properties>
+							<string name="Name">Text</string>
+							<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+							<float name="BackgroundTransparency">1</float>
+							<string name="Text">❄ скоропорт</string>
+							<bool name="TextScaled">true</bool>
+							<Color3 name="TextColor3"><R>0.5</R><G>0.8</G><B>1</B></Color3>
+						</Properties>
+					</Item>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX8">
+				<Properties>
+					<string name="Name">Perishable2</string>
+					<CoordinateFrame name="CFrame"><X>6.1</X><Y>0.08</Y><Z>20.8</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+					<Vector3 name="size"><X>12.2</X><Y>0.15</Y><Z>5.6</Z></Vector3>
+					<Color3uint8 name="Color3uint8">4288664815</Color3uint8>
+					<token name="Material">1536</token>
+					<bool name="Anchored">true</bool>
+					<bool name="CanCollide">false</bool>
+					<token name="shape">1</token>
+					<float name="Transparency">0.55</float>
+					<token name="TopSurface">0</token>
+					<token name="BottomSurface">0</token>
+				</Properties>
+				<Item class="BillboardGui" referent="RBX9">
+					<Properties>
+						<string name="Name">Label</string>
+						<UDim2 name="Size"><XS>0</XS><XO>160</XO><YS>0</YS><YO>36</YO></UDim2>
+						<Vector3 name="StudsOffset"><X>0</X><Y>1.2</Y><Z>0</Z></Vector3>
+						<bool name="AlwaysOnTop">true</bool>
+						<float name="LightInfluence">0</float>
+						<float name="MaxDistance">220</float>
+						<bool name="Active">true</bool>
+					</Properties>
+					<Item class="TextLabel" referent="RBX10">
+						<Properties>
+							<string name="Name">Text</string>
+							<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+							<float name="BackgroundTransparency">1</float>
+							<string name="Text">❄ скоропорт</string>
+							<bool name="TextScaled">true</bool>
+							<Color3 name="TextColor3"><R>0.5</R><G>0.8</G><B>1</B></Color3>
+						</Properties>
+					</Item>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Model" referent="RBX11">
+			<Properties>
+				<string name="Name">Gondolas</string>
+			</Properties>
+			<Item class="Model" referent="RBX12">
+				<Properties>
+					<string name="Name">Стеллаж 1 (Бакалея)</string>
+				</Properties>
+				<Item class="Part" referent="RBX13">
+					<Properties>
+						<string name="Name">Side</string>
+						<CoordinateFrame name="CFrame"><X>-0.12</X><Y>4.2</Y><Z>1.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>0.24</X><Y>8.4</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4287600288</Color3uint8>
+						<token name="Material">1088</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="BillboardGui" referent="RBX29">
+						<Properties>
+							<string name="Name">Label</string>
+							<UDim2 name="Size"><XS>0</XS><XO>220</XO><YS>0</YS><YO>44</YO></UDim2>
+							<Vector3 name="StudsOffset"><X>0</X><Y>10.9</Y><Z>0</Z></Vector3>
+							<bool name="AlwaysOnTop">true</bool>
+							<float name="LightInfluence">0</float>
+							<float name="MaxDistance">220</float>
+							<bool name="Active">true</bool>
+						</Properties>
+						<Item class="TextLabel" referent="RBX30">
+							<Properties>
+								<string name="Name">Text</string>
+								<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+								<float name="BackgroundTransparency">1</float>
+								<string name="Text">Стеллаж 1 (Бакалея)</string>
+								<bool name="TextScaled">true</bool>
+								<Color3 name="TextColor3"><R>1</R><G>1</G><B>1</B></Color3>
+							</Properties>
+						</Item>
+					</Item>
+				</Item>
+				<Item class="Part" referent="RBX14">
+					<Properties>
+						<string name="Name">Side</string>
+						<CoordinateFrame name="CFrame"><X>9.72</X><Y>4.2</Y><Z>1.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>0.24</X><Y>8.4</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4287600288</Color3uint8>
+						<token name="Material">1088</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX15">
+					<Properties>
+						<string name="Name">Back</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>4.2</Y><Z>2.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>8.4</Y><Z>0.24</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4288324011</Color3uint8>
+						<token name="Material">1088</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX16">
+					<Properties>
+						<string name="Name">Shelf</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>0.34</Y><Z>1.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>0.12</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4292139488</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX17">
+					<Properties>
+						<string name="Name">Shelf</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>1.94</Y><Z>1.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>0.12</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4292139488</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX18">
+					<Properties>
+						<string name="Name">Shelf</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>3.54</Y><Z>1.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>0.12</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4292139488</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX19">
+					<Properties>
+						<string name="Name">Shelf</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>5.14</Y><Z>1.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>0.12</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4292139488</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX20">
+					<Properties>
+						<string name="Name">Shelf</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>6.74</Y><Z>1.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>0.12</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4292139488</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX21">
+					<Properties>
+						<string name="Name">Масло оливковое 1 л</string>
+						<CoordinateFrame name="CFrame"><X>1.64</X><Y>1.0</Y><Z>0.62</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>2.84</X><Y>1.2</Y><Z>1.08</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4283333031</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="ProximityPrompt" referent="RBX22">
+						<Properties>
+							<string name="Name">Prompt</string>
+							<string name="ActionText">Пополнить</string>
+							<string name="ObjectText">Масло оливковое 1 л</string>
+							<float name="HoldDuration">0.5</float>
+							<float name="MaxActivationDistance">8.0</float>
+							<bool name="RequiresLineOfSight">false</bool>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="Part" referent="RBX23">
+					<Properties>
+						<string name="Name">Хлопья овсяные 500 г</string>
+						<CoordinateFrame name="CFrame"><X>2.08</X><Y>4.04</Y><Z>0.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>3.32</X><Y>0.88</Y><Z>0.84</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4283333031</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="ProximityPrompt" referent="RBX24">
+						<Properties>
+							<string name="Name">Prompt</string>
+							<string name="ActionText">Пополнить</string>
+							<string name="ObjectText">Хлопья овсяные 500 г</string>
+							<float name="HoldDuration">0.5</float>
+							<float name="MaxActivationDistance">8.0</float>
+							<bool name="RequiresLineOfSight">false</bool>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="Part" referent="RBX25">
+					<Properties>
+						<string name="Name">Мюсли «Утро» 750 г</string>
+						<CoordinateFrame name="CFrame"><X>2.0</X><Y>5.68</Y><Z>0.56</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>3.16</X><Y>0.96</Y><Z>0.96</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4283333031</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="ProximityPrompt" referent="RBX26">
+						<Properties>
+							<string name="Name">Prompt</string>
+							<string name="ActionText">Пополнить</string>
+							<string name="ObjectText">Мюсли «Утро» 750 г</string>
+							<float name="HoldDuration">0.5</float>
+							<float name="MaxActivationDistance">8.0</float>
+							<bool name="RequiresLineOfSight">false</bool>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="Part" referent="RBX27">
+					<Properties>
+						<string name="Name">Орехи микс 200 г</string>
+						<CoordinateFrame name="CFrame"><X>2.0</X><Y>7.16</Y><Z>0.44</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>2.36</X><Y>0.72</Y><Z>0.72</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4289755809</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="ProximityPrompt" referent="RBX28">
+						<Properties>
+							<string name="Name">Prompt</string>
+							<string name="ActionText">Пополнить</string>
+							<string name="ObjectText">Орехи микс 200 г</string>
+							<float name="HoldDuration">0.5</float>
+							<float name="MaxActivationDistance">8.0</float>
+							<bool name="RequiresLineOfSight">false</bool>
+						</Properties>
+					</Item>
+				</Item>
+			</Item>
+			<Item class="Model" referent="RBX31">
+				<Properties>
+					<string name="Name">Стеллаж 2 (Напитки)</string>
+				</Properties>
+				<Item class="Part" referent="RBX32">
+					<Properties>
+						<string name="Name">Side</string>
+						<CoordinateFrame name="CFrame"><X>-0.12</X><Y>4.2</Y><Z>9.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>0.24</X><Y>8.4</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4287600288</Color3uint8>
+						<token name="Material">1088</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="BillboardGui" referent="RBX48">
+						<Properties>
+							<string name="Name">Label</string>
+							<UDim2 name="Size"><XS>0</XS><XO>220</XO><YS>0</YS><YO>44</YO></UDim2>
+							<Vector3 name="StudsOffset"><X>0</X><Y>10.9</Y><Z>0</Z></Vector3>
+							<bool name="AlwaysOnTop">true</bool>
+							<float name="LightInfluence">0</float>
+							<float name="MaxDistance">220</float>
+							<bool name="Active">true</bool>
+						</Properties>
+						<Item class="TextLabel" referent="RBX49">
+							<Properties>
+								<string name="Name">Text</string>
+								<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+								<float name="BackgroundTransparency">1</float>
+								<string name="Text">Стеллаж 2 (Напитки)</string>
+								<bool name="TextScaled">true</bool>
+								<Color3 name="TextColor3"><R>1</R><G>1</G><B>1</B></Color3>
+							</Properties>
+						</Item>
+					</Item>
+				</Item>
+				<Item class="Part" referent="RBX33">
+					<Properties>
+						<string name="Name">Side</string>
+						<CoordinateFrame name="CFrame"><X>9.72</X><Y>4.2</Y><Z>9.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>0.24</X><Y>8.4</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4287600288</Color3uint8>
+						<token name="Material">1088</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX34">
+					<Properties>
+						<string name="Name">Back</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>4.2</Y><Z>10.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>8.4</Y><Z>0.24</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4288324011</Color3uint8>
+						<token name="Material">1088</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX35">
+					<Properties>
+						<string name="Name">Shelf</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>0.34</Y><Z>9.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>0.12</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4292139488</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX36">
+					<Properties>
+						<string name="Name">Shelf</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>1.94</Y><Z>9.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>0.12</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4292139488</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX37">
+					<Properties>
+						<string name="Name">Shelf</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>3.54</Y><Z>9.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>0.12</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4292139488</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX38">
+					<Properties>
+						<string name="Name">Shelf</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>5.14</Y><Z>9.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>0.12</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4292139488</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX39">
+					<Properties>
+						<string name="Name">Shelf</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>6.74</Y><Z>9.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>0.12</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4292139488</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX40">
+					<Properties>
+						<string name="Name">Вода минеральная 5 л</string>
+						<CoordinateFrame name="CFrame"><X>2.48</X><Y>1.02</Y><Z>8.98</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>4.52</X><Y>1.24</Y><Z>1.8</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4294086187</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="ProximityPrompt" referent="RBX41">
+						<Properties>
+							<string name="Name">Prompt</string>
+							<string name="ActionText">Пополнить</string>
+							<string name="ObjectText">Вода минеральная 5 л</string>
+							<float name="HoldDuration">0.5</float>
+							<float name="MaxActivationDistance">8.0</float>
+							<bool name="RequiresLineOfSight">false</bool>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="Part" referent="RBX42">
+					<Properties>
+						<string name="Name">Квас «Традиция» 2 л</string>
+						<CoordinateFrame name="CFrame"><X>2.38</X><Y>2.66</Y><Z>8.74</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>3.92</X><Y>1.32</Y><Z>1.32</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4294086187</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="ProximityPrompt" referent="RBX43">
+						<Properties>
+							<string name="Name">Prompt</string>
+							<string name="ActionText">Пополнить</string>
+							<string name="ObjectText">Квас «Традиция» 2 л</string>
+							<float name="HoldDuration">0.5</float>
+							<float name="MaxActivationDistance">8.0</float>
+							<bool name="RequiresLineOfSight">false</bool>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="Part" referent="RBX44">
+					<Properties>
+						<string name="Name">Лимонад «Дюшес» 1.5 л</string>
+						<CoordinateFrame name="CFrame"><X>1.6</X><Y>5.84</Y><Z>8.68</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>2.36</X><Y>1.28</Y><Z>1.2</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4294086187</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="ProximityPrompt" referent="RBX45">
+						<Properties>
+							<string name="Name">Prompt</string>
+							<string name="ActionText">Пополнить</string>
+							<string name="ObjectText">Лимонад «Дюшес» 1.5 л</string>
+							<float name="HoldDuration">0.5</float>
+							<float name="MaxActivationDistance">8.0</float>
+							<bool name="RequiresLineOfSight">false</bool>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="Part" referent="RBX46">
+					<Properties>
+						<string name="Name">Сухарики ржаные 100 г</string>
+						<CoordinateFrame name="CFrame"><X>2.36</X><Y>7.12</Y><Z>8.38</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>3.48</X><Y>0.64</Y><Z>0.6</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4289755809</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="ProximityPrompt" referent="RBX47">
+						<Properties>
+							<string name="Name">Prompt</string>
+							<string name="ActionText">Пополнить</string>
+							<string name="ObjectText">Сухарики ржаные 100 г</string>
+							<float name="HoldDuration">0.5</float>
+							<float name="MaxActivationDistance">8.0</float>
+							<bool name="RequiresLineOfSight">false</bool>
+						</Properties>
+					</Item>
+				</Item>
+			</Item>
+			<Item class="Model" referent="RBX50">
+				<Properties>
+					<string name="Name">Стеллаж 3 (Молочка и снеки)</string>
+				</Properties>
+				<Item class="Part" referent="RBX51">
+					<Properties>
+						<string name="Name">Side</string>
+						<CoordinateFrame name="CFrame"><X>-0.12</X><Y>4.2</Y><Z>17.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>0.24</X><Y>8.4</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4287600288</Color3uint8>
+						<token name="Material">1088</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="BillboardGui" referent="RBX69">
+						<Properties>
+							<string name="Name">Label</string>
+							<UDim2 name="Size"><XS>0</XS><XO>220</XO><YS>0</YS><YO>44</YO></UDim2>
+							<Vector3 name="StudsOffset"><X>0</X><Y>10.9</Y><Z>0</Z></Vector3>
+							<bool name="AlwaysOnTop">true</bool>
+							<float name="LightInfluence">0</float>
+							<float name="MaxDistance">220</float>
+							<bool name="Active">true</bool>
+						</Properties>
+						<Item class="TextLabel" referent="RBX70">
+							<Properties>
+								<string name="Name">Text</string>
+								<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+								<float name="BackgroundTransparency">1</float>
+								<string name="Text">Стеллаж 3 (Молочка и снеки)</string>
+								<bool name="TextScaled">true</bool>
+								<Color3 name="TextColor3"><R>1</R><G>1</G><B>1</B></Color3>
+							</Properties>
+						</Item>
+					</Item>
+				</Item>
+				<Item class="Part" referent="RBX52">
+					<Properties>
+						<string name="Name">Side</string>
+						<CoordinateFrame name="CFrame"><X>9.72</X><Y>4.2</Y><Z>17.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>0.24</X><Y>8.4</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4287600288</Color3uint8>
+						<token name="Material">1088</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX53">
+					<Properties>
+						<string name="Name">Back</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>4.2</Y><Z>18.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>8.4</Y><Z>0.24</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4288324011</Color3uint8>
+						<token name="Material">1088</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX54">
+					<Properties>
+						<string name="Name">Shelf</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>0.34</Y><Z>17.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>0.12</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4292139488</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX55">
+					<Properties>
+						<string name="Name">Shelf</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>1.94</Y><Z>17.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>0.12</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4292139488</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX56">
+					<Properties>
+						<string name="Name">Shelf</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>3.54</Y><Z>17.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>0.12</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4292139488</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX57">
+					<Properties>
+						<string name="Name">Shelf</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>5.14</Y><Z>17.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>0.12</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4292139488</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX58">
+					<Properties>
+						<string name="Name">Shelf</string>
+						<CoordinateFrame name="CFrame"><X>4.8</X><Y>6.74</Y><Z>17.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>9.6</X><Y>0.12</Y><Z>2.0</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4292139488</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+				</Item>
+				<Item class="Part" referent="RBX59">
+					<Properties>
+						<string name="Name">Молоко 3.2% 1 л</string>
+						<CoordinateFrame name="CFrame"><X>1.18</X><Y>2.5</Y><Z>16.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>1.92</X><Y>1.0</Y><Z>0.84</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4284064079</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="ProximityPrompt" referent="RBX60">
+						<Properties>
+							<string name="Name">Prompt</string>
+							<string name="ActionText">Пополнить</string>
+							<string name="ObjectText">Молоко 3.2% 1 л</string>
+							<float name="HoldDuration">0.5</float>
+							<float name="MaxActivationDistance">8.0</float>
+							<bool name="RequiresLineOfSight">false</bool>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="Part" referent="RBX61">
+					<Properties>
+						<string name="Name">Кефир 1% 0.9 л</string>
+						<CoordinateFrame name="CFrame"><X>3.24</X><Y>2.48</Y><Z>16.5</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>1.64</X><Y>0.96</Y><Z>0.84</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4284064079</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="ProximityPrompt" referent="RBX62">
+						<Properties>
+							<string name="Name">Prompt</string>
+							<string name="ActionText">Пополнить</string>
+							<string name="ObjectText">Кефир 1% 0.9 л</string>
+							<float name="HoldDuration">0.5</float>
+							<float name="MaxActivationDistance">8.0</float>
+							<bool name="RequiresLineOfSight">false</bool>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="Part" referent="RBX63">
+					<Properties>
+						<string name="Name">Сыр «Гурман» 300 г</string>
+						<CoordinateFrame name="CFrame"><X>2.32</X><Y>3.76</Y><Z>16.68</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>3.8</X><Y>0.32</Y><Z>1.2</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4284064079</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="ProximityPrompt" referent="RBX64">
+						<Properties>
+							<string name="Name">Prompt</string>
+							<string name="ActionText">Пополнить</string>
+							<string name="ObjectText">Сыр «Гурман» 300 г</string>
+							<float name="HoldDuration">0.5</float>
+							<float name="MaxActivationDistance">8.0</float>
+							<bool name="RequiresLineOfSight">false</bool>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="Part" referent="RBX65">
+					<Properties>
+						<string name="Name">Чипсы «Хруст» 150 г</string>
+						<CoordinateFrame name="CFrame"><X>2.8</X><Y>5.76</Y><Z>16.62</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>4.76</X><Y>1.12</Y><Z>1.08</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4289755809</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="ProximityPrompt" referent="RBX66">
+						<Properties>
+							<string name="Name">Prompt</string>
+							<string name="ActionText">Пополнить</string>
+							<string name="ObjectText">Чипсы «Хруст» 150 г</string>
+							<float name="HoldDuration">0.5</float>
+							<float name="MaxActivationDistance">8.0</float>
+							<bool name="RequiresLineOfSight">false</bool>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="Part" referent="RBX67">
+					<Properties>
+						<string name="Name">Орехи микс 200 г</string>
+						<CoordinateFrame name="CFrame"><X>1.36</X><Y>7.16</Y><Z>16.44</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+						<Vector3 name="size"><X>1.88</X><Y>0.72</Y><Z>0.72</Z></Vector3>
+						<Color3uint8 name="Color3uint8">4289755809</Color3uint8>
+						<token name="Material">272</token>
+						<bool name="Anchored">true</bool>
+						<bool name="CanCollide">true</bool>
+						<token name="shape">1</token>
+						<float name="Transparency">0.0</float>
+						<token name="TopSurface">0</token>
+						<token name="BottomSurface">0</token>
+					</Properties>
+					<Item class="ProximityPrompt" referent="RBX68">
+						<Properties>
+							<string name="Name">Prompt</string>
+							<string name="ActionText">Пополнить</string>
+							<string name="ObjectText">Орехи микс 200 г</string>
+							<float name="HoldDuration">0.5</float>
+							<float name="MaxActivationDistance">8.0</float>
+							<bool name="RequiresLineOfSight">false</bool>
+						</Properties>
+					</Item>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Model" referent="RBX71">
+			<Properties>
+				<string name="Name">Fridges</string>
+			</Properties>
+			<Item class="Part" referent="RBX72">
+				<Properties>
+					<string name="Name">ХВ-1</string>
+					<CoordinateFrame name="CFrame"><X>3.3</X><Y>1.6</Y><Z>21.3</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+					<Vector3 name="size"><X>4.6</X><Y>3.2</Y><Z>2.2</Z></Vector3>
+					<Color3uint8 name="Color3uint8">4291814898</Color3uint8>
+					<token name="Material">1568</token>
+					<bool name="Anchored">true</bool>
+					<bool name="CanCollide">true</bool>
+					<token name="shape">1</token>
+					<float name="Transparency">0.25</float>
+					<token name="TopSurface">0</token>
+					<token name="BottomSurface">0</token>
+				</Properties>
+				<Item class="BillboardGui" referent="RBX73">
+					<Properties>
+						<string name="Name">Label</string>
+						<UDim2 name="Size"><XS>0</XS><XO>170</XO><YS>0</YS><YO>36</YO></UDim2>
+						<Vector3 name="StudsOffset"><X>0</X><Y>2.4</Y><Z>0</Z></Vector3>
+						<bool name="AlwaysOnTop">true</bool>
+						<float name="LightInfluence">0</float>
+						<float name="MaxDistance">220</float>
+						<bool name="Active">true</bool>
+					</Properties>
+					<Item class="TextLabel" referent="RBX74">
+						<Properties>
+							<string name="Name">Text</string>
+							<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+							<float name="BackgroundTransparency">1</float>
+							<string name="Text">🧊 ХВ-1 · 4.0°C</string>
+							<bool name="TextScaled">true</bool>
+							<Color3 name="TextColor3"><R>0.55</R><G>0.8</G><B>1</B></Color3>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="ProximityPrompt" referent="RBX75">
+					<Properties>
+						<string name="Name">Prompt</string>
+						<string name="ActionText">Проверить</string>
+						<string name="ObjectText">ХВ-1</string>
+						<float name="HoldDuration">0.5</float>
+						<float name="MaxActivationDistance">8.0</float>
+						<bool name="RequiresLineOfSight">false</bool>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX76">
+				<Properties>
+					<string name="Name">ХВ-2</string>
+					<CoordinateFrame name="CFrame"><X>8.9</X><Y>1.6</Y><Z>21.3</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+					<Vector3 name="size"><X>4.6</X><Y>3.2</Y><Z>2.2</Z></Vector3>
+					<Color3uint8 name="Color3uint8">4291814898</Color3uint8>
+					<token name="Material">1568</token>
+					<bool name="Anchored">true</bool>
+					<bool name="CanCollide">true</bool>
+					<token name="shape">1</token>
+					<float name="Transparency">0.25</float>
+					<token name="TopSurface">0</token>
+					<token name="BottomSurface">0</token>
+				</Properties>
+				<Item class="BillboardGui" referent="RBX77">
+					<Properties>
+						<string name="Name">Label</string>
+						<UDim2 name="Size"><XS>0</XS><XO>170</XO><YS>0</YS><YO>36</YO></UDim2>
+						<Vector3 name="StudsOffset"><X>0</X><Y>2.4</Y><Z>0</Z></Vector3>
+						<bool name="AlwaysOnTop">true</bool>
+						<float name="LightInfluence">0</float>
+						<float name="MaxDistance">220</float>
+						<bool name="Active">true</bool>
+					</Properties>
+					<Item class="TextLabel" referent="RBX78">
+						<Properties>
+							<string name="Name">Text</string>
+							<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+							<float name="BackgroundTransparency">1</float>
+							<string name="Text">🧊 ХВ-2 · 4.0°C</string>
+							<bool name="TextScaled">true</bool>
+							<Color3 name="TextColor3"><R>0.55</R><G>0.8</G><B>1</B></Color3>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="ProximityPrompt" referent="RBX79">
+					<Properties>
+						<string name="Name">Prompt</string>
+						<string name="ActionText">Проверить</string>
+						<string name="ObjectText">ХВ-2</string>
+						<float name="HoldDuration">0.5</float>
+						<float name="MaxActivationDistance">8.0</float>
+						<bool name="RequiresLineOfSight">false</bool>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Model" referent="RBX80">
+			<Properties>
+				<string name="Name">Checkout</string>
+			</Properties>
+			<Item class="Part" referent="RBX81">
+				<Properties>
+					<string name="Name">Касса 1</string>
+					<CoordinateFrame name="CFrame"><X>24.6</X><Y>1.0</Y><Z>4.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+					<Vector3 name="size"><X>3.2</X><Y>2.0</Y><Z>2.4</Z></Vector3>
+					<Color3uint8 name="Color3uint8">4289312454</Color3uint8>
+					<token name="Material">272</token>
+					<bool name="Anchored">true</bool>
+					<bool name="CanCollide">true</bool>
+					<token name="shape">1</token>
+					<float name="Transparency">0.0</float>
+					<token name="TopSurface">0</token>
+					<token name="BottomSurface">0</token>
+				</Properties>
+				<Item class="BillboardGui" referent="RBX82">
+					<Properties>
+						<string name="Name">Label</string>
+						<UDim2 name="Size"><XS>0</XS><XO>220</XO><YS>0</YS><YO>44</YO></UDim2>
+						<Vector3 name="StudsOffset"><X>0</X><Y>2.2</Y><Z>0</Z></Vector3>
+						<bool name="AlwaysOnTop">true</bool>
+						<float name="LightInfluence">0</float>
+						<float name="MaxDistance">220</float>
+						<bool name="Active">true</bool>
+					</Properties>
+					<Item class="TextLabel" referent="RBX83">
+						<Properties>
+							<string name="Name">Text</string>
+							<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+							<float name="BackgroundTransparency">1</float>
+							<string name="Text">🧾 Касса 1</string>
+							<bool name="TextScaled">true</bool>
+							<Color3 name="TextColor3"><R>1</R><G>1</G><B>1</B></Color3>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="ProximityPrompt" referent="RBX84">
+					<Properties>
+						<string name="Name">Prompt</string>
+						<string name="ActionText">Обслужить покупателя</string>
+						<string name="ObjectText">Касса 1</string>
+						<float name="HoldDuration">1.0</float>
+						<float name="MaxActivationDistance">8.0</float>
+						<bool name="RequiresLineOfSight">false</bool>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX85">
+				<Properties>
+					<string name="Name">Касса 2</string>
+					<CoordinateFrame name="CFrame"><X>28.0</X><Y>1.0</Y><Z>4.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+					<Vector3 name="size"><X>3.2</X><Y>2.0</Y><Z>2.4</Z></Vector3>
+					<Color3uint8 name="Color3uint8">4289312454</Color3uint8>
+					<token name="Material">272</token>
+					<bool name="Anchored">true</bool>
+					<bool name="CanCollide">true</bool>
+					<token name="shape">1</token>
+					<float name="Transparency">0.0</float>
+					<token name="TopSurface">0</token>
+					<token name="BottomSurface">0</token>
+				</Properties>
+				<Item class="BillboardGui" referent="RBX86">
+					<Properties>
+						<string name="Name">Label</string>
+						<UDim2 name="Size"><XS>0</XS><XO>220</XO><YS>0</YS><YO>44</YO></UDim2>
+						<Vector3 name="StudsOffset"><X>0</X><Y>2.2</Y><Z>0</Z></Vector3>
+						<bool name="AlwaysOnTop">true</bool>
+						<float name="LightInfluence">0</float>
+						<float name="MaxDistance">220</float>
+						<bool name="Active">true</bool>
+					</Properties>
+					<Item class="TextLabel" referent="RBX87">
+						<Properties>
+							<string name="Name">Text</string>
+							<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+							<float name="BackgroundTransparency">1</float>
+							<string name="Text">🧾 Касса 2</string>
+							<bool name="TextScaled">true</bool>
+							<Color3 name="TextColor3"><R>1</R><G>1</G><B>1</B></Color3>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="ProximityPrompt" referent="RBX88">
+					<Properties>
+						<string name="Name">Prompt</string>
+						<string name="ActionText">Обслужить покупателя</string>
+						<string name="ObjectText">Касса 2</string>
+						<float name="HoldDuration">1.0</float>
+						<float name="MaxActivationDistance">8.0</float>
+						<bool name="RequiresLineOfSight">false</bool>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="Part" referent="RBX89">
+				<Properties>
+					<string name="Name">Зона СКО</string>
+					<CoordinateFrame name="CFrame"><X>19.4</X><Y>0.1</Y><Z>4.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+					<Vector3 name="size"><X>5.2</X><Y>0.2</Y><Z>6.4</Z></Vector3>
+					<Color3uint8 name="Color3uint8">4286556144</Color3uint8>
+					<token name="Material">288</token>
+					<bool name="Anchored">true</bool>
+					<bool name="CanCollide">false</bool>
+					<token name="shape">1</token>
+					<float name="Transparency">0.4</float>
+					<token name="TopSurface">0</token>
+					<token name="BottomSurface">0</token>
+				</Properties>
+				<Item class="BillboardGui" referent="RBX90">
+					<Properties>
+						<string name="Name">Label</string>
+						<UDim2 name="Size"><XS>0</XS><XO>240</XO><YS>0</YS><YO>36</YO></UDim2>
+						<Vector3 name="StudsOffset"><X>0</X><Y>1.6</Y><Z>0</Z></Vector3>
+						<bool name="AlwaysOnTop">true</bool>
+						<float name="LightInfluence">0</float>
+						<float name="MaxDistance">220</float>
+						<bool name="Active">true</bool>
+					</Properties>
+					<Item class="TextLabel" referent="RBX91">
+						<Properties>
+							<string name="Name">Text</string>
+							<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+							<float name="BackgroundTransparency">1</float>
+							<string name="Text">СКО — кассы самообслуживания</string>
+							<bool name="TextScaled">true</bool>
+							<Color3 name="TextColor3"><R>0.55</R><G>0.7</G><B>1</B></Color3>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="ProximityPrompt" referent="RBX92">
+					<Properties>
+						<string name="Name">Prompt</string>
+						<string name="ActionText">Обслужить покупателя</string>
+						<string name="ObjectText">СКО</string>
+						<float name="HoldDuration">1.0</float>
+						<float name="MaxActivationDistance">8.0</float>
+						<bool name="RequiresLineOfSight">false</bool>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX93">
+			<Properties>
+				<string name="Name">Весы</string>
+				<CoordinateFrame name="CFrame"><X>18.4</X><Y>1.12</Y><Z>18.4</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+				<Vector3 name="size"><X>2.0</X><Y>2.2</Y><Z>1.6</Z></Vector3>
+				<Color3uint8 name="Color3uint8">4290364623</Color3uint8>
+				<token name="Material">1088</token>
+				<bool name="Anchored">true</bool>
+				<bool name="CanCollide">true</bool>
+				<token name="shape">1</token>
+				<float name="Transparency">0.0</float>
+				<token name="TopSurface">0</token>
+				<token name="BottomSurface">0</token>
+			</Properties>
+			<Item class="BillboardGui" referent="RBX94">
+				<Properties>
+					<string name="Name">Label</string>
+					<UDim2 name="Size"><XS>0</XS><XO>220</XO><YS>0</YS><YO>44</YO></UDim2>
+					<Vector3 name="StudsOffset"><X>0</X><Y>1.9</Y><Z>0</Z></Vector3>
+					<bool name="AlwaysOnTop">true</bool>
+					<float name="LightInfluence">0</float>
+					<float name="MaxDistance">220</float>
+					<bool name="Active">true</bool>
+				</Properties>
+				<Item class="TextLabel" referent="RBX95">
+					<Properties>
+						<string name="Name">Text</string>
+						<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+						<float name="BackgroundTransparency">1</float>
+						<string name="Text">⚖ Весы</string>
+						<bool name="TextScaled">true</bool>
+						<Color3 name="TextColor3"><R>1</R><G>1</G><B>1</B></Color3>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="ProximityPrompt" referent="RBX96">
+				<Properties>
+					<string name="Name">Prompt</string>
+					<string name="ActionText">Взвесить</string>
+					<string name="ObjectText">Весы</string>
+					<float name="HoldDuration">0.5</float>
+					<float name="MaxActivationDistance">8.0</float>
+					<bool name="RequiresLineOfSight">false</bool>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Model" referent="RBX97">
+			<Properties>
+				<string name="Name">Storeroom</string>
+			</Properties>
+			<Item class="Part" referent="RBX98">
+				<Properties>
+					<string name="Name">Дверь склада</string>
+					<CoordinateFrame name="CFrame"><X>26.4</X><Y>4.4</Y><Z>-2.48</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+					<Vector3 name="size"><X>4.4</X><Y>8.8</Y><Z>0.48</Z></Vector3>
+					<Color3uint8 name="Color3uint8">4287458915</Color3uint8>
+					<token name="Material">528</token>
+					<bool name="Anchored">true</bool>
+					<bool name="CanCollide">true</bool>
+					<token name="shape">1</token>
+					<float name="Transparency">0.0</float>
+					<token name="TopSurface">0</token>
+					<token name="BottomSurface">0</token>
+				</Properties>
+				<Item class="BillboardGui" referent="RBX99">
+					<Properties>
+						<string name="Name">Label</string>
+						<UDim2 name="Size"><XS>0</XS><XO>220</XO><YS>0</YS><YO>44</YO></UDim2>
+						<Vector3 name="StudsOffset"><X>0</X><Y>5.2</Y><Z>0</Z></Vector3>
+						<bool name="AlwaysOnTop">true</bool>
+						<float name="LightInfluence">0</float>
+						<float name="MaxDistance">220</float>
+						<bool name="Active">true</bool>
+					</Properties>
+					<Item class="TextLabel" referent="RBX100">
+						<Properties>
+							<string name="Name">Text</string>
+							<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+							<float name="BackgroundTransparency">1</float>
+							<string name="Text">📦 СКЛАД</string>
+							<bool name="TextScaled">true</bool>
+							<Color3 name="TextColor3"><R>1</R><G>1</G><B>1</B></Color3>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="ProximityPrompt" referent="RBX101">
+					<Properties>
+						<string name="Name">Prompt</string>
+						<string name="ActionText">Взять товар</string>
+						<string name="ObjectText">Склад</string>
+						<float name="HoldDuration">0.5</float>
+						<float name="MaxActivationDistance">8.0</float>
+						<bool name="RequiresLineOfSight">false</bool>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX102">
+			<Properties>
+				<string name="Name">Вход</string>
+				<CoordinateFrame name="CFrame"><X>28.0</X><Y>0.07</Y><Z>21.2</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+				<Vector3 name="size"><X>4.0</X><Y>0.15</Y><Z>2.0</Z></Vector3>
+				<Color3uint8 name="Color3uint8">4288666792</Color3uint8>
+				<token name="Material">288</token>
+				<bool name="Anchored">true</bool>
+				<bool name="CanCollide">false</bool>
+				<token name="shape">1</token>
+				<float name="Transparency">0.3</float>
+				<token name="TopSurface">0</token>
+				<token name="BottomSurface">0</token>
+			</Properties>
+			<Item class="BillboardGui" referent="RBX103">
+				<Properties>
+					<string name="Name">Label</string>
+					<UDim2 name="Size"><XS>0</XS><XO>120</XO><YS>0</YS><YO>32</YO></UDim2>
+					<Vector3 name="StudsOffset"><X>0</X><Y>1.2</Y><Z>0</Z></Vector3>
+					<bool name="AlwaysOnTop">true</bool>
+					<float name="LightInfluence">0</float>
+					<float name="MaxDistance">220</float>
+					<bool name="Active">true</bool>
+				</Properties>
+				<Item class="TextLabel" referent="RBX104">
+					<Properties>
+						<string name="Name">Text</string>
+						<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+						<float name="BackgroundTransparency">1</float>
+						<string name="Text">ВХОД</string>
+						<bool name="TextScaled">true</bool>
+						<Color3 name="TextColor3"><R>0.4</R><G>0.85</G><B>0.5</B></Color3>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="Part" referent="RBX105">
+			<Properties>
+				<string name="Name">Выход</string>
+				<CoordinateFrame name="CFrame"><X>29.4</X><Y>0.07</Y><Z>1.0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+				<Vector3 name="size"><X>4.0</X><Y>0.15</Y><Z>1.8</Z></Vector3>
+				<Color3uint8 name="Color3uint8">4293964717</Color3uint8>
+				<token name="Material">288</token>
+				<bool name="Anchored">true</bool>
+				<bool name="CanCollide">false</bool>
+				<token name="shape">1</token>
+				<float name="Transparency">0.3</float>
+				<token name="TopSurface">0</token>
+				<token name="BottomSurface">0</token>
+			</Properties>
+		</Item>
+		<Item class="SpawnLocation" referent="RBX106">
+			<Properties>
+				<string name="Name">Spawn</string>
+				<CoordinateFrame name="CFrame"><X>22.4</X><Y>0.3</Y><Z>12.8</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+				<Vector3 name="size"><X>6.0</X><Y>0.5</Y><Z>6.0</Z></Vector3>
+				<Color3uint8 name="Color3uint8">4293452501</Color3uint8>
+				<token name="Material">272</token>
+				<bool name="Anchored">true</bool>
+				<bool name="CanCollide">true</bool>
+				<token name="shape">1</token>
+				<float name="Transparency">0.0</float>
+				<token name="TopSurface">0</token>
+				<token name="BottomSurface">0</token>
+				<bool name="Neutral">true</bool>
+			</Properties>
+		</Item>
+	</Item>
+	<Item class="Lighting" referent="RBX116">
+		<Properties>
+			<string name="Name">Lighting</string>
+		</Properties>
+	</Item>
+	<Item class="Players" referent="RBX117">
+		<Properties>
+			<string name="Name">Players</string>
+		</Properties>
+	</Item>
+	<Item class="Teams" referent="RBX118">
+		<Properties>
+			<string name="Name">Teams</string>
+		</Properties>
+	</Item>
+	<Item class="SoundService" referent="RBX119">
+		<Properties>
+			<string name="Name">SoundService</string>
+		</Properties>
+	</Item>
+	<Item class="ReplicatedStorage" referent="RBX120">
+		<Properties>
+			<string name="Name">ReplicatedStorage</string>
+		</Properties>
+		<Item class="RemoteEvent" referent="RBX107">
+			<Properties>
+				<string name="Name">Announce</string>
+			</Properties>
+		</Item>
+	</Item>
+	<Item class="ServerScriptService" referent="RBX121">
+		<Properties>
+			<string name="Name">ServerScriptService</string>
+		</Properties>
+		<Item class="Script" referent="RBX108">
+			<Properties>
+				<string name="Name">TrainingServer</string>
+				<ProtectedString name="Source"><![CDATA[-- Тренажёр персонала «Гурман» (сгенерировано planogram3d.robloxkit)
+local Players = game:GetService("Players")
+local MessagingService = game:GetService("MessagingService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local announce = ReplicatedStorage:WaitForChild("Announce")
+local carrying = {}   -- [player] = число коробок
+
+Players.PlayerAdded:Connect(function(player)
+	local stats = Instance.new("Folder")
+	stats.Name = "leaderstats"
+	stats.Parent = player
+	local points = Instance.new("IntValue")
+	points.Name = "Баллы"
+	points.Value = 0
+	points.Parent = stats
+	local served = Instance.new("IntValue")
+	served.Name = "Обслужено"
+	served.Value = 0
+	served.Parent = stats
+	carrying[player] = 0
+	announce:FireClient(player,
+		"🎓 Добро пожаловать в тренажёр! Возьмите товар на складе 📦")
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	carrying[player] = nil
+end)
+
+local function addPoints(player, n, reason)
+	local s = player:FindFirstChild("leaderstats")
+	if s then s["Баллы"].Value += n end
+	announce:FireClient(player, ("+%d баллов — %s"):format(n, reason))
+end
+
+local function hook(model, handler)
+	for _, obj in ipairs(model:GetDescendants()) do
+		if obj:IsA("ProximityPrompt") then
+			obj.Triggered:Connect(function(player)
+				handler(player, obj)
+			end)
+		end
+	end
+end
+
+local ws = workspace
+if ws:FindFirstChild("Storeroom") then
+	hook(ws.Storeroom, function(player)
+		carrying[player] = 3
+		announce:FireClient(player, "📦 Взято 3 коробки — пополните полки!")
+	end)
+end
+if ws:FindFirstChild("Gondolas") then
+	hook(ws.Gondolas, function(player, promptObj)
+		if (carrying[player] or 0) <= 0 then
+			announce:FireClient(player, "Сначала возьмите товар на складе 📦")
+			return
+		end
+		carrying[player] -= 1
+		addPoints(player, 15, "выкладка: " ..
+			promptObj.Parent.Parent.Name)
+	end)
+end
+if ws:FindFirstChild("Checkout") then
+	hook(ws.Checkout, function(player)
+		local s = player:FindFirstChild("leaderstats")
+		if s then s["Обслужено"].Value += 1 end
+		addPoints(player, 25, "покупатель обслужен на кассе")
+	end)
+end
+if ws:FindFirstChild("Fridges") then
+	hook(ws.Fridges, function(player)
+		addPoints(player, 20, "холодильник проверен")
+	end)
+end
+
+-- поощрения из внешней системы planogram3d (Open Cloud → MessagingService)
+pcall(function()
+	MessagingService:SubscribeAsync("gourman-rewards", function(msg)
+		local data = msg.Data
+		for _, player in ipairs(Players:GetPlayers()) do
+			if data.roblox_user == nil
+				or player.Name == data.roblox_user then
+				if data.points and player:FindFirstChild("leaderstats") then
+					player.leaderstats["Баллы"].Value += data.points
+				end
+				announce:FireClient(player, ("🏆 %s: +%d баллов (%s)")
+					:format(data.name or player.Name, data.points or 0,
+						data.reason or "поощрение"))
+			end
+		end
+	end)
+end)
+]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="ModuleScript" referent="RBX109">
+			<Properties>
+				<string name="Name">RewardConfig</string>
+				<ProtectedString name="Source"><![CDATA[-- Уровни-смены тренажёра (сгенерировано planogram3d)
+return {
+	{level = 1, title = "Смена 1 · Основы", goal = 700, time = 150, bonusPerStar = 100},
+	{level = 2, title = "Смена 2 · Чистота и лента", goal = 1400, time = 150, bonusPerStar = 100},
+	{level = 3, title = "Смена 3 · Час пик", goal = 2100, time = 160, bonusPerStar = 100},
+}
+]]></ProtectedString>
+			</Properties>
+		</Item>
+		<Item class="ModuleScript" referent="RBX110">
+			<Properties>
+				<string name="Name">PlanogramData</string>
+				<ProtectedString name="Source"><![CDATA[-- Планограмма магазина (сгенерировано planogram3d)
+return {
+	store = "«Гурман» №17 · Трёхсвятская",
+	gondolas = {
+		{name = "Стеллаж 1 (Бакалея)", products = {
+			{sku = "ALP-003", name = "Масло оливковое 1 л", price = 288, facings = 8},
+			{sku = "ALP-002", name = "Хлопья овсяные 500 г", price = 202, facings = 6},
+			{sku = "ALP-001", name = "Мюсли «Утро» 750 г", price = 206, facings = 5},
+			{sku = "SNK-002", name = "Орехи микс 200 г", price = 104, facings = 5},
+		}},
+		{name = "Стеллаж 2 (Напитки)", products = {
+			{sku = "BRW-003", name = "Вода минеральная 5 л", price = 102, facings = 6},
+			{sku = "BRW-001", name = "Квас «Традиция» 2 л", price = 104, facings = 9},
+			{sku = "BRW-002", name = "Лимонад «Дюшес» 1.5 л", price = 118, facings = 6},
+			{sku = "SNK-003", name = "Сухарики ржаные 100 г", price = 113, facings = 8},
+		}},
+		{name = "Стеллаж 3 (Молочка и снеки)", products = {
+			{sku = "DRY-001", name = "Молоко 3.2% 1 л", price = 82, facings = 7},
+			{sku = "DRY-002", name = "Кефир 1% 0.9 л", price = 103, facings = 6},
+			{sku = "DRY-003", name = "Сыр «Гурман» 300 г", price = 80, facings = 8},
+			{sku = "SNK-001", name = "Чипсы «Хруст» 150 г", price = 130, facings = 6},
+			{sku = "SNK-002", name = "Орехи микс 200 г", price = 104, facings = 4},
+		}},
+	},
+}
+]]></ProtectedString>
+			</Properties>
+		</Item>
+	</Item>
+	<Item class="StarterGui" referent="RBX122">
+		<Properties>
+			<string name="Name">StarterGui</string>
+		</Properties>
+		<Item class="ScreenGui" referent="RBX111">
+			<Properties>
+				<string name="Name">TrainingGui</string>
+			</Properties>
+			<Item class="Frame" referent="RBX112">
+				<Properties>
+					<string name="Name">Toast</string>
+					<UDim2 name="Size"><XS>0</XS><XO>460</XO><YS>0</YS><YO>44</YO></UDim2>
+					<UDim2 name="Position"><XS>0.5</XS><XO>-230</XO><YS>0</YS><YO>24</YO></UDim2>
+					<float name="BackgroundTransparency">0.25</float>
+					<Color3 name="BackgroundColor3"><R>0.1</R><G>0.16</G><B>0.23</B></Color3>
+					<bool name="Visible">false</bool>
+				</Properties>
+				<Item class="TextLabel" referent="RBX113">
+					<Properties>
+						<string name="Name">Text</string>
+						<UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2>
+						<float name="BackgroundTransparency">1</float>
+						<string name="Text"></string>
+						<bool name="TextScaled">true</bool>
+						<Color3 name="TextColor3"><R>1</R><G>0.92</G><B>0.6</B></Color3>
+					</Properties>
+				</Item>
+			</Item>
+			<Item class="LocalScript" referent="RBX114">
+				<Properties>
+					<string name="Name">AnnounceClient</string>
+					<ProtectedString name="Source"><![CDATA[-- Всплывающие объявления тренажёра (сгенерировано planogram3d)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local announce = ReplicatedStorage:WaitForChild("Announce")
+local gui = script.Parent
+local frame = gui:WaitForChild("Toast")
+local label = frame:WaitForChild("Text")
+local queue = {}
+local busy = false
+
+local function show()
+	if busy then return end
+	local text = table.remove(queue, 1)
+	if not text then return end
+	busy = true
+	label.Text = text
+	frame.Visible = true
+	task.delay(3, function()
+		frame.Visible = false
+		busy = false
+		show()
+	end)
+end
+
+announce.OnClientEvent:Connect(function(text)
+	table.insert(queue, text)
+	show()
+end)
+]]></ProtectedString>
+				</Properties>
+			</Item>
+		</Item>
+	</Item>
+</roblox>

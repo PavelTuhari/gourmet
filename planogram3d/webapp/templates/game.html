@@ -56,6 +56,16 @@
           padding:4px 2px; border-bottom:1px dashed #dfe5ec; }
   .tips { background:#e8f0fe; border-radius:10px; padding:10px 14px;
           font-size:12.5px; line-height:1.6; margin-top:10px; }
+  .reg { display:flex; gap:8px; margin:10px 0 2px; }
+  .reg input { flex:1; border:1.5px solid #ccd5e0; border-radius:9px;
+               padding:9px 12px; font-size:13.5px; font-family:inherit; }
+  .reg input:focus { outline:none; border-color:#2f6fed; }
+  .rbx { background:#eef; border:1px solid #d6d9f5; border-radius:10px;
+         padding:10px 14px; font-size:12.5px; line-height:1.6;
+         margin-top:10px; }
+  .rbx b.big { font-size:15px; color:#5a48c7; }
+  .rbx .lb { display:flex; justify-content:space-between; padding:2px 0;
+             border-bottom:1px dashed #dcdff2; }
 </style>
 </head>
 <body>
@@ -76,6 +86,12 @@
         <h1>🎓 Тренажёр персонала магазина</h1>
         <h2 id="b-store"></h2>
         <div id="b-body"></div>
+        <div class="reg">
+          <input id="reg-name" placeholder="Имя сотрудника"
+                 maxlength="40">
+          <input id="reg-roblox" placeholder="Ник в Roblox"
+                 maxlength="40">
+        </div>
         <button id="b-start">▶ Начать смену</button>
       </div>
     </div>
@@ -85,6 +101,7 @@
         <div class="stars" id="r-stars"></div>
         <div id="r-stats"></div>
         <div class="tips" id="r-tips"></div>
+        <div class="rbx" id="r-rbx" style="display:none"></div>
         <button id="r-btn"></button>
       </div>
     </div>
@@ -209,7 +226,19 @@ function showBrief() {
   document.getElementById("brief").style.display = "flex";
   document.getElementById("result").style.display = "none";
 }
+const regName = document.getElementById("reg-name"),
+      regRoblox = document.getElementById("reg-roblox");
+regName.value = localStorage.getItem("pl3d_name") || "";
+regRoblox.value = localStorage.getItem("pl3d_roblox") || "";
+
 document.getElementById("b-start").onclick = () => {
+  localStorage.setItem("pl3d_name", regName.value);
+  localStorage.setItem("pl3d_roblox", regRoblox.value);
+  if (regRoblox.value.trim())
+    fetch("/api/roblox/register", {method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({name: regName.value || "Стажёр",
+        roblox_user: regRoblox.value, store_id: STORE_ID})});
   document.getElementById("brief").style.display = "none";
   G.state = "play";
 };
@@ -245,6 +274,36 @@ function endLevel() {
   if (!tips.length) tips.push("Отличная работа: процессы кассира, " +
     "мерчандайзера и клининга под контролем!");
   document.getElementById("r-tips").innerHTML = "💡 " + tips.join("<br>💡 ");
+
+  // бонусы и поощрения команды в Roblox
+  const rbx = document.getElementById("r-rbx");
+  rbx.style.display = "none";
+  if (regRoblox.value.trim()) {
+    fetch("/api/roblox/progress", {method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        name: regName.value || "Стажёр", roblox_user: regRoblox.value,
+        store_id: STORE_ID, level: G.level, stars,
+        revenue: G.money, stats: s })})
+      .then(r => r.json()).then(d => {
+        rbx.style.display = "block";
+        rbx.innerHTML =
+          `🎮 <b>Roblox</b> (${d.mode === "roblox" ? "Open Cloud"
+            : "эмуляция"}): <b class="big">+${d.bonus} баллов</b>, ` +
+          `всего <b>${d.total}</b>` +
+          (d.new_badges.length
+            ? `<br>🏅 Новый бейдж: <b>${d.new_badges.join(", ")}</b>` : "") +
+          `<br><br><b>Топ команды:</b>` +
+          d.top.map((mm, i) =>
+            `<div class="lb"><span>${i + 1}. ${mm.name} ` +
+            `(${mm.roblox_user})</span><b>${mm.points}</b></div>`)
+            .join("");
+      }).catch(() => {});
+  } else {
+    rbx.style.display = "block";
+    rbx.innerHTML = "🎮 Укажите ник в Roblox на брифинге — баллы и " +
+      "бейджи будут начисляться в командный опыт Roblox.";
+  }
   const btn = document.getElementById("r-btn");
   if (ok && G.level < LEVELS.length) {
     btn.textContent = "▶ Следующая смена";

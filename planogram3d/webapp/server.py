@@ -20,12 +20,42 @@ from flask import Flask, abort, jsonify, render_template, request
 from ..core import build_report_page, check_compliance
 from .instore import InstoreHub
 from .network import StoreNetwork
+from .roblox import TeamHub
 from .zabbix import create_provider
 
 app = Flask(__name__)
 network = StoreNetwork()
 zabbix, zabbix_mode = create_provider(list(network.stores))
 instore = InstoreHub()
+team = TeamHub()
+
+
+@app.post("/api/roblox/register")
+def roblox_register():
+    """Регистрация члена команды: имя + ник в Roblox + магазин."""
+    d = request.get_json(silent=True) or {}
+    if not d.get("roblox_user"):
+        abort(400)
+    return jsonify(team.register(d.get("name", ""), d["roblox_user"],
+                                 d.get("store_id", "")))
+
+
+@app.get("/api/roblox/team")
+def roblox_team():
+    """Команда: лидерборд по баллам и лента поощрений."""
+    return jsonify(team.team())
+
+
+@app.post("/api/roblox/progress")
+def roblox_progress():
+    """Результат смены тренажёра → бонусы, бейджи, объявление в Roblox."""
+    d = request.get_json(silent=True) or {}
+    if not d.get("roblox_user"):
+        abort(400)
+    return jsonify(team.progress(
+        d.get("name", ""), d["roblox_user"], d.get("store_id", ""),
+        int(d.get("level", 1)), int(d.get("stars", 0)),
+        int(d.get("revenue", 0)), d.get("stats", {})))
 
 
 @app.get("/")
