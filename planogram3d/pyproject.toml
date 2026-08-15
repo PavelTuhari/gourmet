@@ -12,10 +12,12 @@ dependencies = ["plotly>=5.0"]
 
 [project.optional-dependencies]
 web = ["flask>=2.0"]
+desktop = ["flask>=2.0", "pywebview>=4.0"]
 
 [project.scripts]
 planogram3d = "planogram3d.app:main"
 planogram3d-web = "planogram3d.webapp.server:main"
+planogram3d-app = "planogram3d.desktop:main"
 
 [tool.setuptools]
 packages = ["planogram3d", "planogram3d.core", "planogram3d.webapp",
