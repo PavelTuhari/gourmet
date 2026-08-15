@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>{{ store_name }} — командная смена</title>
+<style>
+  html, body { margin:0; height:100%; font-family:'Segoe UI',system-ui,sans-serif;
+               background:#141d28; color:#23303f; overflow:hidden;
+               user-select:none; }
+  #wrap { display:flex; height:100%; }
+  #stage { flex:1; position:relative; display:flex; align-items:center;
+           justify-content:center; }
+  canvas { max-width:100%; max-height:100%; cursor:pointer; }
+
+  #side { width:270px; background:#f4f6f9; border-left:1px solid #dde3ea;
+          display:flex; flex-direction:column; }
+  #side .head { padding:11px 14px; background:linear-gradient(90deg,#1d2b3a,#2f4b68);
+                color:#fff; }
+  #side .head .t { font-weight:700; font-size:14px; }
+  #side .head .k { font-size:11.5px; opacity:.85; }
+  .hkpis { display:grid; grid-template-columns:1fr 1fr; gap:5px;
+           padding:9px 11px; }
+  .hk { background:#fff; border-radius:8px; padding:5px 8px; }
+  .hk b { display:block; font-size:14px; }
+  .hk span { font-size:10px; color:#6b7683; }
+  #roster { padding:4px 11px; }
+  #roster h3, #evh { font-size:11px; margin:6px 0 4px; color:#5b6672;
+       text-transform:uppercase; letter-spacing:.4px; }
+  .pl { display:flex; align-items:center; gap:6px; font-size:12px;
+        padding:3px 0; border-bottom:1px dashed #e3e8ef; }
+  .pl .pts { margin-left:auto; font-weight:800; color:#5a48c7; }
+  .pl .ai { font-size:9.5px; background:#e3e8ef; border-radius:6px;
+            padding:0 5px; color:#5b6672; }
+  #evlist { flex:1; overflow-y:auto; padding:0 11px 10px; font-size:11.5px;
+            line-height:1.5; }
+  #evlist div { border-bottom:1px dashed #e3e8ef; padding:3px 0; }
+
+  .overlay { position:absolute; inset:0; background:rgba(16,24,32,.85);
+             display:flex; align-items:center; justify-content:center;
+             z-index:20; }
+  .panel { width:600px; background:#f6f8fb; border-radius:18px;
+           padding:24px 28px; box-shadow:0 16px 60px rgba(0,0,0,.5); }
+  .panel h1 { font-size:20px; margin:0 0 4px; }
+  .panel .sub { font-size:12.5px; color:#5b6672; margin-bottom:14px; }
+  .roles { display:grid; grid-template-columns:repeat(5,1fr); gap:8px;
+           margin:10px 0; }
+  .role { border:2px solid #dfe6ee; border-radius:11px; padding:9px 6px;
+          text-align:center; cursor:pointer; background:#fff; }
+  .role.sel { border-color:#2f6fed; background:#eaf1ff; }
+  .role.full { opacity:.45; cursor:not-allowed; }
+  .role .ic { font-size:22px; }
+  .role .tt { font-size:11px; font-weight:700; margin-top:2px; }
+  .role .free { font-size:10px; color:#6b7683; }
+  .panel input { width:100%; box-sizing:border-box; border:1.5px solid
+                 #ccd5e0; border-radius:9px; padding:9px 12px;
+                 font-size:13.5px; margin-bottom:8px; }
+  .panel .btnrow { display:flex; gap:8px; margin-top:8px; }
+  .panel button { flex:1; border:0; border-radius:10px; padding:11px;
+                  font-size:14px; font-weight:700; cursor:pointer; }
+  #join-btn { background:#2f6fed; color:#fff; }
+  #start-btn { background:#2fa14e; color:#fff; }
+  .bots { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  .bots button { flex:none; background:#eef1f5; color:#23303f;
+                 font-size:12px; padding:7px 10px; border-radius:9px; }
+  #lobby-roster { font-size:12.5px; margin-top:10px; line-height:1.7; }
+  .stat-table { width:100%; border-collapse:collapse; font-size:13px;
+                margin:10px 0; }
+  .stat-table th, .stat-table td { padding:5px 8px; text-align:left;
+                border-bottom:1px dashed #dfe5ec; }
+  .apihint { background:#e8f0fe; border-radius:9px; padding:9px 12px;
+             font-size:11px; margin-top:10px; font-family:monospace;
+             color:#31456b; word-break:break-all; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="stage">
+    <canvas id="cv"></canvas>
+    <div class="overlay" id="lobby">
+      <div class="panel">
+        <h1>👥 Командная смена — до 10 игроков</h1>
+        <div class="sub" id="lobby-store"></div>
+        <input id="j-name" placeholder="Имя студента" maxlength="30">
+        <input id="j-roblox" placeholder="Ник в Roblox (необязательно —
+для баллов команды)" maxlength="30">
+        <div class="roles" id="roles"></div>
+        <div class="btnrow">
+          <button id="join-btn">Войти в смену</button>
+          <button id="start-btn">▶ Начать смену</button>
+        </div>
+        <div class="bots">
+          <span style="align-self:center;font-size:12px;color:#5b6672">
+            Добавить ИИ:</span>
+          <button data-bot="cashier">🧑‍💼 кассир</button>
+          <button data-bot="merch">📦 мерч</button>
+          <button data-bot="cleaner">🧹 клинер</button>
+          <button data-bot="tech">🛠 техник</button>
+          <button data-bot="supervisor">🧑‍💻 супервайзер</button>
+        </div>
+        <div id="lobby-roster"></div>
+        <div class="apihint" id="api-hint"></div>
+      </div>
+    </div>
+    <div class="overlay" id="result" style="display:none">
+      <div class="panel">
+        <h1 id="r-title"></h1>
+        <table class="stat-table" id="r-table"></table>
+        <div class="btnrow"><button id="r-again"
+          style="background:#2f6fed;color:#fff">↻ Ещё смена</button></div>
+      </div>
+    </div>
+  </div>
+  <div id="side">
+    <div class="head"><div class="t">👥 Командная смена</div>
+      <div class="k" id="h-sub">лобби</div></div>
+    <div class="hkpis">
+      <div class="hk"><b id="h-money">0 ₽</b><span>выручка / цель</span></div>
+      <div class="hk"><b id="h-time">—</b><span>время</span></div>
+      <div class="hk"><b id="h-rep">—</b><span>репутация</span></div>
+      <div class="hk"><b id="h-queue">0</b><span>очередь кассы</span></div>
+    </div>
+    <div id="roster"><h3>Команда</h3><div id="pl-list"></div></div>
+    <div id="evh" style="padding:0 11px"><h3>События</h3></div>
+    <div id="evlist"></div>
+  </div>
+</div>
+
+<script>
+const STORE_ID = {{ store_id | tojson }};
+const CODE = new URLSearchParams(location.search).get("room") || "main";
+const API = `/api/mgame/${STORE_ID}/${CODE}`;
+document.getElementById("lobby-store").textContent =
+  {{ store_name | tojson }} + " · комната «" + CODE + "» · роли: 2 кассира," +
+  " 3 мерчандайзера, 2 клинера, 2 техника, 1 супервайзер";
+document.getElementById("api-hint").textContent =
+  `API для внешних ИИ-агентов: POST ${API}/join {"name","role","kind":"api"}` +
+  ` → цикл GET ${API}/state и POST ${API}/action` +
+  ` {"player","action":"serve|storeroom|restock|clean|fix_fridge|paper|move"}`;
+
+/* ---------- канвас (изометрия как в одиночном тренажёре) ---------- */
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+const DPR = Math.max(1, window.devicePixelRatio || 1);
+const CW = 960, CH = 620;
+cv.style.width = CW + "px"; cv.style.height = CH + "px";
+cv.width = CW * DPR; cv.height = CH * DPR;
+ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+const SX = 54, SY = 27, OX = 415, OY = 120;
+const iso = (x, y, z = 0) => [(x - y) * SX + OX, (x + y) * SY + OY - z * 46];
+function unIso(px, py) {
+  const a = (px - OX) / SX, b = (py - OY) / SY;
+  return [(a + b) / 2, (b - a) / 2];
+}
+function poly(pts, fill, stroke) {
+  ctx.beginPath();
+  pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+  ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+}
+function shade(c, f) {
+  let r, g, b;
+  if (c[0] === "#") { r = parseInt(c.slice(1,3),16);
+    g = parseInt(c.slice(3,5),16); b = parseInt(c.slice(5,7),16); }
+  else { [r, g, b] = c.match(/[\d.]+/g).map(Number); }
+  const k = v => Math.max(0, Math.min(255, Math.round(v * f)));
+  return `rgb(${k(r)},${k(g)},${k(b)})`;
+}
+function vGrad(y0, y1, c0, c1) {
+  const g = ctx.createLinearGradient(0, y0, 0, y1);
+  g.addColorStop(0, c0); g.addColorStop(1, c1); return g;
+}
+function box(x, y, w, d, h, top, left, right) {
+  const [cx2, cy2] = iso(x + w/2, y + d/2);
+  ctx.fillStyle = "rgba(30,40,50,.13)";
+  ctx.beginPath();
+  ctx.ellipse(cx2+4, cy2+4, (w+d)*SX*.42, (w+d)*SY*.42, 0, 0, 7); ctx.fill();
+  const zT = iso(x,y,h)[1], zB = iso(x,y+d,0)[1];
+  poly([iso(x,y+d,h),iso(x+w,y+d,h),iso(x+w,y+d,0),iso(x,y+d,0)],
+       vGrad(zT,zB,left,shade(left,.82)));
+  poly([iso(x+w,y,h),iso(x+w,y+d,h),iso(x+w,y+d,0),iso(x+w,y,0)],
+       vGrad(zT,zB,right,shade(right,.78)));
+  poly([iso(x,y,h),iso(x+w,y,h),iso(x+w,y+d,h),iso(x,y+d,h)],
+       vGrad(iso(x,y,h)[1],iso(x,y+d,h)[1],shade(top,1.06),top),
+       "rgba(0,0,0,.18)");
+}
+function label(x, y, z, text, size = 12, color = "#3c4856") {
+  const [sx2, sy2] = iso(x, y, z);
+  ctx.font = `600 ${size}px 'Segoe UI',sans-serif`;
+  ctx.textAlign = "center"; ctx.fillStyle = color;
+  ctx.fillText(text, sx2, sy2);
+}
+const fillColor = f => f > .6 ? "#4caf50" : f > .3 ? "#ffb300" : "#e5533d";
+
+/* ---------- состояние ---------- */
+let ST = null, me = null, lastEv = 0, myRole = null;
+let popups = [];
+const REG = {x: 6.15, y: 1.0}, SCO = [4.2, 0.2, 1.3, 1.6],
+      SCALES = [4.6, 4.6], STOREROOM = {x: 6.6, y: -0.15},
+      FRIDGES = [["ХВ-1",0.25,5.05,1.15,0.55],["ХВ-2",1.65,5.05,1.15,0.55]];
+
+/* ---------- лобби ---------- */
+const ROLE_META = [
+  ["cashier","🧑‍💼","Кассир"], ["merch","📦","Мерч"],
+  ["cleaner","🧹","Клинер"], ["tech","🛠","Техник"],
+  ["supervisor","🧑‍💻","Суперв."]];
+let selRole = "cashier";
+function renderRoles() {
+  const rf = (ST && ST.roles_free) || {};
+  document.getElementById("roles").innerHTML = ROLE_META.map(r =>
+    `<div class="role ${selRole === r[0] ? "sel" : ""} ${
+        rf[r[0]] === 0 ? "full" : ""}" data-r="${r[0]}">
+      <div class="ic">${r[1]}</div><div class="tt">${r[2]}</div>
+      <div class="free">своб.: ${rf[r[0]] ?? "?"}</div></div>`).join("");
+  document.querySelectorAll(".role").forEach(el =>
+    el.onclick = () => { if (!el.classList.contains("full")) {
+      selRole = el.dataset.r; renderRoles(); } });
+}
+renderRoles();
+document.getElementById("j-name").value =
+  localStorage.getItem("pl3d_name") || "";
+document.getElementById("j-roblox").value =
+  localStorage.getItem("pl3d_roblox") || "";
+
+document.getElementById("join-btn").onclick = async () => {
+  const name = document.getElementById("j-name").value || "Студент";
+  localStorage.setItem("pl3d_name", name);
+  const d = await (await fetch(API + "/join", {method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({name, role: selRole, kind: "human",
+      roblox_user: document.getElementById("j-roblox").value})})).json();
+  if (d.error) { alert("Не удалось войти: " + d.error); return; }
+  me = d.player_id; myRole = d.role;
+  document.getElementById("join-btn").textContent =
+    "✓ Вы в смене (" + name + ")";
+};
+document.getElementById("start-btn").onclick = () =>
+  fetch(API + "/start", {method: "POST"});
+document.getElementById("r-again").onclick = () => {
+  document.getElementById("result").style.display = "none";
+  fetch(API + "/start", {method: "POST"});
+};
+document.querySelectorAll("[data-bot]").forEach(b =>
+  b.onclick = () => fetch(API + "/bot", {method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({role: b.dataset.bot})}));
+
+/* ---------- действия кликом ---------- */
+cv.addEventListener("click", e => {
+  if (!me || !ST || ST.phase !== "play") return;
+  const r = cv.getBoundingClientRect();
+  const [hx, hy] = unIso((e.clientX - r.left) * (CW / r.width),
+                         (e.clientY - r.top) * (CH / r.height));
+  const near = (x, y, rr) => Math.hypot(hx - x, hy - y) < rr;
+  let act = {action: "move", x: hx, y: hy};
+  for (const s of ST.shelves)
+    if (hx > s.x - .2 && hx < s.x + s.w + .2 &&
+        hy > s.y - .05 && hy < s.y + s.d + .7)
+      act = {action: "restock", target: String(s.i)};
+  if (near(REG.x, REG.y, .7))
+    act = {action: ST.paper <= 0 ? "paper" : "serve"};
+  for (const m of ST.messes)
+    if (near(m.x, m.y, .55)) act = {action: "clean",
+                                    target: String(m.id)};
+  if (ST.fridge_alarm)
+    for (const f of FRIDGES)
+      if (f[0] === ST.fridge_alarm && hx > f[1]-.2 && hx < f[1]+f[3]+.2
+          && hy > f[2]-.3 && hy < f[2]+f[4]+.6)
+        act = {action: "fix_fridge"};
+  if (near(STOREROOM.x, STOREROOM.y + .35, .85))
+    act = {action: "storeroom"};
+  fetch(API + "/action", {method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({player: me, ...act})});
+});
+
+/* ---------- опрос ---------- */
+async function poll() {
+  try {
+    const st = await (await fetch(
+      `${API}/state?player=${me || ""}&after=${lastEv}`)).json();
+    ST = st;
+    for (const e of st.events) {
+      lastEv = e.id;
+      if (e.kind === "fx") popups.push({x: e.x, y: e.y, text: e.fx,
+        color: e.color || "#ffd54f", t: performance.now()});
+      else {
+        const el = document.createElement("div");
+        el.textContent = e.text;
+        const list = document.getElementById("evlist");
+        list.prepend(el);
+        while (list.children.length > 30) list.lastChild.remove();
+      }
+    }
+    renderSide(st);
+    if (st.phase === "lobby") {
+      document.getElementById("lobby").style.display = "flex";
+      renderRoles();
+      document.getElementById("lobby-roster").innerHTML =
+        "<b>В лобби:</b> " + (st.players.map(p =>
+          `${p.icon} ${p.name}${p.kind !== "human" ? " (ИИ)" : ""}`)
+          .join(" · ") || "пока никого");
+    } else {
+      document.getElementById("lobby").style.display = "none";
+    }
+    if (st.phase === "ended") showResult(st);
+  } catch (e) { /* повторим */ }
+}
+setInterval(poll, 600); poll();
+
+function renderSide(st) {
+  document.getElementById("h-sub").textContent =
+    st.phase === "play" ? "смена идёт" :
+    st.phase === "ended" ? "смена завершена" : "лобби — ждём игроков";
+  document.getElementById("h-money").textContent =
+    `${st.money} / ${st.goal} ₽`;
+  const m = Math.floor(st.time_left / 60),
+        s2 = Math.floor(st.time_left % 60);
+  document.getElementById("h-time").textContent =
+    st.phase === "play" ? `${m}:${String(s2).padStart(2, "0")}` : "—";
+  document.getElementById("h-rep").textContent = st.rep + "%";
+  document.getElementById("h-queue").textContent =
+    st.queue_len + (st.paper <= 0 ? " 🧻!" : "");
+  document.getElementById("pl-list").innerHTML = st.players.map(p =>
+    `<div class="pl"><span>${p.icon}</span><span>${p.name}${
+      p.id === me ? " (вы)" : ""}</span>${
+      p.kind !== "human" ? '<span class="ai">ИИ</span>' : ""}
+      <span class="pts">${p.stats.points}</span></div>`).join("");
+}
+
+function showResult(st) {
+  const ok = st.money >= st.goal;
+  document.getElementById("r-title").textContent = ok
+    ? "✅ Командная смена пройдена!" : "❌ План не выполнен";
+  const rows = [...st.players].sort((a, b) =>
+    b.stats.points - a.stats.points);
+  document.getElementById("r-table").innerHTML =
+    "<tr><th>Игрок</th><th>Роль</th><th>Касса</th><th>Полки</th>" +
+    "<th>Уборка</th><th>Техника</th><th>Баллы</th></tr>" +
+    rows.map(p => `<tr><td>${p.icon} ${p.name}${
+      p.kind !== "human" ? " (ИИ)" : ""}</td><td>${p.role_title}</td>
+      <td>${p.stats.serve}</td><td>${p.stats.restock}</td>
+      <td>${p.stats.clean}</td><td>${p.stats.fridge + p.stats.paper}</td>
+      <td><b>${p.stats.points}</b></td></tr>`).join("");
+  document.getElementById("result").style.display = "flex";
+}
+
+/* ---------- отрисовка ---------- */
+function draw() {
+  requestAnimationFrame(draw);
+  ctx.clearRect(0, 0, CW, CH);
+  if (!ST) return;
+
+  poly([iso(-0.7,-0.6), iso(8.1,-0.6), iso(8.1,6.1), iso(-0.7,6.1)],
+       vGrad(iso(3.7,-0.6)[1], iso(3.7,6.1)[1], "#efe9dc", "#e2dccc"));
+  const WH = 1.5;
+  poly([iso(-0.7,-0.6,WH), iso(8.1,-0.6,WH), iso(8.1,-0.6,0),
+        iso(-0.7,-0.6,0)],
+       vGrad(iso(3.7,-0.6,WH)[1], iso(3.7,-0.6,0)[1], "#dfe4ea","#c8cfd8"));
+  poly([iso(-0.7,-0.6,WH), iso(-0.7,6.1,WH), iso(-0.7,6.1,0),
+        iso(-0.7,-0.6,0)],
+       vGrad(iso(-0.7,2.7,WH)[1], iso(-0.7,2.7,0)[1], "#d3d9e0","#bcc4cf"));
+
+  poly([iso(STOREROOM.x-0.55,-0.58,1.2), iso(STOREROOM.x+0.55,-0.58,1.2),
+        iso(STOREROOM.x+0.55,-0.58,0), iso(STOREROOM.x-0.55,-0.58,0)],
+       "#8d6e63");
+  label(STOREROOM.x, -0.15, 0.62, "📦 СКЛАД", 12, "#5d4037");
+  const [zx, zy, zw, zd] = SCO;
+  poly([iso(zx,zy), iso(zx+zw,zy), iso(zx+zw,zy+zd), iso(zx,zy+zd)],
+       "rgba(47,111,237,.15)");
+  label(zx + zw/2, zy + zd/2, 0, "СКО (само)", 11, "#2f6fed");
+
+  const drawables = [];
+  for (const s of ST.shelves)
+    drawables.push({d: s.x + s.y + s.d, fn: () => {
+      box(s.x, s.y, s.w, s.d, 0.95, "#cfd6de", "#aeb7c2",
+          fillColor(s.stock / s.max));
+      label(s.x + s.w/2, s.y + s.d/2, 1.25,
+            `${s.name} · ${s.stock}/${s.max}`, 11);
+    }});
+  for (const f of FRIDGES) {
+    const alarm = ST.fridge_alarm === f[0];
+    drawables.push({d: f[1] + f[2] + f[4], fn: () => {
+      box(f[1], f[2], f[3], f[4], 0.8, alarm ? "#f3b0ab" : "#ddeef7",
+          "#9fb4c4", "#8aa2b5");
+      label(f[1] + f[3]/2, f[2] + f[4]/2, 1.1,
+            (alarm ? "⚠ " : "") + f[0], 10.5,
+            alarm ? "#c62828" : "#1e6fa8");
+    }});
+  }
+  drawables.push({d: REG.x + REG.y, fn: () => {
+    box(REG.x - 0.4, REG.y - 0.3, 0.8, 0.6, 0.5, "#b8c4d2", "#93a2b4",
+        "#7e8ca0");
+    label(REG.x, REG.y - 0.35, 0.9, "Касса 1", 11);
+    if (ST.paper <= 0)
+      label(REG.x, REG.y - 0.35, 1.15, "🧻 НЕТ ЛЕНТЫ", 11, "#c62828");
+    if (ST.serving > 0) {
+      const [bx, by] = iso(REG.x, REG.y, 1.05);
+      ctx.fillStyle = "#dfe5ec"; ctx.fillRect(bx-22, by-5, 44, 7);
+      ctx.fillStyle = "#4caf50";
+      ctx.fillRect(bx-22, by-5, 44 * Math.min(1, ST.serving / 1.7), 7);
+    }
+  }});
+  drawables.push({d: SCALES[0] + SCALES[1], fn: () => {
+    box(SCALES[0]-0.25, SCALES[1]-0.2, 0.5, 0.4, 0.55, "#c9d3dd",
+        "#a3aebc", "#8d99a9");
+    label(SCALES[0], SCALES[1]-0.28, 0.95, "⚖ Весы", 11);
+  }});
+
+  for (const m of ST.messes)
+    drawables.push({d: m.x + m.y - .4, fn: () => {
+      const [mx, my] = iso(m.x, m.y);
+      ctx.fillStyle = "rgba(120,160,220,.4)";
+      ctx.beginPath(); ctx.ellipse(mx, my, 21, 9, 0, 0, 7); ctx.fill();
+      ctx.font = "13px sans-serif"; ctx.fillText("🫗", mx-6, my+3);
+    }});
+
+  for (const c of ST.customers)
+    drawables.push({d: c.x + c.y, fn: () => {
+      const [px, py] = iso(c.x, c.y);
+      ctx.fillStyle = "rgba(0,0,0,.18)";
+      ctx.beginPath(); ctx.ellipse(px, py+3, 10, 4, 0, 0, 7); ctx.fill();
+      ctx.font = "20px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(c.icon, px, py - 4);
+      if (c.items > 0) { ctx.font = "12px sans-serif";
+                         ctx.fillText("🛒", px+11, py+1); }
+      if (c.icon !== "😡") {
+        ctx.font = "9px sans-serif";
+        ctx.fillText("❤".repeat(c.hearts), px, py - 26);
+      }
+    }});
+
+  for (const p of ST.players)
+    drawables.push({d: p.x + p.y + .01, fn: () => {
+      const [px, py] = iso(p.x, p.y);
+      ctx.fillStyle = p.id === me ? "rgba(47,111,237,.35)"
+                                  : "rgba(90,72,199,.22)";
+      ctx.beginPath(); ctx.ellipse(px, py+3, 12, 5, 0, 0, 7); ctx.fill();
+      ctx.font = "21px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(p.icon, px, py - 4);
+      if (p.carry > 0) { ctx.font = "11px sans-serif";
+                         ctx.fillText("📦", px+13, py-8); }
+      ctx.font = "700 9.5px 'Segoe UI'";
+      ctx.fillStyle = p.id === me ? "#2f6fed" : "#5b6672";
+      ctx.fillText(p.name + (p.kind !== "human" ? " 🤖" : ""),
+                   px, py + 13);
+      if (p.busy > 0) {
+        ctx.fillStyle = "#dfe5ec"; ctx.fillRect(px-22, py-34, 44, 6);
+        ctx.fillStyle = "#2f6fed";
+        ctx.fillRect(px-22, py-34, 44 * (p.busy / p.busy_max), 6);
+      }
+    }});
+
+  drawables.sort((a, b) => a.d - b.d).forEach(d => d.fn());
+
+  const now = performance.now();
+  popups = popups.filter(pp => now - pp.t < 1500);
+  for (const pp of popups) {
+    const k = (now - pp.t) / 1500;
+    const [px, py] = iso(pp.x, pp.y, 0.9);
+    ctx.globalAlpha = 1 - k;
+    ctx.font = "700 14px 'Segoe UI'"; ctx.textAlign = "center";
+    ctx.lineWidth = 3; ctx.strokeStyle = "rgba(20,30,40,.7)";
+    ctx.strokeText(pp.text, px, py - 38 * k);
+    ctx.fillStyle = pp.color; ctx.fillText(pp.text, px, py - 38 * k);
+    ctx.globalAlpha = 1;
+  }
+}
+draw();
+</script>
+</body>
+</html>

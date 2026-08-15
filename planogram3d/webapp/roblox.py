@@ -201,6 +201,28 @@ class TeamHub:
                 "mode": self.cloud.mode, "delivered": ok,
                 "top": self.leaderboard()[:5]}
 
+    def award(self, name: str, roblox_user: str, store_id: str,
+              points: int, reason: str) -> dict:
+        """Прямое поощрение (например, за командную смену тренажёра)."""
+        member = self.register(name, roblox_user, store_id)
+        key = member["roblox_user"].strip().lower()
+        with self._lock:
+            member = self.members[key]
+            member["points"] += int(points)
+            self.feed.insert(0, {
+                "t": time.time(),
+                "text": f"💎 {member['name']}: +{points} баллов — {reason}"})
+            self._save()
+            snapshot = dict(member)
+        try:
+            self.cloud.save_member(snapshot)
+            self.cloud.announce({"roblox_user": snapshot["roblox_user"],
+                                 "name": snapshot["name"],
+                                 "points": int(points), "reason": reason})
+        except Exception:
+            pass
+        return snapshot
+
     def leaderboard(self) -> List[dict]:
         with self._lock:
             rows = sorted(self.members.values(),

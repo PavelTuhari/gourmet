@@ -22,6 +22,7 @@ from flask import (Flask, abort, jsonify, redirect, render_template,
 from ..core import build_report_page, check_compliance
 from .delivery import DeliveryHub
 from .instore import InstoreHub
+from .multigame import MultiHub
 from .network import StoreNetwork
 from .roblox import TeamHub
 from .zabbix import create_provider
@@ -32,6 +33,7 @@ zabbix, zabbix_mode = create_provider(list(network.stores))
 instore = InstoreHub()
 team = TeamHub()
 delivery = DeliveryHub(network)
+mgames = MultiHub(network)
 
 
 @app.get("/delivery")
@@ -221,6 +223,64 @@ def game_config(store_id):
         "entrance": ENTRANCE, "exit": EXIT,
         "storeroom": {"x": 6.6, "y": -0.15},
     })
+
+
+@app.get("/store/<store_id>/game/multi")
+def store_game_multi(store_id):
+    try:
+        store = network.store(store_id)
+    except KeyError:
+        abort(404)
+    return render_template("game_multi.html", store_id=store_id,
+                           store_name=store.name)
+
+
+@app.post("/api/mgame/<store_id>/<code>/join")
+def mgame_join(store_id, code):
+    """Подключение игрока (человек / внешний ИИ) к командной смене."""
+    d = request.get_json(silent=True) or {}
+    try:
+        game = mgames.get(store_id, code)
+    except KeyError:
+        abort(404)
+    return jsonify(game.join(d.get("name", ""), d.get("role", ""),
+                             d.get("kind", "human"),
+                             d.get("roblox_user", "")))
+
+
+@app.post("/api/mgame/<store_id>/<code>/bot")
+def mgame_bot(store_id, code):
+    """Добавить встроенного ИИ-бота указанной роли."""
+    d = request.get_json(silent=True) or {}
+    game = mgames.get(store_id, code)
+    role = d.get("role", "merch")
+    names = {"cashier": "ИИ-Кассир", "merch": "ИИ-Мерч",
+             "cleaner": "ИИ-Клинер", "tech": "ИИ-Техник",
+             "supervisor": "ИИ-Супервайзер"}
+    return jsonify(game.join(names.get(role, "ИИ-Бот"), role, "bot"))
+
+
+@app.post("/api/mgame/<store_id>/<code>/start")
+def mgame_start(store_id, code):
+    game = mgames.get(store_id, code)
+    game.start()
+    return jsonify({"ok": True})
+
+
+@app.post("/api/mgame/<store_id>/<code>/action")
+def mgame_action(store_id, code):
+    """Действие игрока: люди из браузера и внешние ИИ по API."""
+    d = request.get_json(silent=True) or {}
+    game = mgames.get(store_id, code)
+    return jsonify(game.action(d.get("player", ""), d.get("action", ""),
+                               d.get("x"), d.get("y"), d.get("target")))
+
+
+@app.get("/api/mgame/<store_id>/<code>/state")
+def mgame_state(store_id, code):
+    game = mgames.get(store_id, code)
+    return jsonify(game.state(request.args.get("player", ""),
+                              request.args.get("after", 0, type=int)))
 
 
 @app.get("/api/instore/<store_id>/state")
