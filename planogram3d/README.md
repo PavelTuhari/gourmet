@@ -211,6 +211,11 @@ python -m planogram3d.webapp
   экспорт PNG, headless-мониторинг.
 * [docs/PRESENTATION_PLAN.md](docs/PRESENTATION_PLAN.md) и
   `docs/presentation.pptx` — план презентации и слайды (PowerPoint).
+* [docs/ARTICLE_TEAM_TRAINING.md](docs/ARTICLE_TEAM_TRAINING.md) —
+  статья о методике обучения команды магазина в симуляторе.
+* [docs/ROADMAP_AI_WORKFORCE.md](docs/ROADMAP_AI_WORKFORCE.md) —
+  роадмап замещения ролей ИИ-агентами через API: уровни автономии
+  A0–A5 по аналогии с робо-такси, от симулятора до живой системы.
 
 Работающая система сама раздаёт документацию и презентацию:
 

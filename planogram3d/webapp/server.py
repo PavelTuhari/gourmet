@@ -103,8 +103,13 @@ _DOCS = {
     "readme": ("README.md", "О модуле"),
     "library": ("docs/LIBRARY.md", "Справочник API"),
     "integration": ("docs/INTEGRATION.md", "Интеграция"),
+    "article": ("docs/ARTICLE_TEAM_TRAINING.md", "Статья: методика"),
+    "roadmap": ("docs/ROADMAP_AI_WORKFORCE.md", "Роадмап ИИ"),
     "plan": ("docs/PRESENTATION_PLAN.md", "План презентации"),
 }
+#: ссылки по имени файла (из markdown-документов) → ключ страницы
+_DOC_FILES = {path.split("/")[-1]: key
+              for key, (path, _) in _DOCS.items()}
 
 
 @app.get("/presentation")
@@ -128,6 +133,8 @@ def docs_pptx():
 @app.get("/docs/<name>")
 def docs_page(name):
     from .mdview import md_to_html
+    if name in _DOC_FILES:           # ссылка по имени .md-файла
+        name = _DOC_FILES[name]
     if name not in _DOCS:
         abort(404)
     path, title = _DOCS[name]
