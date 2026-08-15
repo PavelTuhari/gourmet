@@ -101,9 +101,10 @@ def index():
 _PKG_ROOT = Path(__file__).resolve().parent.parent
 _DOCS = {
     "readme": ("README.md", "О модуле"),
+    "erp3d": ("docs/ARTICLE_3D_ERP.md", "3D для ERP"),
     "library": ("docs/LIBRARY.md", "Справочник API"),
     "integration": ("docs/INTEGRATION.md", "Интеграция"),
-    "article": ("docs/ARTICLE_TEAM_TRAINING.md", "Статья: методика"),
+    "article": ("docs/ARTICLE_TEAM_TRAINING.md", "Методичка"),
     "roadmap": ("docs/ROADMAP_AI_WORKFORCE.md", "Роадмап ИИ"),
     "plan": ("docs/PRESENTATION_PLAN.md", "План презентации"),
 }
