@@ -15,15 +15,17 @@
 
 import argparse
 
-from flask import Flask, abort, jsonify, render_template
+from flask import Flask, abort, jsonify, render_template, request
 
 from ..core import build_report_page, check_compliance
+from .instore import InstoreHub
 from .network import StoreNetwork
 from .zabbix import create_provider
 
 app = Flask(__name__)
 network = StoreNetwork()
 zabbix, zabbix_mode = create_provider(list(network.stores))
+instore = InstoreHub()
 
 
 @app.get("/")
@@ -56,6 +58,39 @@ def store_page(store_id):
         abort(404)
     violations = check_compliance(store)
     return build_report_page(store, violations)
+
+
+@app.get("/store/<store_id>/live")
+def store_live(store_id):
+    try:
+        store = network.store(store_id)
+    except KeyError:
+        abort(404)
+    return render_template("instore.html", store_id=store_id,
+                           store_name=store.name)
+
+
+@app.get("/api/instore/<store_id>/state")
+def instore_state(store_id):
+    try:
+        store = network.store(store_id)
+    except KeyError:
+        abort(404)
+    after = request.args.get("after", 0, type=int)
+    return jsonify(instore.get(store_id, store).state(after_id=after))
+
+
+@app.post("/api/instore/<store_id>/ingest")
+def instore_ingest(store_id):
+    """Приём реального потока событий: кассы, весы, СКО, видеоаналитика."""
+    try:
+        store = network.store(store_id)
+    except KeyError:
+        abort(404)
+    payload = request.get_json(silent=True) or {}
+    accepted = instore.get(store_id, store).ingest(
+        payload.get("events", []))
+    return jsonify({"accepted": accepted})
 
 
 def main(argv=None) -> int:

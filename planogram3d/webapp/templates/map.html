@@ -128,6 +128,12 @@
     cursor:pointer;
   }
   #interior iframe { border:0; flex:1; width:100%; }
+  #interior .itabs { display:flex; gap:6px; margin-left:18px; }
+  #interior .itabs button {
+    margin-left:0; background:rgba(255,255,255,.14); font-weight:600;
+    padding:7px 14px;
+  }
+  #interior .itabs button.active { background:#2f6fed; }
 
   /* ---- карточка магазина ---- */
   #card {
@@ -194,6 +200,10 @@
     <span style="font-size:20px">🏪</span>
     <div><div class="t" id="i-name"></div>
          <div class="z" id="i-zbx"></div></div>
+    <div class="itabs">
+      <button id="tab-plan" class="active">📋 Планограмма 3D</button>
+      <button id="tab-live">🎮 Симуляция зала</button>
+    </div>
     <button id="i-back">← Назад на карту</button>
   </header>
   <iframe id="i-frame" src="about:blank"></iframe>
@@ -340,9 +350,19 @@ document.getElementById("close").onclick = () => {
 };
 
 /* ---------- «вход в магазин» как в игре ---------- */
-let savedCamera = null;
+let savedCamera = null, currentStoreId = null;
+
+function setInteriorTab(live) {
+  document.getElementById("tab-plan").classList.toggle("active", !live);
+  document.getElementById("tab-live").classList.toggle("active", live);
+  document.getElementById("i-frame").src =
+    "/store/" + currentStoreId + (live ? "/live" : "");
+}
+document.getElementById("tab-plan").onclick = () => setInteriorTab(false);
+document.getElementById("tab-live").onclick = () => setInteriorTab(true);
 
 function enterStore(s) {
+  currentStoreId = s.id;
   document.getElementById("card").style.display = "none";
   savedCamera = { center: map.getCenter(), zoom: map.getZoom(),
                   pitch: map.getPitch(), bearing: map.getBearing() };
@@ -363,7 +383,7 @@ function enterStore(s) {
       `полки ${Math.round(s.fill_avg * 100)}% · ` +
       (z.active ? `Zabbix: ${z.active} актив. проблем ⚠`
                 : "Zabbix: проблем нет ✓");
-    document.getElementById("i-frame").src = "/store/" + s.id;
+    setInteriorTab(false);           // по умолчанию — планограмма
     document.getElementById("interior").classList.add("on");
     document.getElementById("enter-fx").classList.remove("on");
   }, 3100);

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>{{ store_name }} — симуляция зала</title>
+<style>
+  html, body { margin:0; height:100%; font-family:'Segoe UI',system-ui,sans-serif;
+               background:#1a2430; color:#23303f; overflow:hidden; }
+  #wrap { display:flex; height:100%; }
+  #stage { flex:1; position:relative; display:flex; align-items:center;
+           justify-content:center; }
+  canvas { max-width:100%; max-height:100%; }
+
+  #side { width:295px; background:#f4f6f9; display:flex; flex-direction:column;
+          border-left:1px solid #dde3ea; }
+  #side .head { padding:12px 14px; background:linear-gradient(90deg,#1d2b3a,#2f4b68);
+                color:#fff; }
+  #side .head .t { font-weight:700; font-size:14px; }
+  #mode { display:inline-block; margin-top:5px; font-size:11.5px; font-weight:700;
+          padding:2px 9px; border-radius:9px; background:#3d5975; }
+  #mode.real { background:#2fa14e; }
+  .kpis { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:10px 12px; }
+  .kpi { background:#fff; border-radius:9px; padding:6px 9px;
+         box-shadow:0 1px 3px rgba(20,40,70,.08); }
+  .kpi b { display:block; font-size:15px; }
+  .kpi span { font-size:10.5px; color:#6b7683; }
+  #feed { flex:1; overflow-y:auto; padding:6px 12px 12px; font-size:12px;
+          line-height:1.5; }
+  #feed div { border-bottom:1px dashed #dfe5ec; padding:4px 0; }
+  #feed .src { font-size:10px; color:#8a94a1; margin-left:4px; }
+  #feed .pos { color:#1d7a3d; font-weight:600; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="stage"><canvas id="cv" width="920" height="600"></canvas></div>
+  <div id="side">
+    <div class="head">
+      <div class="t">🎮 Симуляция торгового зала</div>
+      <span id="mode">🧪 тестовый поток</span>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><b id="k-in">0</b><span>в зале сейчас</span></div>
+      <div class="kpi"><b id="k-vis">0</b><span>посетителей</span></div>
+      <div class="kpi"><b id="k-rc">0</b><span>чеков</span></div>
+      <div class="kpi"><b id="k-rev">0 ₽</b><span>выручка касс</span></div>
+      <div class="kpi"><b id="k-sco">0%</b><span>доля СКО</span></div>
+      <div class="kpi"><b id="k-wg">0</b><span>взвешиваний</span></div>
+    </div>
+    <div id="feed"></div>
+  </div>
+</div>
+
+<script>
+const STORE_ID = {{ store_id | tojson }};
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+
+/* ---------- изометрия ---------- */
+const SX = 54, SY = 27, OX = 400, OY = 118;
+const iso = (x, y, z = 0) => [ (x - y) * SX + OX, (x + y) * SY + OY - z * 46 ];
+
+function poly(pts, fill, stroke) {
+  ctx.beginPath();
+  pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+  ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+}
+
+/* box: параллелепипед (x,y)-(x+w,y+d) высотой h */
+function box(x, y, w, d, h, top, left, right) {
+  poly([iso(x,y+d,h), iso(x+w,y+d,h), iso(x+w,y+d,0), iso(x,y+d,0)], left);
+  poly([iso(x+w,y,h), iso(x+w,y+d,h), iso(x+w,y+d,0), iso(x+w,y,0)], right);
+  poly([iso(x,y,h), iso(x+w,y,h), iso(x+w,y+d,h), iso(x,y+d,h)], top,
+       "rgba(0,0,0,.14)");
+}
+
+function label(x, y, z, text, size = 12, color = "#3c4856") {
+  const [sx, sy] = iso(x, y, z);
+  ctx.font = `600 ${size}px 'Segoe UI',sans-serif`;
+  ctx.textAlign = "center"; ctx.fillStyle = color;
+  ctx.fillText(text, sx, sy);
+}
+
+const fillColor = f => f > .7 ? "#4caf50" : f > .4 ? "#ffb300" : "#e5533d";
+
+/* ---------- состояние ---------- */
+let layout = null, counters = {}, lastEvent = 0;
+let agents = {};                       // id -> {from:{x,y}, to:{x,y}, t0, state, cart}
+let popups = [];                       // {x,y,text,color,t0}
+let gateFlash = 0;
+
+async function poll() {
+  try {
+    const st = await (await fetch(
+      `/api/instore/${STORE_ID}/state?after=${lastEvent}`)).json();
+    layout = st.layout; counters = st.counters;
+    const m = document.getElementById("mode");
+    m.textContent = st.mode === "real"
+      ? "📡 реальный поток (кассы/CCTV)" : "🧪 тестовый поток";
+    m.className = st.mode === "real" ? "real" : "";
+
+    const seen = new Set();
+    for (const a of st.agents) {
+      seen.add(a.id);
+      const prev = agents[a.id];
+      agents[a.id] = { from: prev ? {x: posOf(prev).x, y: posOf(prev).y}
+                                  : {x: a.x, y: a.y},
+                       to: {x: a.x, y: a.y}, t0: performance.now(),
+                       state: a.state, cart: a.cart };
+    }
+    for (const id of Object.keys(agents))
+      if (!seen.has(+id)) delete agents[id];
+
+    for (const e of st.events) { lastEvent = e.id; onEvent(e); }
+    renderKpis();
+  } catch (err) { /* сервер занят — попробуем позже */ }
+}
+setInterval(poll, 1000); poll();
+
+function posOf(a) {
+  const k = Math.min(1, (performance.now() - a.t0) / 1000);
+  return { x: a.from.x + (a.to.x - a.from.x) * k,
+           y: a.from.y + (a.to.y - a.from.y) * k };
+}
+
+/* ---------- события ---------- */
+const EVENT_FMT = {
+  cam_in:  e => ["🎥", "Видеонаблюдение: посетитель вошёл"],
+  cam_out: e => ["🎥", "Видеонаблюдение: посетитель вышел"],
+  pick:    e => ["🛒", `Взято с полки: ${e.data.name}`],
+  scale:   e => ["⚖️", `Весы: ${e.data.name} — ${e.data.weight_kg} кг`],
+  sco_in:  e => ["🚧", "Вход в зону касс самообслуживания"],
+  sco_out: e => ["🚧", "Выход из зоны СКО"],
+  pos:     e => ["🧾", `${e.data.register}: чек ${e.data.total} ₽ ` +
+                       `(${e.data.items} поз.)`],
+};
+
+function onEvent(e) {
+  const fmt = EVENT_FMT[e.type];
+  if (!fmt) return;
+  const [icon, text] = fmt(e);
+  const feed = document.getElementById("feed");
+  const div = document.createElement("div");
+  div.innerHTML = `${icon} <span class="${e.type === "pos" ? "pos" : ""}">` +
+    `${text}</span><span class="src">${
+      e.source === "real" ? "поток" : "тест"}</span>`;
+  feed.prepend(div);
+  while (feed.children.length > 40) feed.lastChild.remove();
+
+  if (e.x == null) return;
+  if (e.type === "pos")
+    popups.push({x: e.x, y: e.y, text: `+${e.data.total} ₽`,
+                 color: "#ffd54f", t0: performance.now()});
+  else if (e.type === "scale")
+    popups.push({x: e.x, y: e.y, text: `${e.data.weight_kg} кг`,
+                 color: "#90caf9", t0: performance.now()});
+  else if (e.type === "pick")
+    popups.push({x: e.x, y: e.y, text: "🛒", color: "#fff",
+                 t0: performance.now()});
+  else if (e.type === "sco_in" || e.type === "sco_out")
+    gateFlash = performance.now();
+}
+
+function renderKpis() {
+  const c = counters;
+  document.getElementById("k-in").textContent = c.in_store ?? 0;
+  document.getElementById("k-vis").textContent = c.visitors_today ?? 0;
+  document.getElementById("k-rc").textContent = c.receipts ?? 0;
+  document.getElementById("k-rev").textContent =
+    (c.revenue ?? 0).toLocaleString("ru-RU") + " ₽";
+  document.getElementById("k-sco").textContent = c.receipts
+    ? Math.round(100 * c.sco_receipts / c.receipts) + "%" : "0%";
+  document.getElementById("k-wg").textContent = c.weighings ?? 0;
+}
+
+/* ---------- отрисовка ---------- */
+function draw() {
+  requestAnimationFrame(draw);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  if (!layout) return;
+
+  // пол
+  poly([iso(-0.7,-0.6), iso(8.1,-0.6), iso(8.1,6.1), iso(-0.7,6.1)],
+       "#e8e2d5");
+  ctx.strokeStyle = "rgba(0,0,0,.05)";
+  for (let x = 0; x <= 8; x++)
+    poly([iso(x,-0.6), iso(x,6.1)], null, "rgba(0,0,0,.05)");
+  for (let y = 0; y <= 6; y++)
+    poly([iso(-0.7,y), iso(8.1,y)], null, "rgba(0,0,0,.05)");
+
+  // зона СКО (подсветка пола + вспышка ворот)
+  const [sx, sy, sw, sd] = layout.sco;
+  poly([iso(sx,sy), iso(sx+sw,sy), iso(sx+sw,sy+sd), iso(sx,sy+sd)],
+       "rgba(47,111,237,.16)");
+  const gAge = performance.now() - gateFlash;
+  const gate = layout.sco_gate;
+  box(gate[0]-0.45, gate[1]-0.05, 0.12, 0.1, 0.9,
+      gAge < 500 ? "#ffd54f" : "#8fa3b8", "#6d8296", "#5c7086");
+  box(gate[0]+0.33, gate[1]-0.05, 0.12, 0.1, 0.9,
+      gAge < 500 ? "#ffd54f" : "#8fa3b8", "#6d8296", "#5c7086");
+  label(sx + sw/2, sy + sd/2, 0, "СКО", 12, "#2f6fed");
+
+  const drawables = [];
+
+  // стеллажи — реальная планограмма (цвет фронта = заполненность)
+  for (const g of layout.gondolas) {
+    drawables.push({ depth: g.x + g.y + g.d, fn: () => {
+      box(g.x, g.y, g.w, g.d, 0.95, "#cfd6de", "#aeb7c2", fillColor(g.fill));
+      label(g.x + g.w/2, g.y + g.d/2, 1.25,
+            `${g.name.split("(")[0].trim()} · ${Math.round(g.fill*100)}%`,
+            11);
+    }});
+  }
+  // кассы
+  for (const p of layout.pos) {
+    drawables.push({ depth: p.x + p.y, fn: () => {
+      box(p.x - 0.4, p.y - 0.3, 0.8, 0.6, 0.5, "#b8c4d2", "#93a2b4",
+          "#7e8ca0");
+      box(p.x + 0.15, p.y - 0.25, 0.12, 0.12, 0.85, "#4a5a6e", "#3c4b5e",
+          "#33404f");
+      label(p.x, p.y - 0.35, 0.9, p.name, 11);
+    }});
+  }
+  // весы
+  const sc = layout.scales;
+  drawables.push({ depth: sc[0] + sc[1], fn: () => {
+    box(sc[0]-0.25, sc[1]-0.2, 0.5, 0.4, 0.55, "#c9d3dd", "#a3aebc",
+        "#8d99a9");
+    label(sc[0], sc[1] - 0.28, 0.95, "⚖ Весы", 11);
+  }});
+  // вход/выход
+  const en = layout.entrance, ex = layout.exit;
+  drawables.push({ depth: en[0] + en[1], fn: () => {
+    poly([iso(en[0]-0.5,en[1]-0.25), iso(en[0]+0.5,en[1]-0.25),
+          iso(en[0]+0.5,en[1]+0.25), iso(en[0]-0.5,en[1]+0.25)], "#bfe3c4");
+    label(en[0], en[1], 0.55, "🎥 ВХОД", 11, "#1d7a3d");
+  }});
+  drawables.push({ depth: ex[0] + ex[1], fn: () => {
+    poly([iso(ex[0]-0.5,ex[1]-0.2), iso(ex[0]+0.5,ex[1]-0.2),
+          iso(ex[0]+0.5,ex[1]+0.25), iso(ex[0]-0.5,ex[1]+0.25)], "#f2cdc9");
+    label(ex[0], ex[1], 0.55, "🎥 ВЫХОД", 11, "#b03a30");
+  }});
+
+  // покупатели
+  const ICONS = { walk: "🚶", browse: "🧍", weigh: "🧍", queue: "🧍",
+                  pay: "🧍" };
+  for (const id of Object.keys(agents)) {
+    const a = agents[id], p = posOf(a);
+    drawables.push({ depth: p.x + p.y, fn: () => {
+      const [px, py] = iso(p.x, p.y);
+      ctx.fillStyle = "rgba(0,0,0,.18)";
+      ctx.beginPath(); ctx.ellipse(px, py + 3, 10, 4, 0, 0, 7); ctx.fill();
+      ctx.font = "20px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(ICONS[a.state] || "🚶", px, py - 4);
+      if (a.cart) { ctx.font = "13px sans-serif";
+                    ctx.fillText("🛒", px + 11, py + 1); }
+      if (a.state === "pay") { ctx.font = "12px sans-serif";
+                               ctx.fillText("💳", px - 12, py - 18); }
+    }});
+  }
+
+  drawables.sort((a, b) => a.depth - b.depth).forEach(d => d.fn());
+
+  // всплывающие «+N ₽» / «кг»
+  const now = performance.now();
+  popups = popups.filter(p => now - p.t0 < 1500);
+  for (const p of popups) {
+    const k = (now - p.t0) / 1500;
+    const [px, py] = iso(p.x, p.y, 0.9);
+    ctx.globalAlpha = 1 - k;
+    ctx.font = "700 14px 'Segoe UI',sans-serif"; ctx.textAlign = "center";
+    ctx.lineWidth = 3; ctx.strokeStyle = "rgba(20,30,40,.75)";
+    ctx.strokeText(p.text, px, py - 40 * k);
+    ctx.fillStyle = p.color;
+    ctx.fillText(p.text, px, py - 40 * k);
+    ctx.globalAlpha = 1;
+  }
+}
+draw();
+</script>
+</body>
+</html>
