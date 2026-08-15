@@ -107,6 +107,7 @@ _DOCS = {
     "article": ("docs/ARTICLE_TEAM_TRAINING.md", "Методичка"),
     "roadmap": ("docs/ROADMAP_AI_WORKFORCE.md", "Роадмап ИИ"),
     "plan": ("docs/PRESENTATION_PLAN.md", "План презентации"),
+    "handoff": ("docs/HANDOFF.md", "База знаний"),
 }
 #: ссылки по имени файла (из markdown-документов) → ключ страницы
 _DOC_FILES = {path.split("/")[-1]: key
