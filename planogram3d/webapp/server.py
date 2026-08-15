@@ -14,8 +14,10 @@
 """
 
 import argparse
+from pathlib import Path
 
-from flask import Flask, abort, jsonify, render_template, request
+from flask import (Flask, abort, jsonify, redirect, render_template,
+                   request, send_file)
 
 from ..core import build_report_page, check_compliance
 from .delivery import DeliveryHub
@@ -91,6 +93,54 @@ def roblox_progress():
 @app.get("/")
 def index():
     return render_template("map.html")
+
+
+# ----- презентация, документация, команда -------------------------------
+_PKG_ROOT = Path(__file__).resolve().parent.parent
+_DOCS = {
+    "readme": ("README.md", "О модуле"),
+    "library": ("docs/LIBRARY.md", "Справочник API"),
+    "integration": ("docs/INTEGRATION.md", "Интеграция"),
+    "plan": ("docs/PRESENTATION_PLAN.md", "План презентации"),
+}
+
+
+@app.get("/presentation")
+def presentation():
+    """HTML-презентация модуля с живыми ссылками в демо-систему."""
+    return render_template("presentation.html")
+
+
+@app.get("/docs/")
+def docs_index():
+    return redirect("/docs/readme")
+
+
+@app.get("/docs/presentation.pptx")
+def docs_pptx():
+    return send_file(_PKG_ROOT / "docs" / "presentation.pptx",
+                     as_attachment=True,
+                     download_name="planogram3d_presentation.pptx")
+
+
+@app.get("/docs/<name>")
+def docs_page(name):
+    from .mdview import md_to_html
+    if name not in _DOCS:
+        abort(404)
+    path, title = _DOCS[name]
+    md = (_PKG_ROOT / path).read_text(encoding="utf-8")
+    return render_template(
+        "docs.html", title=title, current=name,
+        nav=[(k, t) for k, (_, t) in _DOCS.items()],
+        content=md_to_html(md))
+
+
+@app.get("/team")
+def team_page():
+    data = team.team()
+    return render_template("team.html", mode=data["mode"],
+                           members=data["members"], feed=data["feed"])
 
 
 @app.get("/api/state")

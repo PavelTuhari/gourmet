@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>{{ title }} — planogram3d</title>
+<style>
+  body { margin:0; font-family:'Segoe UI',system-ui,sans-serif;
+         background:#f0f2f5; color:#23303f; }
+  header { background:linear-gradient(90deg,#1d2b3a,#2f4b68); color:#fff;
+           padding:12px 24px; display:flex; gap:18px; align-items:center;
+           position:sticky; top:0; }
+  header b { font-size:16px; }
+  header a { color:#9ec2ff; font-size:13px; text-decoration:none; }
+  header a.on { color:#ffd54f; font-weight:700; }
+  main { max-width:900px; margin:24px auto 60px; background:#fff;
+         border-radius:14px; padding:28px 38px;
+         box-shadow:0 3px 14px rgba(20,40,70,.08); line-height:1.6;
+         font-size:14.5px; }
+  main h1 { font-size:26px; } main h2 { font-size:20px; margin-top:28px; }
+  main h3 { font-size:16px; }
+  code { background:#eef1f5; border-radius:4px; padding:1px 5px;
+         font-size:13px; }
+  pre { background:#1d2b3a; color:#dce6f2; border-radius:10px;
+        padding:14px 18px; overflow-x:auto; font-size:13px; }
+  pre code { background:none; color:inherit; padding:0; }
+  table { border-collapse:collapse; width:100%; font-size:13.5px; }
+  th, td { border:1px solid #dfe6ee; padding:6px 10px; text-align:left; }
+  th { background:#f4f6f9; }
+  a { color:#2f6fed; }
+</style>
+</head>
+<body>
+<header><b>📖 planogram3d</b>
+  {% for key, t in nav %}
+  <a href="/docs/{{ key }}" class="{{ 'on' if key == current }}">{{ t }}</a>
+  {% endfor %}
+  <a href="/docs/presentation.pptx">PPTX</a>
+  <a href="/presentation" style="margin-left:auto">📽 Презентация</a>
+  <a href="/">🗺 Демо</a>
+</header>
+<main>{{ content | safe }}</main>
+</body>
+</html>

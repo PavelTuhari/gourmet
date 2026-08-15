@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>planogram3d — презентация</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { --navy:#1d2b3a; --navy2:#2f4b68; --blue:#2f6fed;
+          --gold:#ffd54f; --ink:#23303f; --muted:#5b6672;
+          --light:#f4f6f9; --green:#2fa14e; }
+  html, body { margin:0; height:100%;
+               font-family:'Segoe UI',system-ui,sans-serif;
+               color:var(--ink); background:#0f1721; }
+  .slide { display:none; height:100vh; box-sizing:border-box;
+           padding:46px 60px 70px; overflow:auto; }
+  .slide.active { display:flex; flex-direction:column; }
+  .slide.light { background:#fff; }
+  .slide.dark { background:var(--navy); color:#fff; }
+  h1 { font-family:Cambria,serif; font-size:34px; margin:0 0 18px; }
+  .dark h1 { color:#fff; }
+  .sub { color:var(--muted); font-size:15px; margin:-8px 0 16px; }
+  .dark .sub { color:#c8d4e2; }
+
+  .links { display:flex; flex-wrap:wrap; gap:10px; margin-top:auto;
+           padding-top:16px; }
+  .links a { background:var(--blue); color:#fff; text-decoration:none;
+             font-weight:600; font-size:13.5px; padding:9px 16px;
+             border-radius:10px; }
+  .links a.alt { background:var(--light); color:var(--ink);
+                 border:1px solid #dfe6ee; }
+  .dark .links a.alt { background:var(--navy2); color:#dce6f2;
+                       border:none; }
+  .links .lbl { align-self:center; font-size:12.5px; color:var(--muted);
+                font-weight:700; margin-right:2px; }
+  .dark .links .lbl { color:#8fa3b8; }
+
+  .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .card { background:var(--light); border:1px solid #dfe6ee;
+          border-radius:14px; padding:16px 18px; }
+  .card h3 { margin:0 0 8px; font-size:16.5px; }
+  .card p { margin:0 0 10px; font-size:13px; color:var(--muted);
+            line-height:1.45; }
+  .card a { color:var(--blue); font-weight:700; font-size:12.5px;
+            text-decoration:none; }
+  .cols { display:flex; gap:34px; align-items:flex-start; }
+  .cols ul { margin:0; padding-left:20px; font-size:14.5px;
+             line-height:1.75; }
+  .stat { background:var(--navy); color:#fff; border-radius:14px;
+          padding:18px 22px; text-align:center; min-width:150px; }
+  .stat b { display:block; font-size:46px; color:var(--gold); }
+  .stat span { font-size:12.5px; color:#c8d4e2; }
+
+  .arch { display:flex; gap:14px; align-items:stretch; }
+  .arch .box { flex:1; border-radius:12px; padding:14px 16px;
+               color:#fff; }
+  .arch .box h4 { margin:0 0 8px; font-size:15.5px; }
+  .arch .box div { font-size:12px; color:#dce6f2; line-height:1.5; }
+  .arch .arrow { align-self:center; font-size:24px; color:var(--muted); }
+
+  svg.bpmn { width:100%; height:auto; background:#fff;
+             border:1px solid #e3e8ef; border-radius:12px; }
+  svg.bpmn a { cursor:pointer; }
+  svg.bpmn a:hover rect, svg.bpmn a:hover polygon { stroke-width:3; }
+  .legend { font-size:11.5px; color:var(--muted); margin-top:8px; }
+
+  #nav { position:fixed; bottom:0; left:0; right:0; height:52px;
+         background:rgba(16,24,34,.92); display:flex; align-items:center;
+         gap:14px; padding:0 22px; z-index:50; color:#c8d4e2; }
+  #nav button { border:0; background:var(--navy2); color:#fff;
+                border-radius:8px; padding:8px 16px; font-size:14px;
+                cursor:pointer; font-weight:700; }
+  #nav .dots { display:flex; gap:6px; }
+  #nav .dots i { width:9px; height:9px; border-radius:50%;
+                 background:#41536a; cursor:pointer; }
+  #nav .dots i.on { background:var(--gold); }
+  #nav .cnt { margin-left:auto; font-size:13px; }
+  #nav a { color:#9ec2ff; font-size:12.5px; text-decoration:none;
+           margin-left:14px; }
+</style>
+</head>
+<body>
+
+<!-- 1. Титул -->
+<section class="slide dark">
+  <div style="margin:auto 0">
+    <div style="font-family:Cambria,serif;font-size:64px;font-weight:700">
+      planogram3d</div>
+    <div style="font-size:24px;color:var(--gold);margin:10px 0 22px">
+      Цифровой двойник розничной сети «Гурман»</div>
+    <div style="font-size:16px;color:#c8d4e2;max-width:760px;line-height:1.6">
+      3D-планограммы и контроль соответствия · живая карта сети ·
+      датчики торгового зала · игровой тренажёр персонала и Roblox ·
+      интернет-заказы с GPS-мониторингом и фискальными чеками.
+      Все ссылки в этой презентации ведут в работающую демо-систему.</div>
+  </div>
+  <div class="links"><span class="lbl">🔗 Живое демо:</span>
+    <a href="/" target="_blank">Карта сети 2D/3D</a>
+    <a href="/delivery" target="_blank">Доставка</a>
+    <a href="/store/st17/game" target="_blank">Тренажёр</a>
+    <a class="alt" href="/docs/" target="_blank">Документация</a>
+  </div>
+</section>
+
+<!-- 2. Возможности -->
+<section class="slide light">
+  <h1>Шесть работающих блоков платформы</h1>
+  <div class="grid">
+    <div class="card"><h3>🧊 3D-планограммы</h3>
+      <p>Текущие продажи с теплокартой остатков и утверждённая выкладка
+         по поставщикам; карточки SKU при наведении.</p>
+      <a href="/store/st17" target="_blank">Открыть 3D-планограмму →</a></div>
+    <div class="card"><h3>✅ Контроль соответствия</h3>
+      <p>Регламент, контракты, факт против плана, OOS — отчёт под
+         3D-сценой, 16 нарушений в демо.</p>
+      <a href="/store/st17" target="_blank">Отчёт о нарушениях →</a></div>
+    <div class="card"><h3>🗺 Живая карта сети</h3>
+      <p>Реальная Тверь (OSM) в 2D/3D, эмуляция торгового дня, Zabbix,
+         логистический центр с рейсами.</p>
+      <a href="/" target="_blank">Карта сети →</a></div>
+    <div class="card"><h3>📡 Датчики зала</h3>
+      <p>Очереди, ТСД по BLE/LoRa, холодильники, расходники, оценка
+         трафика по датчикам входа/выхода.</p>
+      <a href="/store/st17/live" target="_blank">Симуляция зала →</a></div>
+    <div class="card"><h3>🎓 Тренажёр + Roblox</h3>
+      <p>Игра-обучение кассиров; баллы, бейджи и лидерборд команды через
+         Open Cloud.</p>
+      <a href="/store/st17/game" target="_blank">Играть смену →</a></div>
+    <div class="card"><h3>🛵 Доставка</h3>
+      <p>Сборка, маршруты, диаграмма Ганта, GPS-мониторинг и чек при
+         вручении.</p>
+      <a href="/delivery" target="_blank">Дашборд доставки →</a></div>
+  </div>
+  <div class="links"><span class="lbl">🔗 Всё сразу:</span>
+    <a href="/" target="_blank">Стартовая карта сети</a></div>
+</section>
+
+<!-- 3. Архитектура -->
+<section class="slide light">
+  <h1>Архитектура: встраиваемое ядро и надстройки</h1>
+  <div class="arch">
+    <div class="box" style="background:var(--navy)">
+      <h4>planogram3d.core</h4>
+      <div>модель данных Store · проверки соответствия · 3D-сцены
+        (Plotly) · отчёты HTML<br>
+        <i style="color:var(--gold)">зависимость — только plotly</i></div>
+    </div><div class="arrow">→</div>
+    <div class="box" style="background:var(--navy2)">
+      <h4>planogram3d.webapp</h4>
+      <div>карта сети · симуляция зала · тренажёр · доставка · Zabbix ·
+        Roblox-команда (Flask)<br>
+        <i style="color:var(--gold)">REST API для интеграций</i></div>
+    </div><div class="arrow">→</div>
+    <div class="box" style="background:var(--blue)">
+      <h4>planogram3d.robloxkit</h4>
+      <div>конвертер сцен в .rbxlx · Luau-скрипты тренажёра · place-файлы
+        для Roblox Studio<br>
+        <i style="color:var(--gold)">без зависимостей</i></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h3>Один объект Store — все данные системы</h3>
+    <p>Магазины, стеллажи, товары, поставщики, контракты, две планограммы
+       (утверждённая и фактическая), продажи. Наполняется из учётной
+       системы, БД или CSV; свои правила — через extra_checks.</p>
+  </div>
+  <div class="links"><span class="lbl">🔗 Подробнее:</span>
+    <a class="alt" href="/docs/library" target="_blank">Справочник API</a>
+    <a class="alt" href="/docs/integration" target="_blank">
+      Руководство по интеграции</a>
+    <a href="/store/st17" target="_blank">Пример работы ядра</a></div>
+</section>
+
+<!-- 4. 3D-планограмма -->
+<section class="slide light">
+  <h1>3D-планограмма: продажи и утверждённая выкладка</h1>
+  <div class="cols">
+    <ul style="flex:1">
+      <li>Два режима одной сцены — «Текущее состояние продаж» и
+          «Утверждённая планограмма», переключение кнопками</li>
+      <li>Теплокарта остатков: зелёный — полная полка, красный
+          полупрозрачный — out-of-stock</li>
+      <li>Глубина стопки товара пропорциональна остатку</li>
+      <li>Утверждённая выкладка раскрашена по поставщикам — видны доли
+          полки по контрактам</li>
+      <li>Карточка при наведении: SKU, поставщик, фейсинги, остаток,
+          скорость продаж, запас в днях</li>
+      <li>Отчёт — автономный HTML-файл: можно отправить письмом</li>
+    </ul>
+    <div class="stat"><b>2</b><span>режима сцены<br>в одном отчёте</span>
+    </div>
+  </div>
+  <div class="links"><span class="lbl">🔗 Живое демо:</span>
+    <a href="/store/st17" target="_blank">Магазин №17 · Трёхсвятская</a>
+    <a class="alt" href="/store/st03" target="_blank">Магазин №3 ·
+      пл. Ленина</a>
+    <a class="alt" href="/store/st08" target="_blank">Магазин №8 ·
+      Набережная</a></div>
+</section>
+
+<!-- 5. Соответствие -->
+<section class="slide light">
+  <h1>Контроль соответствия: регламент и контракты</h1>
+  <div class="cols">
+    <ul style="flex:1">
+      <li><b>Внутренний регламент</b> — вес на верхних полках, габариты
+          в просвете, переполнение и пересечения выкладок</li>
+      <li><b>Контракты с поставщиками</b> — минимальная доля полки,
+          обязательные SKU, уровень глаз</li>
+      <li><b>Факт против планограммы</b> — отсутствующие и лишние
+          позиции, расхождение фейсингов</li>
+      <li><b>Продажи</b> — out-of-stock, низкая заполненность, запас
+          меньше дневных продаж</li>
+      <li>Каждое нарушение с адресом: стеллаж, полка, SKU, причина</li>
+    </ul>
+    <div class="stat"><b>16</b><span>нарушений находит<br>демо-магазин
+      (6 критичных)</span></div>
+  </div>
+  <div class="links"><span class="lbl">🔗 Живое демо:</span>
+    <a href="/store/st17" target="_blank">Отчёт под 3D-сценой</a>
+    <a class="alt" href="/docs/integration" target="_blank">
+      Свои правила (extra_checks)</a></div>
+</section>
+
+<!-- 6. Карта сети -->
+<section class="slide light">
+  <h1>Живая карта сети, Zabbix и логистический центр</h1>
+  <div class="cols">
+    <ul style="flex:1">
+      <li>Карта из OpenStreetMap: улицы, здания, Волга — автономна,
+          интернет не нужен; 2D/3D с выдавливанием по этажности</li>
+      <li>Эмуляция торгового дня (1 с = 10 мин): продажи, выручка,
+          пустые полки, лента событий</li>
+      <li>Zabbix: бейдж активных проблем на каждом магазине, список в
+          карточке (реальный API или эмуляция)</li>
+      <li>РЦ-буфер: пустая полка → заказ → грузовик по карте →
+          пополнение; перезаказ у поставщиков</li>
+      <li>Игровой вход в магазин: подлёт камеры, «дверь», интерьер с
+          тремя вкладками</li>
+    </ul>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="stat"><b>6</b><span>магазинов сети<br>в эмуляции</span></div>
+      <div class="stat"><b>🚚</b><span>рейсы РЦ на карте<br>в реальном
+        времени</span></div>
+    </div>
+  </div>
+  <div class="links"><span class="lbl">🔗 Живое демо:</span>
+    <a href="/" target="_blank">Карта сети (3D + Zabbix + РЦ)</a>
+    <a class="alt" href="/api/state" target="_blank">API состояния сети
+      (JSON)</a></div>
+</section>
+
+<!-- 7. Симуляция зала -->
+<section class="slide light">
+  <h1>Симуляция зала: датчики магазина на одной схеме</h1>
+  <div class="cols">
+    <ul style="flex:1">
+      <li>Покупатели ходят к реальным стеллажам планограммы, весам,
+          кассам и СКО</li>
+      <li>Очереди у касс в реальном времени; оценка трафика: датчики
+          входа/выхода − очереди = равномерно по залу</li>
+      <li>ТСД: BLE-маяки (±0.5–1 м) в торговой зоне, LoRa (±2–3.5 м) на
+          остальной площади, круги точности</li>
+      <li>Холодильники: температура, дверца, компрессор, тревоги;
+          зоны скоропорта выделены</li>
+      <li>Расходники: лента касс/весов, кульки — заявки на замену</li>
+      <li>Единая шина событий: эмулятор или реальные кассы/CCTV
+          (POST /api/instore/&lt;id&gt;/ingest)</li>
+    </ul>
+    <div class="stat"><b>7</b><span>типов событий<br>от реальных
+      систем</span></div>
+  </div>
+  <div class="links"><span class="lbl">🔗 Живое демо:</span>
+    <a href="/store/st17/live" target="_blank">Зал магазина №17</a>
+    <a class="alt" href="/api/instore/st17/state" target="_blank">
+      Поток состояния (JSON)</a></div>
+</section>
+
+<!-- 8. Тренажёр и Roblox -->
+<section class="slide light">
+  <h1>Тренажёр персонала и мотивация в Roblox</h1>
+  <div class="cols">
+    <ul style="flex:1">
+      <li>Игра в жанре тайм-менеджмента: склад → полки → касса, уборка,
+          лента, холодильники</li>
+      <li>Покупатели с терпением ❤ — уходят злыми, если ждать</li>
+      <li>3 смены-уровня, звёзды, разбор ошибок и советы в конце</li>
+      <li>Регистрация: имя + ник Roblox; баллы и бейджи за кейсы</li>
+      <li>Open Cloud: DataStore + MessagingService — поощрение видно
+          прямо в Roblox-опыте</li>
+      <li>Конвертер robloxkit: зал с реальной планограммой → .rbxlx
+          для Roblox Studio</li>
+    </ul>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="stat"><b>3</b><span>смены-уровня<br>обучения</span></div>
+      <div class="stat"><b>4</b><span>бейджа<br>команды</span></div>
+    </div>
+  </div>
+  <div class="links"><span class="lbl">🔗 Живое демо:</span>
+    <a href="/store/st17/game" target="_blank">Сыграть смену</a>
+    <a href="/team" target="_blank">Лидерборд команды</a>
+    <a class="alt" href="/api/roblox/team" target="_blank">API команды
+      (JSON)</a></div>
+</section>
+
+<!-- 9. Доставка -->
+<section class="slide light">
+  <h1>Интернет-заказы: сборка → маршруты → Гант → GPS → чек</h1>
+  <div class="cols">
+    <ul style="flex:1">
+      <li>Заказы привязываются к ближайшему магазину, сборка по
+          планограмме</li>
+      <li>Группировка в маршруты по 2–4 адреса («ближайший сосед»)</li>
+      <li>Диаграмма Ганта: план/факт каждого плеча, линия «сейчас»,
+          опоздания красным</li>
+      <li>Курьеры на карте по GPS из приложения
+          (POST /api/delivery/gps); без телеметрии — эмуляция</li>
+      <li>Чек в момент вручения: Android с облачной кассой или терминал
+          SmartOne с ФН на борту; печатная форма 80 мм</li>
+    </ul>
+    <div class="stat"><b>2</b><span>варианта курьерского<br>
+      приложения</span></div>
+  </div>
+  <div class="links"><span class="lbl">🔗 Живое демо:</span>
+    <a href="/delivery" target="_blank">Дашборд доставки</a>
+    <a id="live-receipt" href="/delivery" target="_blank">Последний
+      фискальный чек</a>
+    <a class="alt" href="/api/delivery/state" target="_blank">API
+      доставки (JSON)</a></div>
+</section>
+
+<!-- 10. BPMN: пополнение полки -->
+<section class="slide light">
+  <h1>Бизнес-процесс: пополнение полки через РЦ</h1>
+  <div class="sub">Нотация BPMN (стиль ELMA) · каждая фигура кликабельна
+    и открывает соответствующий экран демо-системы</div>
+  <svg class="bpmn" viewBox="0 0 1180 470" xmlns="http://www.w3.org/2000/svg">
+    <!-- пул и дорожки -->
+    <rect x="0" y="0" width="28" height="470" fill="#2f4b68"/>
+    <text x="14" y="235" fill="#fff" font-size="13" font-weight="700"
+      text-anchor="middle" transform="rotate(-90 14 235)">Пополнение полки</text>
+    <rect x="28" y="0" width="1152" height="160" fill="#f6f9fd"
+      stroke="#d7e0ec"/>
+    <rect x="28" y="160" width="1152" height="155" fill="#eef3fa"
+      stroke="#d7e0ec"/>
+    <rect x="28" y="315" width="1152" height="155" fill="#f6f9fd"
+      stroke="#d7e0ec"/>
+    <text x="40" y="22" font-size="12" font-weight="700"
+      fill="#5b6672">Магазин (торговый зал)</text>
+    <text x="40" y="182" font-size="12" font-weight="700"
+      fill="#5b6672">Логистический центр</text>
+    <text x="40" y="337" font-size="12" font-weight="700"
+      fill="#5b6672">Поставщик</text>
+    <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="8"
+      refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z"
+      fill="#5b6672"/></marker></defs>
+
+    <!-- старт -->
+    <circle cx="95" cy="100" r="15" fill="#d9efd9" stroke="#2fa14e"
+      stroke-width="2.5"/>
+    <text x="95" y="135" font-size="10.5" text-anchor="middle"
+      fill="#5b6672">продажи идут</text>
+    <!-- Т1 мониторинг -->
+    <a href="/store/st17" target="_blank">
+      <rect x="145" y="70" width="185" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="237" y="95" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Контроль остатков</text>
+      <text x="237" y="112" font-size="11" text-anchor="middle"
+        fill="#2f6fed">3D-планограмма ↗</text></a>
+    <!-- D1 -->
+    <a href="/store/st17/live" target="_blank">
+      <polygon points="415,72 447,100 415,128 383,100"
+        fill="#fff3cd" stroke="#e6a700" stroke-width="2"/>
+      <text x="415" y="97" font-size="10" text-anchor="middle"
+        fill="#7a5c00">полка</text>
+      <text x="415" y="109" font-size="10" text-anchor="middle"
+        fill="#7a5c00">пуста? ↗</text></a>
+    <!-- Т2 заказ в РЦ -->
+    <a href="/" target="_blank">
+      <rect x="500" y="70" width="165" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="582" y="95" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Заказ пополнения</text>
+      <text x="582" y="112" font-size="11" text-anchor="middle"
+        fill="#2f6fed">в РЦ (карта) ↗</text></a>
+    <!-- D2 наличие на РЦ -->
+    <a href="/" target="_blank">
+      <polygon points="582,200 616,232 582,264 548,232"
+        fill="#fff3cd" stroke="#e6a700" stroke-width="2"/>
+      <text x="582" y="228" font-size="10" text-anchor="middle"
+        fill="#7a5c00">есть на</text>
+      <text x="582" y="240" font-size="10" text-anchor="middle"
+        fill="#7a5c00">складе? ↗</text></a>
+    <!-- Т3 отгрузка -->
+    <a href="/" target="_blank">
+      <rect x="690" y="202" width="195" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="787" y="227" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Отгрузка: рейс 🚚</text>
+      <text x="787" y="244" font-size="11" text-anchor="middle"
+        fill="#2f6fed">грузовик на карте ↗</text></a>
+    <!-- Т4 пополнение -->
+    <a href="/store/st17/live" target="_blank">
+      <rect x="920" y="70" width="190" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="1015" y="95" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Приёмка и пополнение</text>
+      <text x="1015" y="112" font-size="11" text-anchor="middle"
+        fill="#2f6fed">полки (зал) ↗</text></a>
+    <!-- Т5 срочный заказ поставщику -->
+    <a href="/" target="_blank">
+      <rect x="490" y="357" width="185" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="582" y="382" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Заказ поставщику</text>
+      <text x="582" y="399" font-size="11" text-anchor="middle"
+        fill="#2f6fed">(лента событий) ↗</text></a>
+    <!-- Т6 приход в РЦ -->
+    <a href="/" target="_blank">
+      <rect x="760" y="357" width="185" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="852" y="382" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Поставка в РЦ</text>
+      <text x="852" y="399" font-size="11" text-anchor="middle"
+        fill="#2f6fed">приход на склад ↗</text></a>
+    <!-- конец -->
+    <circle cx="1146" cy="100" r="15" fill="#f7dbd8" stroke="#d64541"
+      stroke-width="3"/>
+    <!-- стрелки -->
+    <line x1="110" y1="100" x2="143" y2="100" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar)"/>
+    <line x1="330" y1="100" x2="381" y2="100" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar)"/>
+    <path d="M415,72 Q415,40 330,45" fill="none" stroke="#5b6672"
+      stroke-width="1.4" marker-end="url(#ar)" stroke-dasharray="4 3"/>
+    <text x="390" y="48" font-size="10" fill="#5b6672">нет</text>
+    <line x1="447" y1="100" x2="498" y2="100" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar)"/>
+    <text x="460" y="92" font-size="10" fill="#5b6672">да</text>
+    <line x1="582" y1="130" x2="582" y2="198" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar)"/>
+    <line x1="616" y1="232" x2="688" y2="232" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar)"/>
+    <text x="632" y="224" font-size="10" fill="#5b6672">да</text>
+    <line x1="582" y1="264" x2="582" y2="355" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar)"/>
+    <text x="590" y="300" font-size="10" fill="#5b6672">нет</text>
+    <line x1="675" y1="387" x2="758" y2="387" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar)"/>
+    <path d="M852,357 L852,262" fill="none" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar)"/>
+    <path d="M885,232 L1015,232 L1015,132" fill="none" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar)"/>
+    <line x1="1110" y1="100" x2="1129" y2="100" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar)"/>
+  </svg>
+  <div class="legend">🟩 старт · 🔷 задача (клик — экран системы) ·
+    🔶 шлюз-решение · 🟥 завершение</div>
+  <div class="links"><span class="lbl">🔗 Весь процесс вживую:</span>
+    <a href="/" target="_blank">Карта: OOS → рейс РЦ → пополнение</a></div>
+</section>
+
+<!-- 11. BPMN: интернет-заказ -->
+<section class="slide light">
+  <h1>Бизнес-процесс: интернет-заказ и доставка</h1>
+  <div class="sub">Нотация BPMN (стиль ELMA) · фигуры кликабельны</div>
+  <svg class="bpmn" viewBox="0 0 1180 470" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="28" height="470" fill="#2f4b68"/>
+    <text x="14" y="235" fill="#fff" font-size="13" font-weight="700"
+      text-anchor="middle" transform="rotate(-90 14 235)">Интернет-заказ</text>
+    <rect x="28" y="0" width="1152" height="150" fill="#f6f9fd"
+      stroke="#d7e0ec"/>
+    <rect x="28" y="150" width="1152" height="160" fill="#eef3fa"
+      stroke="#d7e0ec"/>
+    <rect x="28" y="310" width="1152" height="160" fill="#f6f9fd"
+      stroke="#d7e0ec"/>
+    <text x="40" y="22" font-size="12" font-weight="700"
+      fill="#5b6672">Клиент</text>
+    <text x="40" y="172" font-size="12" font-weight="700"
+      fill="#5b6672">Магазин: сборка и диспетчеризация</text>
+    <text x="40" y="332" font-size="12" font-weight="700"
+      fill="#5b6672">Курьер (приложение с GPS)</text>
+    <defs><marker id="ar2" markerWidth="9" markerHeight="9" refX="8"
+      refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z"
+      fill="#5b6672"/></marker></defs>
+
+    <circle cx="95" cy="75" r="15" fill="#d9efd9" stroke="#2fa14e"
+      stroke-width="2.5"/>
+    <a href="/delivery" target="_blank">
+      <rect x="140" y="45" width="170" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="225" y="70" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Заказ на сайте</text>
+      <text x="225" y="87" font-size="11" text-anchor="middle"
+        fill="#2f6fed">панель заказов ↗</text></a>
+    <a href="/delivery" target="_blank">
+      <rect x="185" y="195" width="185" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="277" y="220" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Сборка по планограмме</text>
+      <text x="277" y="237" font-size="11" text-anchor="middle"
+        fill="#2f6fed">new→picking→packed ↗</text></a>
+    <a href="/delivery" target="_blank">
+      <polygon points="475,198 509,230 475,262 441,230"
+        fill="#fff3cd" stroke="#e6a700" stroke-width="2"/>
+      <text x="475" y="226" font-size="10" text-anchor="middle"
+        fill="#7a5c00">набралась</text>
+      <text x="475" y="238" font-size="10" text-anchor="middle"
+        fill="#7a5c00">партия? ↗</text></a>
+    <a href="/delivery" target="_blank">
+      <rect x="560" y="195" width="190" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="655" y="220" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Маршрут 2–4 адреса</text>
+      <text x="655" y="237" font-size="11" text-anchor="middle"
+        fill="#2f6fed">план на Ганте ↗</text></a>
+    <a href="/delivery" target="_blank">
+      <rect x="600" y="355" width="195" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="697" y="380" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Доставка: GPS-трекинг</text>
+      <text x="697" y="397" font-size="11" text-anchor="middle"
+        fill="#2f6fed">курьер на карте ↗</text></a>
+    <a href="/delivery" target="_blank">
+      <polygon points="870,358 904,390 870,422 836,390"
+        fill="#fff3cd" stroke="#e6a700" stroke-width="2"/>
+      <text x="870" y="386" font-size="10" text-anchor="middle"
+        fill="#7a5c00">вручено</text>
+      <text x="870" y="398" font-size="10" text-anchor="middle"
+        fill="#7a5c00">клиенту? ↗</text></a>
+    <a class="rc-shape" href="/delivery" target="_blank">
+      <rect x="950" y="355" width="175" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="1037" y="380" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Фискальный чек 54-ФЗ</text>
+      <text x="1037" y="397" font-size="11" text-anchor="middle"
+        fill="#2f6fed">печатная форма ↗</text></a>
+    <circle cx="1146" cy="75" r="15" fill="#f7dbd8" stroke="#d64541"
+      stroke-width="3"/>
+    <text x="1168" y="112" font-size="10.5" text-anchor="end"
+      fill="#5b6672">заказ у клиента</text>
+
+    <line x1="110" y1="75" x2="138" y2="75" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar2)"/>
+    <path d="M225,105 L225,160 L277,160 L277,193" fill="none"
+      stroke="#5b6672" stroke-width="1.6" marker-end="url(#ar2)"/>
+    <line x1="370" y1="225" x2="439" y2="225" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar2)"/>
+    <path d="M475,198 Q475,160 370,180" fill="none" stroke="#5b6672"
+      stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#ar2)"/>
+    <text x="452" y="172" font-size="10" fill="#5b6672">нет, ждём</text>
+    <line x1="509" y1="230" x2="558" y2="230" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar2)"/>
+    <text x="522" y="222" font-size="10" fill="#5b6672">да</text>
+    <path d="M655,255 L655,310 L697,310 L697,353" fill="none"
+      stroke="#5b6672" stroke-width="1.6" marker-end="url(#ar2)"/>
+    <line x1="795" y1="390" x2="834" y2="390" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar2)"/>
+    <path d="M870,358 Q870,330 795,340" fill="none" stroke="#5b6672"
+      stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#ar2)"/>
+    <text x="838" y="338" font-size="10" fill="#5b6672">нет</text>
+    <line x1="904" y1="390" x2="948" y2="390" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar2)"/>
+    <text x="916" y="382" font-size="10" fill="#5b6672">да</text>
+    <path d="M1125,390 L1146,390 L1146,92" fill="none" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar2)"/>
+  </svg>
+  <div class="legend">Фигура «Фискальный чек» ведёт на последний живой
+    чек демо-системы (обновляется автоматически)</div>
+  <div class="links"><span class="lbl">🔗 Весь процесс вживую:</span>
+    <a href="/delivery" target="_blank">Дашборд доставки с Гантом</a></div>
+</section>
+
+<!-- 12. BPMN: обучение + финал -->
+<section class="slide light">
+  <h1>Бизнес-процесс: обучение и мотивация персонала</h1>
+  <svg class="bpmn" viewBox="0 0 1180 400" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="28" height="400" fill="#2f4b68"/>
+    <text x="14" y="200" fill="#fff" font-size="13" font-weight="700"
+      text-anchor="middle" transform="rotate(-90 14 200)">Обучение</text>
+    <rect x="28" y="0" width="1152" height="133" fill="#f6f9fd"
+      stroke="#d7e0ec"/>
+    <rect x="28" y="133" width="1152" height="133" fill="#eef3fa"
+      stroke="#d7e0ec"/>
+    <rect x="28" y="266" width="1152" height="134" fill="#f6f9fd"
+      stroke="#d7e0ec"/>
+    <text x="40" y="20" font-size="12" font-weight="700"
+      fill="#5b6672">Сотрудник</text>
+    <text x="40" y="153" font-size="12" font-weight="700"
+      fill="#5b6672">Тренажёр</text>
+    <text x="40" y="286" font-size="12" font-weight="700"
+      fill="#5b6672">Roblox / команда</text>
+    <defs><marker id="ar3" markerWidth="9" markerHeight="9" refX="8"
+      refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z"
+      fill="#5b6672"/></marker></defs>
+
+    <circle cx="95" cy="66" r="15" fill="#d9efd9" stroke="#2fa14e"
+      stroke-width="2.5"/>
+    <a href="/store/st17/game" target="_blank">
+      <rect x="140" y="36" width="200" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="240" y="61" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Регистрация на брифинге</text>
+      <text x="240" y="78" font-size="11" text-anchor="middle"
+        fill="#2f6fed">имя + ник Roblox ↗</text></a>
+    <a href="/store/st17/game" target="_blank">
+      <rect x="240" y="169" width="200" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="340" y="194" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Смена-кейс тренажёра</text>
+      <text x="340" y="211" font-size="11" text-anchor="middle"
+        fill="#2f6fed">полки·касса·события ↗</text></a>
+    <a href="/store/st17/game" target="_blank">
+      <polygon points="560,171 594,199 560,227 526,199"
+        fill="#fff3cd" stroke="#e6a700" stroke-width="2"/>
+      <text x="560" y="195" font-size="10" text-anchor="middle"
+        fill="#7a5c00">план</text>
+      <text x="560" y="207" font-size="10" text-anchor="middle"
+        fill="#7a5c00">выполнен? ↗</text></a>
+    <a href="/store/st17/game" target="_blank">
+      <rect x="650" y="169" width="185" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="742" y="194" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Звёзды и разбор ошибок</text>
+      <text x="742" y="211" font-size="11" text-anchor="middle"
+        fill="#2f6fed">экран результатов ↗</text></a>
+    <a href="/team" target="_blank">
+      <rect x="700" y="300" width="180" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="790" y="325" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Баллы и бейджи</text>
+      <text x="790" y="342" font-size="11" text-anchor="middle"
+        fill="#2f6fed">лидерборд команды ↗</text></a>
+    <a href="/docs/integration" target="_blank">
+      <rect x="940" y="300" width="185" height="60" rx="10"
+        fill="#dbe7f7" stroke="#2f6fed" stroke-width="2"/>
+      <text x="1032" y="325" font-size="12" text-anchor="middle"
+        fill="#1d2b3a">Поощрение в Roblox</text>
+      <text x="1032" y="342" font-size="11" text-anchor="middle"
+        fill="#2f6fed">Open Cloud (docs) ↗</text></a>
+    <circle cx="1150" cy="330" r="14" fill="#f7dbd8" stroke="#d64541"
+      stroke-width="3"/>
+
+    <line x1="110" y1="66" x2="138" y2="66" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar3)"/>
+    <path d="M240,96 L240,135 L340,135 L340,167" fill="none"
+      stroke="#5b6672" stroke-width="1.6" marker-end="url(#ar3)"/>
+    <line x1="440" y1="199" x2="524" y2="199" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar3)"/>
+    <path d="M560,227 Q560,258 440,240" fill="none" stroke="#5b6672"
+      stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#ar3)"/>
+    <text x="520" y="252" font-size="10" fill="#5b6672">нет — повтор</text>
+    <line x1="594" y1="199" x2="648" y2="199" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar3)"/>
+    <text x="608" y="191" font-size="10" fill="#5b6672">да</text>
+    <path d="M742,229 L742,266 L790,266 L790,298" fill="none"
+      stroke="#5b6672" stroke-width="1.6" marker-end="url(#ar3)"/>
+    <line x1="880" y1="330" x2="938" y2="330" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar3)"/>
+    <line x1="1125" y1="330" x2="1134" y2="330" stroke="#5b6672"
+      stroke-width="1.6" marker-end="url(#ar3)"/>
+  </svg>
+  <div class="links"><span class="lbl">🔗 Материалы:</span>
+    <a href="/store/st17/game" target="_blank">Тренажёр</a>
+    <a href="/team" target="_blank">Команда</a>
+    <a class="alt" href="/docs/" target="_blank">Вся документация</a>
+    <a class="alt" href="/docs/presentation.pptx">Скачать PPTX-версию</a>
+  </div>
+</section>
+
+<div id="nav">
+  <button id="prev">←</button><button id="next">→</button>
+  <div class="dots" id="dots"></div>
+  <span class="cnt" id="cnt"></span>
+  <a href="/" target="_blank">демо-система</a>
+  <a href="/docs/" target="_blank">документация</a>
+</div>
+
+<script>
+const slides = [...document.querySelectorAll(".slide")];
+const dots = document.getElementById("dots");
+slides.forEach((s, i) => {
+  const d = document.createElement("i");
+  d.onclick = () => go(i);
+  dots.appendChild(d);
+});
+let cur = 0;
+function go(i) {
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, j) => s.classList.toggle("active", j === cur));
+  [...dots.children].forEach((d, j) =>
+    d.classList.toggle("on", j === cur));
+  document.getElementById("cnt").textContent =
+    (cur + 1) + " / " + slides.length;
+  location.hash = cur + 1;
+}
+document.getElementById("prev").onclick = () => go(cur - 1);
+document.getElementById("next").onclick = () => go(cur + 1);
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown") go(cur + 1);
+  if (e.key === "ArrowLeft" || e.key === "PageUp") go(cur - 1);
+});
+go(parseInt(location.hash.slice(1) || "1", 10) - 1);
+
+// живая ссылка на последний фискальный чек
+fetch("/api/delivery/state").then(r => r.json()).then(d => {
+  if (d.receipts && d.receipts.length) {
+    const url = "/receipt/" + d.receipts[0].id;
+    const a = document.getElementById("live-receipt");
+    if (a) a.href = url;
+    document.querySelectorAll(".rc-shape")
+      .forEach(el => el.setAttribute("href", url));
+  }
+}).catch(() => {});
+</script>
+</body>
+</html>

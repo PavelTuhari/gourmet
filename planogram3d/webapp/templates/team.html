@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Команда «Гурман» — баллы и поощрения</title>
+<style>
+  body { margin:0; font-family:'Segoe UI',system-ui,sans-serif;
+         background:#f0f2f5; color:#23303f; }
+  header { background:linear-gradient(90deg,#1d2b3a,#2f4b68); color:#fff;
+           padding:14px 24px; display:flex; align-items:center; gap:14px; }
+  header b { font-size:17px; }
+  header .mode { font-size:11.5px; background:#3d5975; padding:3px 10px;
+                 border-radius:9px; }
+  header a { color:#9ec2ff; font-size:13px; margin-left:auto; }
+  .wrap { max-width:880px; margin:22px auto; padding:0 16px;
+          display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .panel { background:#fff; border-radius:14px; padding:16px 20px;
+           box-shadow:0 3px 14px rgba(20,40,70,.08); }
+  h2 { font-size:15px; margin:0 0 12px; }
+  .m { display:flex; align-items:baseline; gap:10px; padding:8px 0;
+       border-bottom:1px dashed #e3e8ef; }
+  .m .place { font-weight:800; color:#8a94a1; width:22px; }
+  .m .pts { margin-left:auto; font-weight:800; color:#5a48c7;
+            font-size:16px; }
+  .m .badges { font-size:11px; color:#6b7683; }
+  .feed div { font-size:12.5px; padding:5px 0;
+              border-bottom:1px dashed #e3e8ef; line-height:1.5; }
+</style>
+</head>
+<body>
+<header><span style="font-size:22px">🏅</span>
+  <b>Команда «Гурман»: баллы и поощрения</b>
+  <span class="mode">{{ "Roblox Open Cloud" if mode == "roblox"
+                        else "эмуляция Roblox" }}</span>
+  <a href="/store/st17/game">→ тренажёр</a>
+</header>
+<div class="wrap">
+  <div class="panel">
+    <h2>🏆 Лидерборд</h2>
+    {% for m in members %}
+    <div class="m"><span class="place">{{ loop.index }}.</span>
+      <span><b>{{ m.name }}</b> ({{ m.roblox_user }})<br>
+        <span class="badges">{{ m.badges | join(" · ") or "без бейджей" }}
+        </span></span>
+      <span class="pts">{{ m.points }}</span></div>
+    {% else %}
+    <div>Пока никто не зарегистрирован — пройдите смену в
+      <a href="/store/st17/game">тренажёре</a>.</div>
+    {% endfor %}
+  </div>
+  <div class="panel feed">
+    <h2>💎 Лента поощрений</h2>
+    {% for e in feed %}<div>{{ e.text }}</div>
+    {% else %}<div>Событий пока нет.</div>{% endfor %}
+  </div>
+</div>
+</body>
+</html>
