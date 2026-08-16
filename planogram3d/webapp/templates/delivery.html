@@ -188,8 +188,11 @@ async function poll() {
   st.routes.forEach((r, i) => {
     const color = ROUTE_COLORS[i % 4];
     if (r.status === "active") {
-      const coords = [[r.store_lon, r.store_lat],
-        ...r.stops.map(s => [s.lon, s.lat])];
+      // дорожные полилинии всех плеч маршрута
+      const coords = r.stops.some(s => s.path)
+        ? r.stops.flatMap(s => s.path || [[s.lon, s.lat]])
+        : [[r.store_lon, r.store_lat],
+           ...r.stops.map(s => [s.lon, s.lat])];
       lines.push({ type: "Feature", properties: { color },
         geometry: { type: "LineString", coordinates: coords } });
     }

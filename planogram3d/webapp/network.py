@@ -58,6 +58,7 @@ class DistributionCenter:
     LOCATION = (56.8478, 35.8842)   # промзона на юго-западе Твери
     REORDER_POINT = 45
     REORDER_QTY = 140
+    TRUCK_SPEED = 45.0              # м/с в эмуляции (ускоренное время)
 
     def __init__(self, skus, rng: random.Random):
         self.name = "РЦ «Гурман» Тверь"
@@ -82,11 +83,16 @@ class DistributionCenter:
             return None
         self.stock[sku] = available - shipped
         depart = now + 3.0
-        eta = depart + self.rng.uniform(30, 70)
+        # маршрут грузовика строго по дорогам города
+        from .roadnet import get_roadnet
+        path, road_m = get_roadnet().route(self.lon, self.lat, lon, lat)
+        eta = depart + max(20.0, road_m / self.TRUCK_SPEED)
         self.outbound.append({"store_id": store_id, "sku": sku,
                               "sku_name": sku_name, "qty": shipped,
                               "depart": depart, "eta": eta,
-                              "to": [lat, lon]})
+                              "to": [lat, lon],
+                              "path": [[round(p[0], 5), round(p[1], 5)]
+                                       for p in path]})
         events.appendleft((now, self.name,
                            f"🚚 Отгрузка в {store_title}: {sku_name} "
                            f"× {shipped}"))
@@ -120,7 +126,8 @@ class DistributionCenter:
                            if v < self.REORDER_POINT),
             "outbound": [{"store_id": o["store_id"], "sku": o["sku_name"],
                           "qty": o["qty"], "depart": o["depart"],
-                          "eta": o["eta"], "to": o["to"]}
+                          "eta": o["eta"], "to": o["to"],
+                          "path": o.get("path")}
                          for o in self.outbound],
             "inbound": [{"sku": o["sku_name"], "qty": o["qty"],
                          "eta_sec": max(0, round(o["eta"] - now))}

@@ -35,6 +35,7 @@ from collections import deque
 from typing import Dict, List, Optional
 
 from .network import StoreNetwork, price_for
+from .roadnet import cumulative, get_roadnet, point_along
 
 REAL_GPS_TIMEOUT = 45.0     # с: реальная телеметрия активна
 
@@ -167,15 +168,20 @@ class DeliveryHub:
             rid = f"R-{self._route_seq:03d}"
             self._route_seq += 1
             t = now + 4.0
+            net = get_roadnet()
             stops, prev = [], (emu.lat, emu.lon)
             for o in ordered:
-                travel = max(15.0, _dist_m(prev[0], prev[1],
-                                           o["lat"], o["lon"])
-                             / COURIER_SPEED)
+                # путь строго по дорогам города (граф OSM)
+                path, road_m = net.route(prev[1], prev[0],
+                                         o["lon"], o["lat"])
+                travel = max(15.0, road_m / COURIER_SPEED)
                 stops.append({
                     "order": o["id"], "customer": o["customer"],
                     "address": o["address"], "lat": o["lat"],
                     "lon": o["lon"], "total": o["total"],
+                    "path": [[round(p[0], 5), round(p[1], 5)]
+                             for p in path],
+                    "road_m": round(road_m),
                     "plan_start": t, "plan_arrive": t + travel,
                     "plan_done": t + travel + HANDOVER_PLAN,
                     "actual_start": None, "actual_arrive": None,
@@ -192,6 +198,7 @@ class DeliveryHub:
                 "courier": courier["id"], "status": "active",
                 "created": now, "stops": stops, "stop_idx": 0,
                 "phase": "to_stop", "phase_t": now + 4.0,
+                "leg_pos": 0.0,
             }
             courier["route"] = rid
             courier["lat"], courier["lon"] = emu.lat, emu.lon
@@ -255,16 +262,20 @@ class DeliveryHub:
                 if stop["actual_start"] is None:
                     continue
                 if not real_gps:
-                    d = _dist_m(courier["lat"], courier["lon"],
-                                stop["lat"], stop["lon"])
-                    if d > 8:
-                        k = min(1.0, COURIER_SPEED * dt / d)
-                        courier["lat"] += (stop["lat"] - courier["lat"]) * k
-                        courier["lon"] += (stop["lon"] - courier["lon"]) * k
-                        courier["lat"] += self.rng.gauss(0, 1.5e-5)
-                        courier["lon"] += self.rng.gauss(0, 2.5e-5)
-                arrived = _dist_m(courier["lat"], courier["lon"],
-                                  stop["lat"], stop["lon"]) < 25
+                    # едем строго по дорожной полилинии
+                    path = [tuple(p) for p in stop["path"]]
+                    cum = stop.get("_cum")
+                    if cum is None:
+                        cum = stop["_cum"] = cumulative(path)
+                    route["leg_pos"] += COURIER_SPEED * dt
+                    lon, lat = point_along(path, cum, route["leg_pos"])
+                    # лёгкий GPS-шум, не уводящий с дороги
+                    courier["lon"] = lon + self.rng.gauss(0, 4e-6)
+                    courier["lat"] = lat + self.rng.gauss(0, 3e-6)
+                    arrived = route["leg_pos"] >= cum[-1] - 1.0
+                else:
+                    arrived = _dist_m(courier["lat"], courier["lon"],
+                                      stop["lat"], stop["lon"]) < 25
                 if arrived:
                     stop["actual_arrive"] = now
                     stop["status"] = "handover"
@@ -280,6 +291,7 @@ class DeliveryHub:
                 route["stop_idx"] += 1
                 route["phase"] = "to_stop"
                 route["phase_t"] = now
+                route["leg_pos"] = 0.0
             courier["battery"] = max(3, courier["battery"] - 0.006 * dt)
 
     # ----- API ----------------------------------------------------------
@@ -317,10 +329,14 @@ class DeliveryHub:
                         and now - r["stops"][-1]["plan_done"] > 120):
                     continue
                 courier = self.couriers[r["courier"]]
+                stops_out = [{k: v for k, v in s.items()
+                              if not k.startswith("_")}
+                             for s in r["stops"]]
                 routes.append({
                     **{k: r[k] for k in ("id", "store_id", "store_name",
                                          "store_lat", "store_lon",
-                                         "status", "stops")},
+                                         "status")},
+                    "stops": stops_out,
                     "courier": {
                         "id": courier["id"], "name": courier["name"],
                         "app": courier["app"],

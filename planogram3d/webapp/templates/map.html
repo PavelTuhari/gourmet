@@ -478,7 +478,37 @@ document.getElementById("i-back").onclick = () => {
 
 /* ---------- логистический центр и грузовики ---------- */
 let dcMarker = null, dcData = null, dcCardOpen = false;
-const trucks = {};   // key -> {marker, el}
+const trucks = {};   // key -> {marker, el, cum, path}
+let dcRoutesReady = false;
+map.on("load", () => {
+  map.addSource("dcroutes", { type: "geojson",
+    data: { type: "FeatureCollection", features: [] } });
+  map.addLayer({ id: "dcroutes", type: "line", source: "dcroutes",
+    paint: { "line-color": "#c77c1e", "line-width": 2.4,
+             "line-opacity": 0.75, "line-dasharray": [2.5, 1.8] } });
+  dcRoutesReady = true;
+});
+
+/* накопленные длины полилинии (для позиции грузовика вдоль пути) */
+function cumLen(path) {
+  const kx = 111320 * Math.cos(56.86 * Math.PI / 180), ky = 110540;
+  const cum = [0];
+  for (let i = 1; i < path.length; i++)
+    cum.push(cum[i-1] + Math.hypot((path[i][0]-path[i-1][0]) * kx,
+                                   (path[i][1]-path[i-1][1]) * ky));
+  return cum;
+}
+function alongPath(path, cum, k) {          // k = доля пути 0..1
+  const target = k * cum[cum.length - 1];
+  for (let i = 1; i < cum.length; i++)
+    if (cum[i] >= target) {
+      const seg = cum[i] - cum[i-1];
+      const t = seg > 0 ? (target - cum[i-1]) / seg : 0;
+      return [path[i-1][0] + (path[i][0]-path[i-1][0]) * t,
+              path[i-1][1] + (path[i][1]-path[i-1][1]) * t];
+    }
+  return path[path.length - 1];
+}
 
 function updateDC(dc, serverNow) {
   if (!dc) return;
@@ -497,24 +527,42 @@ function updateDC(dc, serverNow) {
   badge.textContent = dc.outbound.length;
   badge.style.display = dc.outbound.length ? "flex" : "none";
 
-  // грузовики: позиция по прогрессу рейса РЦ → магазин
-  const seen = new Set();
+  // грузовики: едут строго по дорогам (полилиния пути от сервера)
+  const seen = new Set(), lines = [];
   for (const o of dc.outbound) {
     const key = o.store_id + "|" + o.sku + "|" + o.depart;
     seen.add(key);
     const k = Math.max(0, Math.min(1,
       (serverNow - o.depart) / (o.eta - o.depart)));
-    const lat = dc.lat + (o.to[0] - dc.lat) * k,
-          lon = dc.lon + (o.to[1] - dc.lon) * k;
-    if (!trucks[key]) {
+    let lon, lat;
+    if (o.path && o.path.length > 1) {
+      if (!trucks[key] || !trucks[key].cum) {
+        trucks[key] = trucks[key] || {};
+        trucks[key].path = o.path;
+        trucks[key].cum = cumLen(o.path);
+      }
+      [lon, lat] = alongPath(trucks[key].path, trucks[key].cum, k);
+      lines.push({ type: "Feature", properties: {},
+        geometry: { type: "LineString", coordinates: o.path } });
+    } else {                                   // fallback: прямая
+      lat = dc.lat + (o.to[0] - dc.lat) * k;
+      lon = dc.lon + (o.to[1] - dc.lon) * k;
+    }
+    if (!trucks[key].marker) {
       const el = document.createElement("div");
       el.className = "truck"; el.textContent = "🚚";
-      trucks[key] = { marker: new maplibregl.Marker({ element: el })
-        .setLngLat([lon, lat]).addTo(map) };
+      trucks[key].marker = new maplibregl.Marker({ element: el })
+        .setLngLat([lon, lat]).addTo(map);
     } else trucks[key].marker.setLngLat([lon, lat]);
   }
   for (const key of Object.keys(trucks))
-    if (!seen.has(key)) { trucks[key].marker.remove(); delete trucks[key]; }
+    if (!seen.has(key)) {
+      if (trucks[key].marker) trucks[key].marker.remove();
+      delete trucks[key];
+    }
+  if (dcRoutesReady)
+    map.getSource("dcroutes").setData(
+      { type: "FeatureCollection", features: lines });
   if (dcCardOpen) renderDCCard();
 }
 
