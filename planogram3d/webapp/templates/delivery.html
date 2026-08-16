@@ -45,7 +45,7 @@
                  text-align:center; }
   .stop-mark { width:20px; height:20px; border-radius:50%;
                border:3px solid #fff; background:#e6a700;
-               box-shadow:0 2px 5px rgba(0,0,0,.35); }
+               box-shadow:0 2px 5px rgba(0,0,0,.35); cursor:pointer; }
   .stop-mark.done { background:#2fa14e; }
   .stop-mark.handover { background:#e5533d; animation:hp 1s infinite; }
   @keyframes hp { 50% { transform:scale(1.3); } }
@@ -75,6 +75,21 @@
         padding:4px 0; line-height:1.5; }
   .rc a { color:#2f6fed; font-weight:700; text-decoration:none; }
   .rc .w { color:#8a94a1; font-size:10.5px; }
+
+  /* ---- онлайн-табло прибытия (ИИ) на точке доставки ---- */
+  .eta-board { font: 12px/1.5 'Segoe UI',system-ui,sans-serif;
+               min-width:230px; }
+  .eta-board .bh { font-weight:700; font-size:12.5px; margin-bottom:2px; }
+  .eta-board .bp { color:#5b6672; font-size:11px; margin-bottom:5px; }
+  .eta-board table { border-collapse:collapse; width:100%; }
+  .eta-board td { padding:2px 4px; border-top:1px dashed #e3e8ef;
+                  font-size:11.5px; white-space:nowrap; }
+  .eta-board tr.this td { font-weight:700; background:#eef4ff; }
+  .eta-board .sig { color:#8a94a1; font-size:10px; }
+  .eta-board .src { color:#8a94a1; font-size:10px; margin-top:4px; }
+  .eta-board .ai { display:inline-block; background:#7b1fa2; color:#fff;
+                   font-size:9.5px; font-weight:700; border-radius:6px;
+                   padding:0 5px; vertical-align:1px; }
 </style>
 </head>
 <body>
@@ -158,6 +173,42 @@ function fmtT(ts) {
   return d.toLocaleTimeString("ru-RU", {hour: "2-digit",
                                         minute: "2-digit"});
 }
+function fmtTs(ts) {
+  return new Date(ts * 1000).toLocaleTimeString("ru-RU",
+    {hour: "2-digit", minute: "2-digit", second: "2-digit"});
+}
+
+/* ---- онлайн-табло прибытия (ИИ) на точке доставки ---- */
+let etaPopup = null, etaPopupOrder = null;
+async function showEtaBoard(orderId, lon, lat) {
+  let b;
+  try { b = await (await fetch("/api/eta/order/" + orderId)).json(); }
+  catch (e) { return; }
+  const rows = b.rows.length ? b.rows.map(r => `
+    <tr class="${r.this_point ? "this" : ""}">
+      <td>${r.icon} ${r.queue_pos ?? "—"}</td>
+      <td>${r.order}${r.this_point ? " ← эта точка" : ""}</td>
+      <td><b>${fmtTs(r.eta_ts)}</b>
+        <span class="sig">±${r.sigma_sec} с</span></td>
+      <td class="sig">план ${fmtT(r.plan_ts)}</td>
+    </tr>`).join("")
+    : `<tr><td colspan="4">курьер назначается…</td></tr>`;
+  const html = `<div class="eta-board">
+    <div class="bh">🚏 Табло прибытия <span class="ai">ИИ</span></div>
+    <div class="bp">${b.point}</div>
+    <table>${rows}</table>
+    <div class="src">${b.rows.length ? b.rows[0].source + " · GPS: "
+      + b.rows[0].gps_source : "заказ: " + b.status}</div></div>`;
+  if (etaPopup && etaPopupOrder === orderId) {     // живое обновление
+    etaPopup.setHTML(html);
+    return;
+  }
+  if (etaPopup) etaPopup.remove();
+  etaPopupOrder = orderId;
+  etaPopup = new maplibregl.Popup({ offset: 14, maxWidth: "330px" })
+    .setLngLat([lon, lat]).setHTML(html).addTo(map);
+  etaPopup.on("close", () => { etaPopupOrder = null; });
+}
 
 async function poll() {
   let st;
@@ -209,12 +260,15 @@ async function poll() {
       seenS.add(key);
       if (!stopMarks[key]) {
         const el = document.createElement("div");
+        el.onclick = (ev) => { ev.stopPropagation();
+                               showEtaBoard(s.order, s.lon, s.lat); };
         stopMarks[key] = { el, marker:
           new maplibregl.Marker({element: el})
             .setLngLat([s.lon, s.lat]).addTo(map) };
       }
       stopMarks[key].el.className = "stop-mark " + s.status;
-      stopMarks[key].el.title = `${s.order} · ${s.customer}, ${s.address}`;
+      stopMarks[key].el.title = `${s.order} · ${s.customer}, ${s.address}` +
+        ` — клик: табло прибытия (ИИ)`;
     }
     // курьер
     const c = r.courier;
@@ -245,14 +299,26 @@ async function poll() {
   /* --- заказы и события --- */
   const ST_TITLES = { new: "новый", picking: "сборка", packed: "собран",
                       routed: "в доставке", delivered: "доставлен" };
+  const orderAi = {};
+  st.routes.forEach(r => r.stops.forEach(s => {
+    if (s.ai_arrive && s.status !== "done") orderAi[s.order] = s; }));
   document.getElementById("orders").innerHTML = st.orders.slice(0, 12)
     .map(o => `<div class="ord"><span class="st ${o.status}">
       ${ST_TITLES[o.status]}</span><b>${o.id}</b> · ${o.total} ₽<br>
       ${o.customer} · ${o.address}<br>
       <span style="color:#8a94a1">${o.store_name}${
-        o.route ? " · " + o.route : ""}</span></div>`).join("");
+        o.route ? " · " + o.route : ""}</span>${orderAi[o.id]
+        ? `<br><span style="color:#7b1fa2">🚏 ИИ-прибытие: ${
+            fmtT(orderAi[o.id].ai_arrive)} ±${
+            orderAi[o.id].ai_sigma} с</span>` : ""}</div>`).join("");
   document.getElementById("events").innerHTML = st.events.map(e =>
     `<div class="ev">${e.text}</div>`).join("");
+
+  /* живое обновление открытого табло прибытия */
+  if (etaPopupOrder && etaPopup) {
+    const p = etaPopup.getLngLat();
+    showEtaBoard(etaPopupOrder, p.lng, p.lat);
+  }
 
   /* --- диаграмма Ганта --- */
   const rows = [];
@@ -288,7 +354,8 @@ async function poll() {
         }
         rows.push(`<div class="grow"><div class="glabel" style=
           "padding-left:16px">↳ ${s.order} · ${s.customer} · план ${
-          fmtT(s.plan_arrive)}</div>
+          fmtT(s.plan_arrive)}${s.ai_arrive && s.status !== "done"
+            ? ` · ИИ ${fmtT(s.ai_arrive)}±${s.ai_sigma}с` : ""}</div>
           <div class="gtrack">${bars}<div class="gnow" style="left:${
           pct(st.now)}%"></div></div></div>`);
       }

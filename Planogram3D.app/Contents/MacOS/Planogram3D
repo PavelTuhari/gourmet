@@ -1,0 +1,6 @@
+#!/bin/bash
+# Planogram3D.app — нативный запуск без терминала.
+# Репозиторий лежит рядом с бандлом (бандл в корне репо).
+HERE="$(cd "$(dirname "$0")/../../.." && pwd)"
+cd "$HERE"
+exec "$HERE/.venv-planogram3d/bin/python" -m planogram3d.desktop

@@ -34,7 +34,8 @@ import time
 from collections import deque
 from typing import Dict, List, Optional
 
-from .network import StoreNetwork, price_for
+from .eta_ai import get_predictor
+from .network import DistributionCenter, StoreNetwork, price_for
 from .roadnet import cumulative, get_roadnet, point_along
 
 REAL_GPS_TIMEOUT = 45.0     # с: реальная телеметрия активна
@@ -170,12 +171,19 @@ class DeliveryHub:
             t = now + 4.0
             net = get_roadnet()
             stops, prev = [], (emu.lat, emu.lon)
+            hour = self.network.sim_hour(now)
             for o in ordered:
                 # путь строго по дорогам города (граф OSM)
                 path, road_m = net.route(prev[1], prev[0],
                                          o["lon"], o["lat"])
                 travel = max(15.0, road_m / COURIER_SPEED)
+                # фактическая скорость плеча: трафик часа + случайность;
+                # план оптимистичен, ИИ-табло учится на факте
+                actual_v = (COURIER_SPEED
+                            * DistributionCenter._traffic(hour)
+                            * self.rng.uniform(0.8, 1.15))
                 stops.append({
+                    "_v": actual_v,
                     "order": o["id"], "customer": o["customer"],
                     "address": o["address"], "lat": o["lat"],
                     "lon": o["lon"], "total": o["total"],
@@ -267,7 +275,7 @@ class DeliveryHub:
                     cum = stop.get("_cum")
                     if cum is None:
                         cum = stop["_cum"] = cumulative(path)
-                    route["leg_pos"] += COURIER_SPEED * dt
+                    route["leg_pos"] += stop.get("_v", COURIER_SPEED) * dt
                     lon, lat = point_along(path, cum, route["leg_pos"])
                     # лёгкий GPS-шум, не уводящий с дороги
                     courier["lon"] = lon + self.rng.gauss(0, 4e-6)
@@ -281,11 +289,18 @@ class DeliveryHub:
                     stop["status"] = "handover"
                     route["phase"] = "handover"
                     route["phase_t"] = now + self.rng.uniform(14, 32)
+                    # телеметрия плеча → обучение ИИ-модели прибытия
+                    get_predictor().observe(
+                        "courier", stop.get("road_m", 0.0),
+                        now - stop["actual_start"],
+                        hour=self.network.sim_hour(stop["actual_start"]))
                     self._log(f"🏠 {route['id']}: прибытие к "
                               f"{stop['customer']} ({stop['address']})")
             elif route["phase"] == "handover" and now >= route["phase_t"]:
                 stop["actual_done"] = now
                 stop["status"] = "done"
+                get_predictor().observe_duration(
+                    "handover", now - stop["actual_arrive"])
                 self.orders[stop["order"]]["status"] = "delivered"
                 self._fiscal_receipt(route, stop, now)
                 route["stop_idx"] += 1
@@ -293,6 +308,103 @@ class DeliveryHub:
                 route["phase_t"] = now
                 route["leg_pos"] = 0.0
             courier["battery"] = max(3, courier["battery"] - 0.006 * dt)
+
+    # ----- ИИ-прогноз прибытия (онлайн-табло пунктов доставки) ----------
+    def _ai_stop_predictions(self, route: dict, now: float) -> Dict[str,
+                                                                    dict]:
+        """Прогноз прибытия курьера на каждую оставшуюся остановку.
+
+        Модель — общий :mod:`eta_ai`-прогнозист (скорости учатся на
+        телеметрии завершённых плеч, вручение — на фактических
+        длительностях). Неопределённость копится по плечам (σ²).
+        """
+        out: Dict[str, dict] = {}
+        if route["status"] != "active":
+            return out
+        predictor = get_predictor()
+        hour = self.network.sim_hour(now)
+        hand_s, hand_sig, _ = predictor.predict_duration("handover")
+        courier = self.couriers[route["courier"]]
+        t, var = now, 0.0
+        for i in range(route["stop_idx"], len(route["stops"])):
+            stop = route["stops"][i]
+            current = i == route["stop_idx"]
+            if current and stop["status"] == "handover":
+                out[stop["order"]] = {
+                    "ai_arrive": stop["actual_arrive"], "ai_sigma": 0,
+                    "ai_note": "курьер на точке, идёт вручение"}
+                t = max(now, route["phase_t"])
+                var += hand_sig * hand_sig
+                continue
+            if current and stop["status"] == "en_route":
+                cum = stop.get("_cum")
+                if cum is not None:
+                    remaining = max(0.0, cum[-1] - route["leg_pos"])
+                elif courier["lat"] is not None:   # реальный GPS без плеча
+                    remaining = 1.25 * _dist_m(courier["lat"],
+                                               courier["lon"],
+                                               stop["lat"], stop["lon"])
+                else:
+                    remaining = stop.get("road_m", 0.0)
+            else:
+                remaining = stop.get("road_m", 0.0)
+            travel_s, sig, n_obs = predictor.predict("courier", remaining,
+                                                     hour=hour)
+            if current and stop["actual_start"] is None:
+                travel_s += max(0.0, route["phase_t"] - now)  # ещё не выехал
+            arrive = t + travel_s
+            var += sig * sig
+            out[stop["order"]] = {
+                "ai_arrive": arrive,
+                "ai_sigma": round(max(2.0, math.sqrt(var))),
+                "ai_note": (f"модель обучена ({n_obs} плеч.)"
+                            if n_obs else "априорная модель")}
+            t = arrive + hand_s
+            var += hand_sig * hand_sig
+        return out
+
+    def arrival_board(self, order_id: str) -> Optional[dict]:
+        """Онлайн-табло пункта доставки (адреса покупателя)."""
+        now = time.time()
+        with self._lock:
+            order = self.orders.get(order_id)
+            if order is None:
+                return None
+            rows = []
+            route = self.routes.get(order["route"] or "")
+            if route is not None and route["status"] == "active":
+                ai = self._ai_stop_predictions(route, now)
+                courier = self.couriers[route["courier"]]
+                queue = [s["order"] for s in
+                         route["stops"][route["stop_idx"]:]]
+                for pos, s in enumerate(route["stops"]):
+                    if s["order"] not in ai:
+                        continue
+                    p = ai[s["order"]]
+                    rows.append({
+                        "type": "courier",
+                        "icon": "🛵",
+                        "order": s["order"],
+                        "this_point": s["order"] == order_id,
+                        "label": (f"{courier['name']} · "
+                                  f"{APP_TITLES[courier['app']]}"),
+                        "queue_pos": (queue.index(s["order"]) + 1
+                                      if s["order"] in queue else None),
+                        "eta_ts": p["ai_arrive"],
+                        "eta_sec": max(0, round(p["ai_arrive"] - now)),
+                        "sigma_sec": p["ai_sigma"],
+                        "plan_ts": s["plan_arrive"],
+                        "status": s["status"],
+                        "source": "ИИ-прогноз · " + p["ai_note"],
+                        "gps_source": ("приложение (реальный GPS)"
+                                       if now - courier["last_real"]
+                                       < REAL_GPS_TIMEOUT else
+                                       "эмуляция"),
+                    })
+            return {"now": now, "order": order_id,
+                    "point": f"{order['customer']} · {order['address']}",
+                    "status": order["status"], "rows": rows,
+                    "model": get_predictor().summary()}
 
     # ----- API ----------------------------------------------------------
     def ingest_gps(self, courier_id: str, lat: float, lon: float,
@@ -329,8 +441,10 @@ class DeliveryHub:
                         and now - r["stops"][-1]["plan_done"] > 120):
                     continue
                 courier = self.couriers[r["courier"]]
-                stops_out = [{k: v for k, v in s.items()
-                              if not k.startswith("_")}
+                ai = self._ai_stop_predictions(r, now)
+                stops_out = [{**{k: v for k, v in s.items()
+                                 if not k.startswith("_")},
+                              **ai.get(s["order"], {})}
                              for s in r["stops"]]
                 routes.append({
                     **{k: r[k] for k in ("id", "store_id", "store_name",

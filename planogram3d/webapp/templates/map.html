@@ -122,6 +122,18 @@
   #c-zbx .age { color:#8a94a1; margin-left:auto; white-space:nowrap;
                 font-size:11px; }
 
+  /* ---- онлайн-табло прибытия (ИИ) в карточке магазина ---- */
+  #c-eta { margin-top:8px; font-size:12px; }
+  #c-eta .ehead { font-weight:700; margin-bottom:3px; }
+  #c-eta .erow { display:flex; gap:6px; align-items:baseline;
+                 padding:2px 0; border-top:1px dashed #eef1f5; }
+  #c-eta .erow .lbl { flex:1; min-width:0; overflow:hidden;
+                      text-overflow:ellipsis; white-space:nowrap; }
+  #c-eta .erow .eta { font-weight:700; white-space:nowrap; }
+  #c-eta .erow .sig { color:#8a94a1; font-size:10.5px;
+                      white-space:nowrap; }
+  #c-eta .esrc { color:#8a94a1; font-size:10.5px; margin-top:2px; }
+
   /* ---- «вход в магазин» ---- */
   #enter-fx {
     position:absolute; inset:0; z-index:30; pointer-events:none; opacity:0;
@@ -231,6 +243,7 @@
   <div class="kpi"><span>Нарушений (критич.)</span><b id="c-viol"></b></div>
   <div class="oos" id="c-oos"></div>
   <div id="c-zbx"></div>
+  <div id="c-eta"></div>
   <a class="btn" id="c-link" href="#">🚪 Войти в магазин</a>
 </div>
 
@@ -413,6 +426,37 @@ function showCard() {
 
   const link = document.getElementById("c-link");
   link.onclick = (e) => { e.preventDefault(); enterStore(s); };
+  updateEtaBoard(s.id);
+}
+
+/* ---------- онлайн-табло прибытия машин поставщиков (ИИ) ---------- */
+let etaBoardBusy = false;
+async function updateEtaBoard(storeId) {
+  if (etaBoardBusy) return;
+  etaBoardBusy = true;
+  try {
+    const b = await (await fetch("/api/eta/store/" + storeId)).json();
+    if (selected !== storeId) return;      // карточку уже закрыли
+    const el = document.getElementById("c-eta");
+    if (!b.rows.length) {
+      el.innerHTML = `<div class="ehead">🚏 Табло прибытия · ИИ</div>` +
+        `<div class="esrc">машин поставщиков в пути нет</div>`;
+      return;
+    }
+    el.innerHTML = `<div class="ehead">🚏 Табло прибытия · ИИ</div>` +
+      b.rows.map(r => {
+        const t = new Date(r.eta_ts * 1000).toLocaleTimeString("ru-RU",
+          { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        const sig = r.sigma_sec != null ? `±${r.sigma_sec} с` : "план";
+        return `<div class="erow"><span>${r.icon}</span>` +
+          `<span class="lbl" title="${r.label}">${r.label}</span>` +
+          `<span class="eta">${t}</span>` +
+          `<span class="sig">~${r.eta_sec} с ${sig}</span></div>`;
+      }).join("") +
+      `<div class="esrc">${b.rows[0].source} · GPS-телеметрия рейсов → ` +
+      `онлайн-обучение</div>`;
+  } catch (e) { /* сервер занят — обновимся следующим опросом */ }
+  finally { etaBoardBusy = false; }
 }
 function fmtAge(sec) {
   if (sec < 60) return sec + " с";

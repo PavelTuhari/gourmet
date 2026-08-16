@@ -56,6 +56,27 @@ def delivery_gps():
     return jsonify({"accepted": bool(ok)})
 
 
+@app.get("/api/eta/store/<store_id>")
+def eta_store(store_id):
+    """Онлайн-табло пункта доставки (магазина): ИИ-прогноз прибытия
+    машин поставщиков и РЦ — по аналогии с «умными остановками»
+    городского транспорта (GPS-телеметрия → ИИ-модель → табло)."""
+    try:
+        return jsonify(network.arrival_board(store_id))
+    except KeyError:
+        abort(404)
+
+
+@app.get("/api/eta/order/<order_id>")
+def eta_order(order_id):
+    """Онлайн-табло пункта доставки (адреса покупателя): ИИ-прогноз
+    прибытия курьера с неопределённостью ±σ и позицией в очереди."""
+    board = delivery.arrival_board(order_id)
+    if board is None:
+        abort(404)
+    return jsonify(board)
+
+
 @app.get("/receipt/<receipt_id>")
 def receipt_page(receipt_id):
     r = delivery.receipt(receipt_id)
@@ -101,6 +122,7 @@ def index():
 _PKG_ROOT = Path(__file__).resolve().parent.parent
 _DOCS = {
     "readme": ("README.md", "О модуле"),
+    "tz": ("docs/TZ.md", "Техзадание"),
     "erp3d": ("docs/ARTICLE_3D_ERP.md", "3D для ERP"),
     "library": ("docs/LIBRARY.md", "Справочник API"),
     "integration": ("docs/INTEGRATION.md", "Интеграция"),

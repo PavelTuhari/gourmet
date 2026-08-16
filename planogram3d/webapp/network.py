@@ -68,6 +68,20 @@ class DistributionCenter:
                                       for sku in skus}
         self.outbound: List[dict] = []   # отгрузки в магазины (грузовики)
         self.inbound: List[dict] = []    # поставки от поставщиков в РЦ
+        #: час симуляционных суток — ставится сетью (для модели трафика)
+        self.hour_fn = None
+
+    def _sim_hour(self, now: float) -> int:
+        return self.hour_fn(now) if self.hour_fn is not None else 12
+
+    @staticmethod
+    def _traffic(hour: int) -> float:
+        """Замедление трафика по часу суток (часы пик медленнее)."""
+        if hour in (8, 9, 17, 18):
+            return 0.72
+        if hour in (10, 16, 19):
+            return 0.85
+        return 1.0
 
     def order(self, store_title: str, store_id: str, lat: float, lon: float,
               sku: str, sku_name: str, qty: int, now: float,
@@ -86,10 +100,19 @@ class DistributionCenter:
         # маршрут грузовика строго по дорогам города
         from .roadnet import get_roadnet
         path, road_m = get_roadnet().route(self.lon, self.lat, lon, lat)
-        eta = depart + max(20.0, road_m / self.TRUCK_SPEED)
+        # фактическая скорость рейса: трафик часа + случайность водителя;
+        # план (и наивное eta) считается по паспортной скорости, а
+        # ИИ-табло учится на фактических рейсах и прогнозирует точнее
+        hour = self._sim_hour(depart)
+        speed = (self.TRUCK_SPEED * self._traffic(hour)
+                 * self.rng.uniform(0.85, 1.12))
+        eta = depart + max(20.0, road_m / speed)
         self.outbound.append({"store_id": store_id, "sku": sku,
                               "sku_name": sku_name, "qty": shipped,
                               "depart": depart, "eta": eta,
+                              "road_m": road_m,
+                              "plan_eta": depart + max(
+                                  20.0, road_m / self.TRUCK_SPEED),
                               "to": [lat, lon],
                               "path": [[round(p[0], 5), round(p[1], 5)]
                                        for p in path]})
@@ -116,6 +139,15 @@ class DistributionCenter:
             events.appendleft((now, self.name,
                                f"🏭 Приход от поставщика: {o['sku_name']} "
                                f"× {o['qty']}"))
+        # завершённые рейсы — телеметрия в ИИ-модель прогноза прибытия
+        from .eta_ai import get_predictor
+        for o in self.outbound:
+            if now >= o["eta"] and not o.get("_observed"):
+                o["_observed"] = True
+                get_predictor().observe(
+                    "truck", o.get("road_m", 0.0),
+                    o["eta"] - o["depart"],
+                    hour=self._sim_hour(o["depart"]))
         self.outbound = [o for o in self.outbound if now <= o["eta"] + 3]
 
     def snapshot(self, now: float) -> dict:
@@ -307,8 +339,16 @@ class StoreNetwork:
             first = next(iter(self.stores.values())).store
             self.dc = DistributionCenter(list(first.products),
                                          random.Random(20260815))
+            self.dc.hour_fn = self.sim_hour
             for emu in self.stores.values():
                 emu.dc = self.dc
+
+    def sim_hour(self, now: Optional[float] = None) -> int:
+        """Час симуляционных суток (та же формула, что sim_clock)."""
+        if now is None:
+            now = time.time()
+        sim_seconds = (now - self.started_at) * TIME_SCALE
+        return 8 + int(sim_seconds // 3600) % 14
 
     # ----- жизненный цикл -------------------------------------------------
     def start(self) -> None:
@@ -363,3 +403,63 @@ class StoreNetwork:
 
     def store(self, store_id: str) -> Store:
         return self.stores[store_id].store
+
+    def arrival_board(self, store_id: str) -> dict:
+        """Онлайн-табло пункта доставки (магазина): машины поставщиков.
+
+        Для каждой машины РЦ в пути — ИИ-прогноз прибытия (остаток
+        дороги / обученная скорость с учётом часа) с ±σ; прямые
+        поставки поставщиков (без машины на карте) — по плану.
+        """
+        from .eta_ai import get_predictor
+        now = time.time()
+        emu = self.stores[store_id]           # KeyError → 404 на сервере
+        hour = self.sim_hour(now)
+        predictor = get_predictor()
+        rows = []
+        truck_skus = set()
+        with self._lock:
+            if self.dc is not None:
+                for o in self.dc.outbound:
+                    if o["store_id"] != store_id:
+                        continue
+                    truck_skus.add(o["sku"])
+                    total = max(1.0, o["eta"] - o["depart"])
+                    progress = min(1.0, max(0.0, (now - o["depart"]) / total))
+                    remaining_m = o.get("road_m", 0.0) * (1.0 - progress)
+                    eta_s, sigma_s, n_obs = predictor.predict(
+                        "truck", remaining_m, hour=hour)
+                    if now < o["depart"]:              # ещё не выехал
+                        eta_s += o["depart"] - now
+                    rows.append({
+                        "type": "truck",
+                        "icon": "🚚",
+                        "label": f"РЦ «Гурман»: {o['sku_name']} × {o['qty']}",
+                        "eta_sec": round(eta_s),
+                        "sigma_sec": round(max(3.0, sigma_s)),
+                        "eta_ts": now + eta_s,
+                        "plan_ts": o.get("plan_eta", o["eta"]),
+                        "progress": round(progress, 2),
+                        "source": ("ИИ-прогноз (модель обучена, "
+                                   f"{n_obs} рейс.)") if n_obs
+                                  else "ИИ-прогноз (априорная модель)",
+                    })
+            for sku, order in emu.restock_at.items():
+                if sku in truck_skus:
+                    continue                            # уже едет грузовиком
+                name = emu.store.product(sku).name
+                rows.append({
+                    "type": "supplier",
+                    "icon": "📦",
+                    "label": f"Поставщик напрямую: {name} × {order['qty']}",
+                    "eta_sec": max(0, round(order["due"] - now)),
+                    "sigma_sec": None,
+                    "eta_ts": order["due"],
+                    "plan_ts": order["due"],
+                    "progress": None,
+                    "source": "план поставки",
+                })
+        rows.sort(key=lambda r: r["eta_ts"])
+        return {"now": now, "point": emu.title, "store_id": store_id,
+                "sim_hour": hour, "rows": rows,
+                "model": predictor.summary()}
