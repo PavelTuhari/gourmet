@@ -2,7 +2,7 @@
 <html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
-<title>Топливная сеть PECO — Молдова</title>
+<title>{{ t(lang, "fuel.title") }}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="/static/vendor/maplibre-gl.css">
 <style>
@@ -85,37 +85,43 @@
 {% include "_langbar.html" %}
 <div id="layout">
   <header>
-    <span class="t">⛽ Топливная сеть PECO · Молдова</span>
-    <span class="k">АЗС: <b id="k-st">0</b></span>
-    <span class="k">низкий запас: <b id="k-low">0</b></span>
-    <span class="k">риск сухого бака: <b id="k-dry">0</b></span>
-    <span class="k">рейсов: <b id="k-trips">0</b></span>
+    <span class="t">{{ t(lang, "fuel.title") }}</span>
+    <span class="k">{{ t(lang, "fuel.kpi.stations") }}<b id="k-st">0</b></span>
+    <span class="k">{{ t(lang, "fuel.kpi.low") }}<b id="k-low">0</b></span>
+    <span class="k">{{ t(lang, "fuel.kpi.dry") }}<b id="k-dry">0</b></span>
+    <span class="k">{{ t(lang, "fuel.kpi.trips") }}<b id="k-trips">0</b></span>
     <span class="src" id="k-src">—</span>
-    <a href="/">← карта сети</a>
+    <a href="/">{{ t(lang, "delivery.back_to_map") }}</a>
   </header>
 
   <div id="side">
-    <h3>Рейсы бензовозов</h3>
+    <h3>{{ t(lang, "fuel.side.trips") }}</h3>
     <div id="trips"></div>
-    <h3>Прогоны автозаказа</h3>
+    <h3>{{ t(lang, "fuel.side.runs") }}</h3>
     <div id="runs"></div>
-    <h3>События</h3>
+    <h3>{{ t(lang, "delivery.side.events") }}</h3>
     <div id="events"></div>
   </div>
 
   <div id="map">
     <div id="legend">
       <div class="li"><span class="dot" style="background:#2fa14e"></span>
-        запас в норме</div>
+        {{ t(lang, "fuel.legend.normal") }}</div>
       <div class="li"><span class="dot" style="background:#e6a700"></span>
-        ниже точки заказа</div>
+        {{ t(lang, "fuel.legend.low") }}</div>
       <div class="li"><span class="dot" style="background:#d64541"></span>
-        риск сухого бака</div>
+        {{ t(lang, "fuel.legend.dry") }}</div>
     </div>
   </div>
 </div>
 
 <script src="/static/vendor/maplibre-gl.js"></script>
+<script src="/static/js/i18n.js"></script>
+<script>
+var LANG = {{ lang|tojson }};
+var I18N = {{ i18n_json|tojson }};
+var I18NP = {};
+</script>
 <script>
 const style = {
   version: 8,
@@ -175,23 +181,26 @@ function fmtTs(ts) {
 let etaPopup = null, etaPopupStation = null;
 async function showEtaBoard(stationId, lon, lat) {
   let b;
-  try { b = await (await fetch("/api/eta/fuel/" + stationId)).json(); }
+  try { b = await (await fetch("/api/eta/fuel/" + stationId
+                               + "?lang=" + LANG)).json(); }
   catch (e) { return; }
   const rows = b.rows.length ? b.rows.map(r => `
     <tr>
       <td>${r.icon}</td>
       <td>${r.label}</td>
       <td><b>${fmtTs(r.eta_ts)}</b>
-        <span class="sig">±${r.sigma_sec} с</span></td>
-      <td class="sig">план ${fmtT(r.plan_ts)}</td>
+        <span class="sig">±${r.sigma_sec} ${tt("unit.sec_short")}</span></td>
+      <td class="sig">${tt("eta.plan_short")} ${fmtT(r.plan_ts)}</td>
     </tr>`).join("")
-    : `<tr><td colspan="4">бензовозов в пути нет</td></tr>`;
+    : `<tr><td colspan="4">${tt("fuel.eta.none")}</td></tr>`;
   const html = `<div class="eta-board">
-    <div class="bh">🚏 Табло прибытия <span class="ai">ИИ</span></div>
+    <div class="bh">🚏 ${tt("eta.board_title")}
+      <span class="ai">${tt("delivery.eta.ai_badge")}</span></div>
     <div class="bp">${b.point}</div>
     <table>${rows}</table>
     <div class="src">${b.rows.length ? b.rows[0].source
-      : "источник данных: " + b.source}</div></div>`;
+      : tt("fuel.eta.source_prefix") + (b.source === "artgranit"
+          ? "Artgranit" : tt("gps.emulated"))}</div></div>`;
   if (etaPopup && etaPopupStation === stationId) {   // живое обновление
     etaPopup.setHTML(html);
     return;
@@ -205,12 +214,12 @@ async function showEtaBoard(stationId, lon, lat) {
 
 async function poll() {
   let st;
-  try { st = await (await fetch("/api/fuel/state")).json(); }
+  try { st = await (await fetch("/api/fuel/state?lang=" + LANG)).json(); }
   catch (e) { return; }
 
   const srcEl = document.getElementById("k-src");
   srcEl.textContent = st.source === "artgranit"
-    ? "🔌 Artgranit" : "🧪 эмуляция";
+    ? "🔌 Artgranit" : "🧪 " + tt("gps.emulated");
   srcEl.className = "src " + (st.source === "artgranit" ? "artgranit" : "");
 
   document.getElementById("k-st").textContent = st.stations.length;
@@ -246,8 +255,8 @@ async function poll() {
     const m = stationMarks[s.id];
     m.el.className = "st-mark " + cls;
     m.el.textContent = Math.round(s.fill_pct) + "%";
-    m.el.title = `${s.name} · заполненность ${s.fill_pct}% · ` +
-      `${s.days_to_dry.toFixed(1)} дн. до сухого бака — клик: табло`;
+    m.el.title = tt("fuel.station.tooltip", {name: s.name, pct: s.fill_pct,
+      days: s.days_to_dry.toFixed(1)});
   }
   for (const id of Object.keys(stationMarks))
     if (!seenS.has(Number(id))) { stationMarks[id].marker.remove();
@@ -269,9 +278,9 @@ async function poll() {
         new maplibregl.Marker({element: el})
           .setLngLat([t.lon, t.lat]).addTo(map) };
     } else tankerMarks[t.id].marker.setLngLat([t.lon, t.lat]);
-    tankerMarks[t.id].el.title =
-      `${t.id} · ${t.driver} · ${t.liters} л · прогресс ${
-        Math.round(t.progress * 100)}%`;
+    tankerMarks[t.id].el.title = tt("fuel.tanker.tooltip", {id: t.id,
+      driver: t.driver, liters: t.liters,
+      pct: Math.round(t.progress * 100)});
   });
   for (const id of Object.keys(tankerMarks))
     if (!seenT.has(id)) { tankerMarks[id].marker.remove();
@@ -284,17 +293,17 @@ async function poll() {
   document.getElementById("trips").innerHTML = st.trips.map(t => `
     <div class="trip">
       <span class="tr">${t.id}</span> · ${t.status === "done"
-        ? "завершён" : "в пути"}<br>
-      <span class="drv">${t.driver} · ${t.liters} л · ${
+        ? tt("fuel.trip.done") : tt("fuel.trip.enroute")}<br>
+      <span class="drv">${t.driver} · ${t.liters} ${tt("unit.liters_short")} · ${
         t.stops.map(s => s.name.replace(/^АЗС №\d+ /, "")).join(", ")}</span>
       <div class="bar"><i style="width:${
         Math.round(t.progress * 100)}%"></i></div>
-    </div>`).join("") || "<div class='ev'>рейсов пока нет</div>";
+    </div>`).join("") || `<div class='ev'>${tt("fuel.trips.empty")}</div>`;
 
   document.getElementById("runs").innerHTML = st.runs.map(r => `
     <div class="run"><b>${r.id}</b> · ${fmtT(r.started_at)}<br>${
       r.message}</div>`).join("")
-    || "<div class='ev'>автозаказов пока не было</div>";
+    || `<div class='ev'>${tt("fuel.runs.empty")}</div>`;
 
   document.getElementById("events").innerHTML = st.events.map(e =>
     `<div class="ev">${e.text}</div>`).join("");

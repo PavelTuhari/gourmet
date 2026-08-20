@@ -43,6 +43,7 @@ from collections import deque
 from typing import Dict, List, Optional
 
 from ..core import Store
+from .i18n import DEFAULT_LANG, t
 from .network import price_for
 
 WALK_SPEED = 0.85          # м/с
@@ -71,6 +72,29 @@ FRIDGE_WARN, FRIDGE_ALARM = 6.0, 8.0
 #: ТСД: маяки BLE покрывают торговую зону (x < 4.5), дальше — LoRa
 TSD_DEVICES = ["ТСД-1", "ТСД-2", "ТСД-3"]
 BLE_ZONE_X = 4.5
+
+
+def _display_label(lang: str, canonical: str) -> str:
+    """Переводит внутренний (русский) идентификатор устройства/точки зала
+    в подпись на языке запроса — только для отдачи клиенту.
+
+    Идентификаторы («Касса 1», «ХВ-1», «ТСД-1», ...) остаются русскими
+    во внутреннем состоянии и в реальном потоке `ingest()` (это стабильные
+    ключи для сопоставления с очередями/расходниками/холодильниками —
+    их переименование по языку сломало бы это сопоставление), поэтому
+    перевод — только косметический слой поверх них, применяемый в
+    `state()` перед отдачей в JSON, как и лента событий (см. `network.py`).
+    """
+    if canonical.startswith("Касса "):
+        return t(lang, "instore.label.pos_n", n=canonical.split(" ")[1])
+    if canonical.startswith("ХВ-"):
+        return t(lang, "instore.label.fridge_n", n=canonical.split("-")[1])
+    if canonical.startswith("ТСД-"):
+        return t(lang, "instore.label.tsd_n", n=canonical.split("-")[1])
+    mapping = {"Весы": "instore.label.scales", "СКО": "instore.label.sco",
+              "Вход": "instore.label.entrance", "Выход": "instore.label.exit"}
+    key = mapping.get(canonical)
+    return t(lang, key) if key else canonical
 
 
 class InstoreSim:
@@ -273,8 +297,8 @@ class InstoreSim:
             self._emit(now, "consumable",
                        {"device": device, "kind": "paper",
                         "level": round(level),
-                        "text": f"заканчивается лента ({level:.0f}%), "
-                                f"вызван сотрудник"},
+                        "msg_key": "instore.log.paper_low",
+                        "msg_params": {"level": round(level)}},
                        None, None, "test")
 
     def _consume_bags(self, now: float, n: int) -> None:
@@ -284,8 +308,8 @@ class InstoreSim:
             self._emit(now, "consumable",
                        {"device": "Весы", "kind": "bags",
                         "level": self.veg_bags,
-                        "text": f"кульки для овощей заканчиваются "
-                                f"({self.veg_bags} шт.), заказано пополнение"},
+                        "msg_key": "instore.log.bags_low",
+                        "msg_params": {"n": self.veg_bags}},
                        None, None, "test")
 
     def _service_consumables(self, now: float) -> None:
@@ -295,7 +319,8 @@ class InstoreSim:
                 del self._replacements[device]
                 self._emit(now, "consumable",
                            {"device": device, "kind": "paper", "level": 100,
-                            "text": "лента заменена"},
+                            "msg_key": "instore.log.paper_replaced",
+                            "msg_params": {}},
                            None, None, "test")
         if self._bags_order is not None and now >= self._bags_order:
             self.veg_bags += 300
@@ -303,8 +328,8 @@ class InstoreSim:
             self._emit(now, "consumable",
                        {"device": "Весы", "kind": "bags",
                         "level": self.veg_bags,
-                        "text": f"кульки пополнены (теперь "
-                                f"{self.veg_bags} шт.)"},
+                        "msg_key": "instore.log.bags_replenished",
+                        "msg_params": {"n": self.veg_bags}},
                        None, None, "test")
 
     # ----- холодильники -------------------------------------------------
@@ -358,13 +383,13 @@ class InstoreSim:
                 d["y"] += dy / dist * step
             d["battery"] = max(0.0, d["battery"] - 0.01 * dt)
 
-    def _tsd_out(self) -> List[dict]:
+    def _tsd_out(self, lang: str = DEFAULT_LANG) -> List[dict]:
         out = []
         for d in self.tsd:
             ble = d["x"] < BLE_ZONE_X          # зона покрытия BLE-маяков
             acc = (self.rng.uniform(0.5, 1.0) if ble
                    else self.rng.uniform(1.8, 3.5))
-            out.append({"id": d["id"],
+            out.append({"id": _display_label(lang, d["id"]),
                         "x": round(d["x"] + self.rng.gauss(0, acc / 3), 2),
                         "y": round(d["y"] + self.rng.gauss(0, acc / 3), 2),
                         "acc": round(acc, 1),
@@ -373,19 +398,25 @@ class InstoreSim:
         return out
 
     # ----- очереди ------------------------------------------------------
-    def _queues(self, now: float, real_active: bool) -> List[dict]:
+    def _queues(self, now: float, real_active: bool,
+               lang: str = DEFAULT_LANG) -> List[dict]:
+        # "name" остаётся каноническим (русским) — по нему клиент сверяет
+        # очередь с кассой на схеме (`layout.pos[].name`); "label" — то,
+        # что показывается покупателю, переводится отдельно, чтобы
+        # перевод не ломал сопоставление ключей на клиенте
         names = [n for n, _, _ in POS_DESKS] + ["СКО"]
         if real_active and self.reported_queues:
-            return [{"name": n, "len": self.reported_queues.get(n, 0)}
-                    for n in names]
-        counts = {n: 0 for n in names}
-        for agent in self.agents.values():
-            pos = self._agent_pos(agent, now)
-            if not pos or agent["register"] is None:
-                continue
-            if pos[2] in ("queue", "pay"):
-                counts[agent["register"]] += 1
-        return [{"name": n, "len": counts[n]} for n in names]
+            counts = {n: self.reported_queues.get(n, 0) for n in names}
+        else:
+            counts = {n: 0 for n in names}
+            for agent in self.agents.values():
+                pos = self._agent_pos(agent, now)
+                if not pos or agent["register"] is None:
+                    continue
+                if pos[2] in ("queue", "pay"):
+                    counts[agent["register"]] += 1
+        return [{"name": n, "label": _display_label(lang, n),
+                 "len": counts[n]} for n in names]
 
     # ----- оценка покупателей по датчикам входа/выхода ------------------
     def _evolve_ghosts(self, dt: float, target: int) -> None:
@@ -438,7 +469,7 @@ class InstoreSim:
         s = segs[-1]
         return s["x1"], s["y1"], "walk"
 
-    def _layout(self) -> dict:
+    def _layout(self, lang: str = DEFAULT_LANG) -> dict:
         gondolas = []
         perishable_zones = []
         for g in self.store.gondolas:
@@ -458,19 +489,23 @@ class InstoreSim:
             if perishable:
                 perishable_zones.append(
                     {"x": g.x - 0.25, "y": g.y - 0.25, "w": g.width + 0.5,
-                     "d": g.depth + 0.95, "label": "скоропорт"})
+                     "d": g.depth + 0.95,
+                     "label": t(lang, "instore.perishable.zone")})
         fx0 = min(x for _, x, _, _, _ in FRIDGES) - 0.25
         fx1 = max(x + w for _, x, _, w, _ in FRIDGES) + 0.25
         perishable_zones.append({"x": fx0, "y": FRIDGES[0][2] - 0.55,
                                  "w": fx1 - fx0, "d": FRIDGES[0][4] + 0.85,
-                                 "label": "скоропорт · холод"})
+                                 "label": t(lang,
+                                           "instore.perishable.zone_cold")})
         return {"gondolas": gondolas, "entrance": ENTRANCE, "exit": EXIT,
                 "scales": SCALES, "sco": SCO_RECT, "sco_gate": SCO_GATE,
-                "pos": [{"name": n, "x": x, "y": y}
-                        for n, x, y in POS_DESKS],
+                # "name" — канонический (русский) ключ для сопоставления
+                # с `queues[].name`, "label" — переведённая подпись на схеме
+                "pos": [{"name": n, "label": _display_label(lang, n),
+                         "x": x, "y": y} for n, x, y in POS_DESKS],
                 "perishable_zones": perishable_zones}
 
-    def state(self, after_id: int = 0) -> dict:
+    def state(self, after_id: int = 0, lang: str = DEFAULT_LANG) -> dict:
         now = time.time()
         with self._lock:
             dt = min(5.0, now - self._last_evolve)
@@ -485,8 +520,10 @@ class InstoreSim:
             for aid, agent in self.agents.items():
                 q = agent["queue"]
                 while q and q[0][0] <= now:
-                    t, etype, data, x, y = q.pop(0)
-                    self._emit(t, etype, data, x, y, source="test")
+                    # переменная не 't' — это имя занято функцией перевода
+                    # i18n.t(), импортированной в модуль
+                    ev_t, etype, data, x, y = q.pop(0)
+                    self._emit(ev_t, etype, data, x, y, source="test")
                 if now > agent["end"]:
                     finished.append(aid)
             for aid in finished:
@@ -496,7 +533,7 @@ class InstoreSim:
             self._evolve_tsd(now, dt)
             self._service_consumables(now)
 
-            queues = self._queues(now, real_active)
+            queues = self._queues(now, real_active, lang)
             queue_total = sum(q["len"] for q in queues)
             # покупатели по датчикам минус очереди → равномерно по залу
             est_free = max(0, self.counters["in_store"] - queue_total)
@@ -511,10 +548,16 @@ class InstoreSim:
                                        "state": pos[2],
                                        "cart": agent["cart"]})
 
-            new_events = [e for e in self.events if e["id"] > after_id][-40:]
+            raw_events = [e for e in self.events if e["id"] > after_id][-40:]
+            # текст события и переводимые поля данных (имя кассы/устройства)
+            # собираются здесь, на языке запроса — само событие хранит
+            # только канонический (русский) идентификатор, см. `_emit`
+            # и `_display_label`
+            new_events = [self._translate_event(lang, e) for e in raw_events]
             counters = dict(self.counters)
             counters["revenue"] = round(counters["revenue"])
-            fridges_out = [{"id": f["id"], "x": f["x"], "y": f["y"],
+            fridges_out = [{"id": _display_label(lang, f["id"]),
+                            "x": f["x"], "y": f["y"],
                             "w": f["w"], "d": f["d"],
                             "temp": round(f["temp"], 1),
                             "door_open": f["door_open"],
@@ -523,10 +566,11 @@ class InstoreSim:
                                       else "warn" if f["temp"] >= FRIDGE_WARN
                                       else "ok")}
                            for f in self.fridges]
-            consumables = {k: round(v) for k, v in self.consumables.items()}
+            consumables = {_display_label(lang, k): round(v)
+                          for k, v in self.consumables.items()}
         return {"mode": "real" if real_active else "test",
                 "agents": agents_out, "events": new_events,
-                "counters": counters, "layout": self._layout(),
+                "counters": counters, "layout": self._layout(lang),
                 "queues": queues,
                 "estimate": {"in_store": self.counters["in_store"],
                              "in_queues": queue_total,
@@ -535,9 +579,25 @@ class InstoreSim:
                                          "y": round(g["y"], 2)}
                                         for g in self._ghosts]},
                 "fridges": fridges_out,
-                "tsd": self._tsd_out(),
+                "tsd": self._tsd_out(lang),
                 "consumables": {"paper": consumables,
                                 "veg_bags": self.veg_bags}}
+
+    @staticmethod
+    def _translate_event(lang: str, e: dict) -> dict:
+        """Копия события с переведёнными полями `data` — сам `e` в очереди
+        `self.events` не меняется (его могут отдать другому запросу с
+        другим языком, см. комментарий в `state()`)."""
+        etype, data = e["type"], e["data"]
+        if etype == "pos" and "register" in data:
+            data = {**data, "register": _display_label(lang,
+                                                        data["register"])}
+        elif etype == "fridge_alarm" and "id" in data:
+            data = {**data, "id": _display_label(lang, data["id"])}
+        elif etype == "consumable" and "msg_key" in data:
+            data = {**data, "device": _display_label(lang, data["device"]),
+                    "text": t(lang, data["msg_key"], **data["msg_params"])}
+        return {**e, "data": data}
 
 
 class InstoreHub:

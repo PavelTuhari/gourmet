@@ -612,6 +612,281 @@ MESSAGES: Dict[str, Dict[str, _Entry]] = {
         "ru": "← карта сети", "ro": "← harta rețelei", "en": "← network map",
     },
     "docs.demo_link": {"ru": "Демо", "ro": "Demo", "en": "Demo"},
+
+    # ---- топливная сеть (fuel.html, peco_fuel.py) -----------------------
+    "fuel.title": {
+        "ru": "⛽ Топливная сеть PECO · Молдова",
+        "ro": "⛽ Rețeaua de combustibil PECO · Moldova",
+        "en": "⛽ PECO fuel network · Moldova",
+    },
+    "fuel.kpi.stations": {"ru": "АЗС: ", "ro": "Stații: ", "en": "Stations: "},
+    "fuel.kpi.low": {
+        "ru": "низкий запас: ", "ro": "stoc redus: ", "en": "low stock: ",
+    },
+    "fuel.kpi.dry": {
+        "ru": "риск сухого бака: ", "ro": "risc de rezervor gol: ",
+        "en": "dry tank risk: ",
+    },
+    "fuel.kpi.trips": {"ru": "рейсов: ", "ro": "curse: ", "en": "trips: "},
+    "fuel.side.trips": {
+        "ru": "Рейсы бензовозов", "ro": "Curse cisterne",
+        "en": "Tanker trips",
+    },
+    "fuel.side.runs": {
+        "ru": "Прогоны автозаказа", "ro": "Rulaje comandă automată",
+        "en": "Auto-order runs",
+    },
+    "fuel.legend.normal": {
+        "ru": "запас в норме", "ro": "stoc normal", "en": "stock normal",
+    },
+    "fuel.legend.low": {
+        "ru": "ниже точки заказа", "ro": "sub pragul de comandă",
+        "en": "below reorder point",
+    },
+    "fuel.legend.dry": {
+        "ru": "риск сухого бака", "ro": "risc de rezervor gol",
+        "en": "dry tank risk",
+    },
+    "fuel.eta.none": {
+        "ru": "бензовозов в пути нет", "ro": "niciun autocisternă în drum",
+        "en": "no tankers en route",
+    },
+    "fuel.eta.source_prefix": {
+        "ru": "источник данных: ", "ro": "sursă date: ",
+        "en": "data source: ",
+    },
+    "fuel.eta.tanker_row": {
+        "ru": "{trip} · {driver} · {liters} л",
+        "ro": "{trip} · {driver} · {liters} l",
+        "en": "{trip} · {driver} · {liters} L",
+    },
+    "fuel.trip.done": {"ru": "завершён", "ro": "finalizat", "en": "completed"},
+    "fuel.trip.enroute": {"ru": "в пути", "ro": "în drum", "en": "en route"},
+    "fuel.trips.empty": {
+        "ru": "рейсов пока нет", "ro": "deocamdată fără curse",
+        "en": "no trips yet",
+    },
+    "fuel.runs.empty": {
+        "ru": "автозаказов пока не было",
+        "ro": "deocamdată fără comenzi automate",
+        "en": "no auto-orders yet",
+    },
+    "fuel.station.tooltip": {
+        "ru": "{name} · заполненность {pct}% · {days} дн. до сухого бака "
+              "— клик: табло",
+        "ro": "{name} · umplere {pct}% · {days} zile până la rezervor gol "
+              "— clic: tabel",
+        "en": "{name} · fill {pct}% · {days} days to dry tank "
+              "— click: arrival board",
+    },
+    "fuel.tanker.tooltip": {
+        "ru": "{id} · {driver} · {liters} л · прогресс {pct}%",
+        "ro": "{id} · {driver} · {liters} l · progres {pct}%",
+        "en": "{id} · {driver} · {liters} L · progress {pct}%",
+    },
+    "unit.liters_short": {"ru": "л", "ro": "l", "en": "L"},
+    "unit.kg_short": {"ru": "кг", "ro": "kg", "en": "kg"},
+    "unit.meters_short": {"ru": "м", "ro": "m", "en": "m"},
+    "unit.days_short": {"ru": "дн.", "ro": "zile", "en": "days"},
+
+    # ---- лента событий и прогоны топливного контура (peco_fuel.py) ------
+    "fuel.log.autoorder_dispatch": {
+        "ru": "Автозаказ → рейс {trip} ({driver}): {names}",
+        "ro": "Comandă automată → cursă {trip} ({driver}): {names}",
+        "en": "Auto-order → trip {trip} ({driver}): {names}",
+    },
+    "fuel.log.tanker_fill": {
+        "ru": "{trip}: залив {name} (+{qty} л)",
+        "ro": "{trip}: alimentare {name} (+{qty} l)",
+        "en": "{trip}: filled {name} (+{qty} L)",
+    },
+    "fuel.log.trip_done": {
+        "ru": "Рейс {trip} завершён ({driver})",
+        "ro": "Cursa {trip} finalizată ({driver})",
+        "en": "Trip {trip} completed ({driver})",
+    },
+    "fuel.log.artgranit_down": {
+        "ru": "Artgranit недоступен ({error}), переход на эмуляцию по "
+              "истечении окна свежести",
+        "ro": "Artgranit indisponibil ({error}), se trece la emulare după "
+              "expirarea ferestrei de prospețime",
+        "en": "Artgranit unavailable ({error}), switching to emulation "
+              "once the freshness window expires",
+    },
+    "fuel.log.artgranit_up": {
+        "ru": "Artgranit на связи: {n} АЗС, {n2} {trips_word}",
+        "ro": "Artgranit conectat: {n} stații, {n2} {trips_word}",
+        "en": "Artgranit connected: {n} stations, {n2} {trips_word}",
+    },
+    "fuel.log.artgranit_offline": {
+        "ru": "Artgranit молчит дольше {sec} с — эмуляция",
+        "ro": "Artgranit tace de peste {sec} s — emulare",
+        "en": "Artgranit silent for over {sec} s — emulation",
+    },
+    "fuel.run.message": {
+        "ru": "Автозаказ: {n} АЗС, {qty} л, рейс {trip}",
+        "ro": "Comandă automată: {n} stații, {qty} l, cursa {trip}",
+        "en": "Auto-order: {n} stations, {qty} L, trip {trip}",
+    },
+
+    # ---- симуляция торгового зала (instore.html, instore.py) ------------
+    "instore.side.title": {
+        "ru": "🎮 Симуляция торгового зала",
+        "ro": "🎮 Simularea sălii de vânzare",
+        "en": "🎮 Sales floor simulation",
+    },
+    "instore.mode.test": {
+        "ru": "🧪 тестовый поток", "ro": "🧪 flux de test",
+        "en": "🧪 test feed",
+    },
+    "instore.mode.real": {
+        "ru": "📡 реальный поток (кассы/CCTV)",
+        "ro": "📡 flux real (case de marcat/CCTV)",
+        "en": "📡 live feed (registers/CCTV)",
+    },
+    "instore.kpi.in_store": {
+        "ru": "в зале сейчас", "ro": "în magazin acum",
+        "en": "in store now",
+    },
+    "instore.kpi.visitors": {
+        "ru": "посетителей", "ro": "vizitatori", "en": "visitors",
+    },
+    "instore.kpi.receipts": {"ru": "чеков", "ro": "bonuri", "en": "receipts"},
+    "instore.kpi.revenue": {
+        "ru": "выручка касс", "ro": "venit case", "en": "register revenue",
+    },
+    "instore.kpi.sco_share": {
+        "ru": "доля СКО", "ro": "cotă self-checkout",
+        "en": "self-checkout share",
+    },
+    "instore.kpi.weighings": {
+        "ru": "взвешиваний", "ro": "cântăriri", "en": "weighings",
+    },
+    "instore.est.label": {
+        "ru": "👥 Оценка по датчикам входа/выхода",
+        "ro": "👥 Estimare după senzorii de intrare/ieșire",
+        "en": "👥 Estimate from entry/exit sensors",
+    },
+    "instore.est.text": {
+        "ru": "в зале ~{in_store}, в очередях {in_queues}, по залу {on_floor}",
+        "ro": "în magazin ~{in_store}, la coadă {in_queues}, prin magazin "
+              "{on_floor}",
+        "en": "in store ~{in_store}, in queues {in_queues}, "
+              "on the floor {on_floor}",
+    },
+    "instore.cons.title": {
+        "ru": "🧻 Расходники", "ro": "🧻 Consumabile", "en": "🧻 Consumables",
+    },
+    "instore.label.bags": {"ru": "Кульки", "ro": "Pungi", "en": "Bags"},
+    "instore.label.pos_n": {
+        "ru": "Касса {n}", "ro": "Casă {n}", "en": "Register {n}",
+    },
+    "instore.label.scales": {"ru": "Весы", "ro": "Cântar", "en": "Scale"},
+    "instore.label.entrance": {"ru": "ВХОД", "ro": "INTRARE", "en": "ENTRY"},
+    "instore.label.exit": {"ru": "ВЫХОД", "ro": "IEȘIRE", "en": "EXIT"},
+    "instore.label.sco": {
+        # СКО (самообслуживание) — общепринятая аббревиатура self-checkout;
+        # в ro/en даём то же короткое, узнаваемое название, а не дословный
+        # перевод «касса с самообслуживанием»
+        "ru": "СКО", "ro": "self-checkout", "en": "self-checkout",
+    },
+    "instore.label.fridge_n": {
+        # ХВ — холодильная витрина; ro/en используют предметное название
+        # (не транслитерацию), т.к. аббревиатура ХВ ничего не говорит
+        # неруссскоязычному читателю
+        "ru": "ХВ-{n}", "ro": "vitrină frig. {n}", "en": "chiller {n}",
+    },
+    "instore.label.tsd_n": {
+        # ТСД — терминал сбора данных; в рознице ro/en принято называть
+        # устройство по функции (сканер), а не по абревиатуре
+        "ru": "ТСД-{n}", "ro": "terminal date {n}",
+        "en": "handheld scanner {n}",
+    },
+    "instore.queue.label": {
+        "ru": "👥 очередь: {n}", "ro": "👥 coadă: {n}", "en": "👥 queue: {n}",
+    },
+    "instore.queue.sco_label": {
+        "ru": "👥 очередь СКО: {n}", "ro": "👥 coadă self-checkout: {n}",
+        "en": "👥 self-checkout queue: {n}",
+    },
+    "instore.fridge.door_open": {
+        "ru": " · дверца!", "ro": " · ușă deschisă!", "en": " · door open!",
+    },
+    "instore.fridge.alarm": {
+        "ru": "⚠ ТРЕВОГА", "ro": "⚠ ALARMĂ", "en": "⚠ ALARM",
+    },
+    "instore.perishable.zone": {
+        "ru": "скоропорт", "ro": "perisabile", "en": "perishables",
+    },
+    "instore.perishable.zone_cold": {
+        "ru": "скоропорт · холод", "ro": "perisabile · frig",
+        "en": "perishables · chilled",
+    },
+    "instore.event.cam_in": {
+        "ru": "Видеонаблюдение: посетитель вошёл",
+        "ro": "Videosupraveghere: vizitator intrat",
+        "en": "CCTV: visitor entered",
+    },
+    "instore.event.cam_out": {
+        "ru": "Видеонаблюдение: посетитель вышел",
+        "ro": "Videosupraveghere: vizitator ieșit",
+        "en": "CCTV: visitor left",
+    },
+    "instore.event.pick": {
+        "ru": "Взято с полки: {name}", "ro": "Luat de pe raft: {name}",
+        "en": "Picked from shelf: {name}",
+    },
+    "instore.event.scale": {
+        "ru": "Весы: {name} — {weight} кг",
+        "ro": "Cântar: {name} — {weight} kg",
+        "en": "Scale: {name} — {weight} kg",
+    },
+    "instore.event.sco_in": {
+        "ru": "Вход в зону касс самообслуживания",
+        "ro": "Intrare în zona self-checkout",
+        "en": "Entering the self-checkout zone",
+    },
+    "instore.event.sco_out": {
+        "ru": "Выход из зоны СКО", "ro": "Ieșire din zona self-checkout",
+        "en": "Leaving the self-checkout zone",
+    },
+    "instore.event.pos": {
+        "ru": "{register}: чек {total} L ({items} поз.)",
+        "ro": "{register}: bon {total} L ({items} art.)",
+        "en": "{register}: receipt {total} L ({items} items)",
+    },
+    "instore.event.fridge_alarm": {
+        "ru": "{id}: ТРЕВОГА — температура {temp}°C",
+        "ro": "{id}: ALARMĂ — temperatură {temp}°C",
+        "en": "{id}: ALARM — temperature {temp}°C",
+    },
+    "instore.event.source_real": {
+        "ru": "поток", "ro": "flux", "en": "feed",
+    },
+    "instore.event.source_test": {
+        "ru": "тест", "ro": "test", "en": "test",
+    },
+    "instore.log.paper_low": {
+        "ru": "заканчивается лента ({level}%), вызван сотрудник",
+        "ro": "se termină banda ({level}%), a fost chemat un angajat",
+        "en": "paper roll running low ({level}%), staff called",
+    },
+    "instore.log.bags_low": {
+        "ru": "кульки для овощей заканчиваются ({n} шт.), заказано "
+              "пополнение",
+        "ro": "pungile pentru legume se termină ({n} buc.), "
+              "reaprovizionare comandată",
+        "en": "vegetable bags running low ({n} pcs), restock ordered",
+    },
+    "instore.log.paper_replaced": {
+        "ru": "лента заменена", "ro": "banda a fost înlocuită",
+        "en": "paper roll replaced",
+    },
+    "instore.log.bags_replenished": {
+        "ru": "кульки пополнены (теперь {n} шт.)",
+        "ro": "pungile au fost reaprovizionate (acum {n} buc.)",
+        "en": "bags restocked (now {n} pcs)",
+    },
 }
 
 

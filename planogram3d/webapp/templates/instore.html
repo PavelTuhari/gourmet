@@ -2,7 +2,7 @@
 <html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
-<title>{{ store_name }} — симуляция зала</title>
+<title>{{ store_name }} — {{ t(lang, "map.interior.tab_live") }}</title>
 <style>
   html, body { margin:0; height:100%; font-family:'Segoe UI',system-ui,sans-serif;
                background:#1a2430; color:#23303f; overflow:hidden; }
@@ -53,31 +53,35 @@
   <div id="stage"><canvas id="cv" width="920" height="600"></canvas></div>
   <div id="side">
     <div class="head">
-      <div class="t">🎮 Симуляция торгового зала</div>
-      <span id="mode">🧪 тестовый поток</span>
+      <div class="t">{{ t(lang, "instore.side.title") }}</div>
+      <span id="mode">{{ t(lang, "instore.mode.test") }}</span>
     </div>
     <div class="kpis">
-      <div class="kpi"><b id="k-in">0</b><span>в зале сейчас</span></div>
-      <div class="kpi"><b id="k-vis">0</b><span>посетителей</span></div>
-      <div class="kpi"><b id="k-rc">0</b><span>чеков</span></div>
-      <div class="kpi"><b id="k-rev">0 L</b><span>выручка касс</span></div>
-      <div class="kpi"><b id="k-sco">0%</b><span>доля СКО</span></div>
-      <div class="kpi"><b id="k-wg">0</b><span>взвешиваний</span></div>
+      <div class="kpi"><b id="k-in">0</b><span>{{ t(lang, "instore.kpi.in_store") }}</span></div>
+      <div class="kpi"><b id="k-vis">0</b><span>{{ t(lang, "instore.kpi.visitors") }}</span></div>
+      <div class="kpi"><b id="k-rc">0</b><span>{{ t(lang, "instore.kpi.receipts") }}</span></div>
+      <div class="kpi"><b id="k-rev">0 L</b><span>{{ t(lang, "instore.kpi.revenue") }}</span></div>
+      <div class="kpi"><b id="k-sco">0%</b><span>{{ t(lang, "instore.kpi.sco_share") }}</span></div>
+      <div class="kpi"><b id="k-wg">0</b><span>{{ t(lang, "instore.kpi.weighings") }}</span></div>
     </div>
     <div id="est">
       <label><input type="checkbox" id="ghosts-toggle" checked>
-        👥 Оценка по датчикам входа/выхода</label>
+        {{ t(lang, "instore.est.label") }}</label>
       <span id="est-text">—</span>
     </div>
     <div class="cons">
-      <div class="t">🧻 Расходники</div>
+      <div class="t">{{ t(lang, "instore.cons.title") }}</div>
       <div id="cons-rows"></div>
     </div>
     <div id="feed"></div>
   </div>
 </div>
 
+<script src="/static/js/i18n.js"></script>
 <script>
+var LANG = {{ lang|tojson }};
+var I18N = {{ i18n_json|tojson }};
+var I18NP = {};
 const STORE_ID = {{ store_id | tojson }};
 const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
 
@@ -161,11 +165,12 @@ let queues = [], fridges = [], tsd = [], estimate = null;
 async function poll() {
   try {
     const st = await (await fetch(
-      `/api/instore/${STORE_ID}/state?after=${lastEvent}`)).json();
+      `/api/instore/${STORE_ID}/state?after=${lastEvent}&lang=${LANG}`
+      )).json();
     layout = st.layout; counters = st.counters;
     const m = document.getElementById("mode");
     m.textContent = st.mode === "real"
-      ? "📡 реальный поток (кассы/CCTV)" : "🧪 тестовый поток";
+      ? tt("instore.mode.real") : tt("instore.mode.test");
     m.className = st.mode === "real" ? "real" : "";
 
     const seen = new Set();
@@ -191,9 +196,9 @@ async function poll() {
 
 function renderSide(st) {
   if (estimate)
-    document.getElementById("est-text").textContent =
-      `в зале ~${estimate.in_store}, в очередях ${estimate.in_queues}, ` +
-      `по залу ${estimate.on_floor}`;
+    document.getElementById("est-text").textContent = tt("instore.est.text",
+      {in_store: estimate.in_store, in_queues: estimate.in_queues,
+       on_floor: estimate.on_floor});
   const c = st.consumables || {paper: {}, veg_bags: 0};
   const rows = [];
   for (const [dev, pct] of Object.entries(c.paper)) {
@@ -204,7 +209,7 @@ function renderSide(st) {
   }
   const bagsCol = c.veg_bags < 40 ? "#e5533d"
                 : c.veg_bags < 120 ? "#ffb300" : "#4caf50";
-  rows.push(`<div class="row"><span>Кульки</span>` +
+  rows.push(`<div class="row"><span>${tt("instore.label.bags")}</span>` +
     `<span class="bar"><i style="width:${
       Math.min(100, c.veg_bags / 5)}%;background:${bagsCol}"></i></span>` +
     `<span class="pct" style="color:${bagsCol}">${c.veg_bags}</span></div>`);
@@ -220,16 +225,17 @@ function posOf(a) {
 
 /* ---------- события ---------- */
 const EVENT_FMT = {
-  cam_in:  e => ["🎥", "Видеонаблюдение: посетитель вошёл"],
-  cam_out: e => ["🎥", "Видеонаблюдение: посетитель вышел"],
-  pick:    e => ["🛒", `Взято с полки: ${e.data.name}`],
-  scale:   e => ["⚖️", `Весы: ${e.data.name} — ${e.data.weight_kg} кг`],
-  sco_in:  e => ["🚧", "Вход в зону касс самообслуживания"],
-  sco_out: e => ["🚧", "Выход из зоны СКО"],
-  pos:     e => ["🧾", `${e.data.register}: чек ${e.data.total} L ` +
-                       `(${e.data.items} поз.)`],
-  fridge_alarm: e => ["🧊", `${e.data.id}: ТРЕВОГА — температура ` +
-                            `${e.data.temp_c}°C`],
+  cam_in:  e => ["🎥", tt("instore.event.cam_in")],
+  cam_out: e => ["🎥", tt("instore.event.cam_out")],
+  pick:    e => ["🛒", tt("instore.event.pick", {name: e.data.name})],
+  scale:   e => ["⚖️", tt("instore.event.scale",
+                         {name: e.data.name, weight: e.data.weight_kg})],
+  sco_in:  e => ["🚧", tt("instore.event.sco_in")],
+  sco_out: e => ["🚧", tt("instore.event.sco_out")],
+  pos:     e => ["🧾", tt("instore.event.pos", {register: e.data.register,
+                          total: e.data.total, items: e.data.items})],
+  fridge_alarm: e => ["🧊", tt("instore.event.fridge_alarm",
+                              {id: e.data.id, temp: e.data.temp_c})],
   consumable:   e => ["🧻", `${e.data.device}: ${e.data.text}`],
 };
 
@@ -242,8 +248,9 @@ function onEvent(e) {
   const feed = document.getElementById("feed");
   const div = document.createElement("div");
   div.innerHTML = `${icon} <span class="${cls}">` +
-    `${text}</span><span class="src">${
-      e.source === "real" ? "поток" : "тест"}</span>`;
+    `${text}</span><span class="src">${e.source === "real"
+      ? tt("instore.event.source_real") : tt("instore.event.source_test")
+      }</span>`;
   feed.prepend(div);
   while (feed.children.length > 40) feed.lastChild.remove();
 
@@ -252,7 +259,8 @@ function onEvent(e) {
     popups.push({x: e.x, y: e.y, text: `+${e.data.total} L`,
                  color: "#ffd54f", t0: performance.now()});
   else if (e.type === "scale")
-    popups.push({x: e.x, y: e.y, text: `${e.data.weight_kg} кг`,
+    popups.push({x: e.x, y: e.y,
+                 text: `${e.data.weight_kg} ${tt("unit.kg_short")}`,
                  color: "#90caf9", t0: performance.now()});
   else if (e.type === "pick")
     popups.push({x: e.x, y: e.y, text: "🛒", color: "#fff",
@@ -326,7 +334,7 @@ function draw() {
       gAge < 500 ? "#ffd54f" : "#8fa3b8", "#6d8296", "#5c7086");
   box(gate[0]+0.33, gate[1]-0.05, 0.12, 0.1, 0.9,
       gAge < 500 ? "#ffd54f" : "#8fa3b8", "#6d8296", "#5c7086");
-  label(sx + sw/2, sy + sd/2, 0, "СКО", 12, "#2f6fed");
+  label(sx + sw/2, sy + sd/2, 0, tt("instore.label.sco"), 12, "#2f6fed");
 
   const drawables = [];
 
@@ -347,17 +355,18 @@ function draw() {
           "#7e8ca0");
       box(p.x + 0.15, p.y - 0.25, 0.12, 0.12, 0.85, "#4a5a6e", "#3c4b5e",
           "#33404f");
-      label(p.x, p.y - 0.35, 0.9, p.name, 11);
+      label(p.x, p.y - 0.35, 0.9, p.label, 11);
       const q = queueOf(p.name);
       if (q > 0)
-        label(p.x, p.y + 0.75, 0.85, `👥 очередь: ${q}`, 11.5,
+        label(p.x, p.y + 0.75, 0.85, tt("instore.queue.label", {n: q}), 11.5,
               q >= 3 ? "#c62828" : "#3c4856");
     }});
   }
   const scoQ = queueOf("СКО");
   if (scoQ > 0)
     drawables.push({ depth: sx + sy + 3, fn: () =>
-      label(sx + sw/2, sy - 0.25, 0.9, `👥 очередь СКО: ${scoQ}`, 11.5,
+      label(sx + sw/2, sy - 0.25, 0.9,
+            tt("instore.queue.sco_label", {n: scoQ}), 11.5,
             scoQ >= 3 ? "#c62828" : "#2f6fed") });
 
   // холодильные витрины: температура и состояние
@@ -369,10 +378,12 @@ function draw() {
       const tCol = f.state === "alarm" ? "#c62828"
                  : f.state === "warn" ? "#c77700" : "#1e6fa8";
       label(f.x + f.w/2, f.y + f.d/2, 1.12,
-            `${f.id} · ${f.temp}°C${f.door_open ? " · дверца!" : ""}` +
+            `${f.id} · ${f.temp}°C${f.door_open
+              ? tt("instore.fridge.door_open") : ""}` +
             `${f.compressor ? " ❄" : ""}`, 10.5, tCol);
       if (f.state === "alarm")
-        label(f.x + f.w/2, f.y + f.d/2, 1.38, "⚠ ТРЕВОГА", 11, "#c62828");
+        label(f.x + f.w/2, f.y + f.d/2, 1.38, tt("instore.fridge.alarm"),
+              11, "#c62828");
     }});
   }
   // весы
@@ -380,19 +391,21 @@ function draw() {
   drawables.push({ depth: sc[0] + sc[1], fn: () => {
     box(sc[0]-0.25, sc[1]-0.2, 0.5, 0.4, 0.55, "#c9d3dd", "#a3aebc",
         "#8d99a9");
-    label(sc[0], sc[1] - 0.28, 0.95, "⚖ Весы", 11);
+    label(sc[0], sc[1] - 0.28, 0.95, "⚖ " + tt("instore.label.scales"), 11);
   }});
   // вход/выход
   const en = layout.entrance, ex = layout.exit;
   drawables.push({ depth: en[0] + en[1], fn: () => {
     poly([iso(en[0]-0.5,en[1]-0.25), iso(en[0]+0.5,en[1]-0.25),
           iso(en[0]+0.5,en[1]+0.25), iso(en[0]-0.5,en[1]+0.25)], "#bfe3c4");
-    label(en[0], en[1], 0.55, "🎥 ВХОД", 11, "#1d7a3d");
+    label(en[0], en[1], 0.55, "🎥 " + tt("instore.label.entrance"), 11,
+          "#1d7a3d");
   }});
   drawables.push({ depth: ex[0] + ex[1], fn: () => {
     poly([iso(ex[0]-0.5,ex[1]-0.2), iso(ex[0]+0.5,ex[1]-0.2),
           iso(ex[0]+0.5,ex[1]+0.25), iso(ex[0]-0.5,ex[1]+0.25)], "#f2cdc9");
-    label(ex[0], ex[1], 0.55, "🎥 ВЫХОД", 11, "#b03a30");
+    label(ex[0], ex[1], 0.55, "🎥 " + tt("instore.label.exit"), 11,
+          "#b03a30");
   }});
 
   // покупатели
@@ -443,7 +456,8 @@ function draw() {
       ctx.fillText("📟", px, py - 2);
       ctx.font = "700 9.5px 'Segoe UI',sans-serif";
       ctx.fillStyle = d.src === "BLE" ? "#2f6fed" : "#8e44ad";
-      ctx.fillText(`${d.id} · ${d.src} ±${d.acc} м · 🔋${d.battery}%`,
+      ctx.fillText(`${d.id} · ${d.src} ±${d.acc} ${tt("unit.meters_short")} ` +
+        `· 🔋${d.battery}%`,
                    px, py + 14);
     }});
   }

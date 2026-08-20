@@ -111,10 +111,24 @@ def eta_order(order_id):
     return jsonify(board)
 
 
+#: ключи каталога для JS страницы /fuel — панель и попап табло рисуются в
+#: браузере (см. `_DELIVERY_JS_KEYS`: статику шаблон берёт через Jinja,
+#: здесь только то, что собирается динамически в poll())
+_FUEL_JS_KEYS = (
+    "gps.emulated", "eta.board_title", "delivery.eta.ai_badge",
+    "fuel.eta.none", "fuel.eta.source_prefix", "eta.plan_short",
+    "unit.sec_short", "unit.liters_short", "fuel.trip.done",
+    "fuel.trip.enroute", "fuel.trips.empty", "fuel.runs.empty",
+    "fuel.station.tooltip", "fuel.tanker.tooltip",
+)
+
+
 @app.get("/fuel")
 def fuel_page():
     """Карта топливной сети Молдовы: нефтебаза, АЗС, рейсы бензовозов."""
-    return render_template("fuel.html", lang=_lang())
+    lang = _lang()
+    return render_template("fuel.html", lang=lang,
+                           i18n_json=client_catalog(lang, _FUEL_JS_KEYS))
 
 
 @app.get("/api/fuel/state")
@@ -330,14 +344,32 @@ def store_page(store_id):
     return build_report_page(store, violations)
 
 
+#: ключи каталога для JS страницы /store/<id>/live — канвас (изометрия
+#: зала), лента событий и режим потока рисуются в браузере
+_INSTORE_JS_KEYS = (
+    "instore.mode.test", "instore.mode.real", "instore.est.text",
+    "instore.label.bags", "instore.label.sco", "instore.label.scales",
+    "instore.label.entrance", "instore.label.exit",
+    "instore.queue.label", "instore.queue.sco_label",
+    "instore.fridge.door_open", "instore.fridge.alarm",
+    "instore.event.cam_in", "instore.event.cam_out", "instore.event.pick",
+    "instore.event.scale", "instore.event.sco_in", "instore.event.sco_out",
+    "instore.event.pos", "instore.event.fridge_alarm",
+    "instore.event.source_real", "instore.event.source_test",
+    "unit.meters_short", "unit.kg_short",
+)
+
+
 @app.get("/store/<store_id>/live")
 def store_live(store_id):
     try:
         store = network.store(store_id)
     except KeyError:
         abort(404)
-    return render_template("instore.html", store_id=store_id,
-                           store_name=store.name, lang=_lang())
+    lang = _lang()
+    return render_template(
+        "instore.html", store_id=store_id, store_name=store.name, lang=lang,
+        i18n_json=client_catalog(lang, _INSTORE_JS_KEYS))
 
 
 @app.get("/store/<store_id>/game")
@@ -448,7 +480,8 @@ def instore_state(store_id):
     except KeyError:
         abort(404)
     after = request.args.get("after", 0, type=int)
-    return jsonify(instore.get(store_id, store).state(after_id=after))
+    return jsonify(instore.get(store_id, store).state(after_id=after,
+                                                       lang=_lang()))
 
 
 @app.post("/api/instore/<store_id>/ingest")

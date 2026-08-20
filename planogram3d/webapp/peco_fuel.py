@@ -39,6 +39,7 @@ from pathlib import Path
 from typing import Deque, Dict, List, Optional, Tuple
 
 from .eta_ai import _PRIOR_SPEED, get_predictor
+from .i18n import DEFAULT_LANG, PluralRef, render_event, t
 from .roadnet import RoadNet, _dist, cumulative, point_along
 
 MOLDOVA_MAP = (Path(__file__).parent / "static" / "data"
@@ -300,8 +301,12 @@ class FuelNetwork:
         self._real_mode = False        # для лога переходов эмуляция↔реал
 
     # ----- события --------------------------------------------------------
-    def _log(self, text: str) -> None:
-        self.events.appendleft({"t": time.time(), "text": text})
+    def _log(self, icon: str, key: str, count=None, **params) -> None:
+        """Запись ленты событий: ключ+параметры вместо готовой строки —
+        язык выбирается при отдаче в `state()` (см. `i18n.render_event`),
+        тем же приёмом, что и в `network._ev`."""
+        self.events.appendleft({"t": time.time(), "icon": icon, "key": key,
+                                "params": params, "count": count})
 
     def _next_driver(self) -> str:
         d = self._driver_pool[self._driver_idx % len(self._driver_pool)]
@@ -408,11 +413,15 @@ class FuelNetwork:
             "id": run_id, "status": "done", "order_count": len(stops),
             "station_count": len(stops), "liters_total": round(liters_total),
             "started_at": now, "finished_at": now,
-            "message": (f"Автозаказ: {len(stops)} АЗС, "
-                       f"{round(liters_total)} л, рейс {trip_id}"),
+            # текст прогона тоже ключ+параметры — переводится в state(),
+            # см. комментарий у _log
+            "msg_key": "fuel.run.message",
+            "msg_params": {"n": len(stops), "qty": round(liters_total),
+                          "trip": trip_id},
         })
         names = ", ".join(s["name"] for s in stops)
-        self._log(f"🛢 Автозаказ → рейс {trip_id} ({driver}): {names}")
+        self._log("🛢", "fuel.log.autoorder_dispatch", trip=trip_id,
+                  driver=driver, names=names)
 
     # ----- движение бензовозов ----------------------------------------------
     def _evolve_trips(self, now: float, dt: float) -> None:
@@ -436,14 +445,14 @@ class FuelNetwork:
                     predictor.observe("tanker", leg_m, elapsed)
                     trip["_prev_cum"] = stop["cum_dist"]
                     trip["_leg_start_ts"] = now
-                    self._log(f"⛽ {trip['id']}: залив {stop['name']} "
-                              f"(+{stop['liters']} л)")
+                    self._log("⛽", "fuel.log.tanker_fill", trip=trip["id"],
+                              name=stop["name"], qty=stop["liters"])
             if (trip["leg_pos"] >= total_len - 1.0
                     and all(s["status"] == "done" for s in trip["stops"])):
                 trip["status"] = "done"
                 trip["_done_at"] = now
-                self._log(f"✅ Рейс {trip['id']} завершён "
-                          f"({trip['driver']})")
+                self._log("✅", "fuel.log.trip_done", trip=trip["id"],
+                          driver=trip["driver"])
         # завершённые рейсы держим на экране ещё немного, потом чистим
         self.trips = {k: v for k, v in self.trips.items()
                       if v["status"] == "en_route"
@@ -586,18 +595,22 @@ class FuelNetwork:
             # последних свежих данных до истечения REAL_ARTGRANIT_TIMEOUT,
             # а не падает и не показывает пустой экран (инвариант плана)
             if self._real_mode:
-                self._log(f"⚠ Artgranit недоступен ({exc}), "
-                          "переход на эмуляцию по истечении окна свежести")
+                self._log("⚠", "fuel.log.artgranit_down", error=str(exc))
             return
         self._real_cache = {"stations": stations_out, "trips": trips_out}
         self._last_real = now
         if not self._real_mode:
-            self._log(f"🔌 Artgranit на связи: {len(stations_out)} АЗС, "
-                      f"{len(trips_out)} рейс(ов)")
+            n_trips = len(trips_out)
+            self._log("🔌", "fuel.log.artgranit_up",
+                      n=len(stations_out), n2=n_trips,
+                      trips_word=PluralRef(
+                          "ai.forecast_trained_trips.trips_word",
+                          count=n_trips))
         self._real_mode = True
 
     # ----- табло прибытия (ИИ) ----------------------------------------------
-    def arrival_board(self, station_id) -> Optional[dict]:
+    def arrival_board(self, station_id, lang: str = DEFAULT_LANG
+                      ) -> Optional[dict]:
         """Онлайн-табло прибытия АЗС: бензовозы в пути к ней, с ИИ-прогнозом
         (±σ) — та же форма ответа, что у ``network.arrival_board`` и
         ``delivery.arrival_board`` (``{"now", "point", "rows", "model"}``),
@@ -608,7 +621,7 @@ class FuelNetwork:
             return None
         predictor = get_predictor()
         now = time.time()
-        st = self.state()                  # тот же снимок, что видит карта
+        st = self.state(lang)               # тот же снимок, что видит карта
         station = next((s for s in st["stations"] if s["id"] == sid), None)
         if station is None:
             return None
@@ -630,15 +643,18 @@ class FuelNetwork:
             eta_s, sigma_s, n_obs = predictor.predict("tanker", remaining_m)
             rows.append({
                 "type": "tanker", "icon": "🚛",
-                "label": f"{trip['id']} · {trip['driver']} · "
-                        f"{stop['liters']} л",
+                "label": t(lang, "fuel.eta.tanker_row", trip=trip["id"],
+                          driver=trip["driver"], liters=stop["liters"]),
                 "eta_sec": round(eta_s),
                 "sigma_sec": round(max(3.0, sigma_s)),
                 "eta_ts": now + eta_s,
                 "plan_ts": stop.get("eta_ts") or trip["eta"],
                 "progress": trip["progress"],
-                "source": (f"ИИ-прогноз (модель обучена, {n_obs} рейс.)"
-                          if n_obs else "ИИ-прогноз (априорная модель)"),
+                "source": (t(lang, "ai.forecast_trained_trips", count=n_obs,
+                             n=n_obs, trips_word=t(
+                                 lang, "ai.forecast_trained_trips.trips_word",
+                                 count=n_obs))
+                          if n_obs else t(lang, "ai.forecast_prior")),
             })
         rows.sort(key=lambda r: r["eta_ts"])
         return {"now": now, "point": station["name"], "station_id": sid,
@@ -646,7 +662,7 @@ class FuelNetwork:
                 "model": predictor.summary()}
 
     # ----- снимок состояния (evolve-on-poll) --------------------------------
-    def state(self) -> dict:
+    def state(self, lang: str = DEFAULT_LANG) -> dict:
         now = time.time()
         dt = min(MAX_DT, now - self._last)
         self._last = now
@@ -659,9 +675,17 @@ class FuelNetwork:
         is_real = (self._real_cache is not None
                   and now - self._last_real < REAL_ARTGRANIT_TIMEOUT)
         if self._real_mode and not is_real:
-            self._log("↩️ Artgranit молчит дольше "
-                      f"{REAL_ARTGRANIT_TIMEOUT:.0f} с — эмуляция")
+            self._log("↩️", "fuel.log.artgranit_offline",
+                      sec=round(REAL_ARTGRANIT_TIMEOUT))
             self._real_mode = False
+        # текст ленты и прогонов собирается здесь, на языке запроса — сами
+        # записи хранят только ключ+параметры (см. `_log`/`i18n.render_event`)
+        runs_out = [{**{k: v for k, v in r.items()
+                        if k not in ("msg_key", "msg_params")},
+                    "message": t(lang, r["msg_key"], **r["msg_params"])}
+                   for r in self.runs]
+        events_out = [{"t": ev["t"], "text": render_event(lang, ev)}
+                     for ev in list(self.events)[:20]]
         if is_real:
             return {
                 "now": now, "source": "artgranit",
@@ -670,8 +694,8 @@ class FuelNetwork:
                                            / self.depot["capacity_l"], 1)},
                 "stations": self._real_cache["stations"],
                 "trips": self._real_cache["trips"],
-                "runs": list(self.runs),
-                "events": list(self.events)[:20],
+                "runs": runs_out,
+                "events": events_out,
             }
 
         stations_out = []
@@ -717,6 +741,6 @@ class FuelNetwork:
                                        / self.depot["capacity_l"], 1)},
             "stations": stations_out,
             "trips": trips_out,
-            "runs": list(self.runs),
-            "events": list(self.events)[:20],
+            "runs": runs_out,
+            "events": events_out,
         }
