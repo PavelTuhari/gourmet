@@ -538,6 +538,26 @@ class FuelNetwork:
                       if v["status"] == "en_route"
                       or now - v.get("_done_at", now) < 90}
 
+    # ----- демонстрация: воспроизводимый автозаказ -------------------------
+    def force_low(self, station_id: int, fraction: float = 0.30) -> bool:
+        """Принудительно опустить остаток станции ниже порога заказа.
+
+        Единственная уступка воспроизводимости демонстрации (владелец
+        явно разрешил её в постановке задачи): дальше рейс рождается
+        штатным путём — следующий вызов :meth:`state` увидит станцию в
+        :meth:`_low_stations` и продиспетчерует её обычным
+        :meth:`_maybe_dispatch`, тем же кодом, что сработал бы и без
+        вмешательства, просто дождавшись естественного расхода запаса.
+        Сбрасываем ``_next_trip_check``, чтобы не ждать до
+        ``TRIP_CHECK_INTERVAL`` — демонстрация не должна начинаться с
+        паузы без объяснения зрителю, что происходит."""
+        st = self.stations.get(int(station_id))
+        if st is None:
+            return False
+        st["current_l"] = min(st["current_l"], st["capacity_l"] * fraction)
+        self._next_trip_check = 0.0
+        return True
+
     # ----- Artgranit: опрос и преобразование форм ---------------------------
     def _station_from_artgranit(self, s: dict) -> dict:
         """Форма Artgranit → форма станции контура (та же, что у эмулятора)."""

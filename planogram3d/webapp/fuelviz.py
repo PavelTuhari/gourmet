@@ -236,7 +236,8 @@ def _legend_traces(lang: str) -> List[go.Scatter3d]:
 
 
 def build_station_figure(station: dict, unload: Optional[dict],
-                         lang: str = DEFAULT_LANG) -> go.Figure:
+                         lang: str = DEFAULT_LANG,
+                         compact: bool = False) -> go.Figure:
     """Собрать 3D-сцену станции.
 
     ``station`` — запись из ``FuelNetwork.state()["stations"]`` (id,
@@ -245,6 +246,11 @@ def build_station_figure(station: dict, unload: Optional[dict],
     какая цистерна получит топливо, выбирается как наименее заполненная
     (правдоподобный адресат реальной доливки; per-марочный адрес рейса
     контур не хранит — см. docstring ``station_tanks``).
+
+    ``compact`` — режим для маленького демонстрационного окна (владелец
+    проверил: в окне ~720×520 обычная сцена занимает треть кадра, а
+    подписи осей съедают место): камера ближе (сцена заполняет кадр),
+    подписи осей и легенда убраны, поля минимальны.
     """
     tanks = station_tanks(station)
     fig = go.Figure()
@@ -259,23 +265,28 @@ def build_station_figure(station: dict, unload: Optional[dict],
     if unload:
         for tr in _truck_traces(lang, tanks, target_idx, unload):
             fig.add_trace(tr)
-    for tr in _legend_traces(lang):
-        fig.add_trace(tr)
+    if not compact:
+        for tr in _legend_traces(lang):
+            fig.add_trace(tr)
 
     title = t(lang, "fuelviz.title", name=station["name"])
+    axis_common = dict(showbackground=False, zeroline=False,
+                       showticklabels=not compact,
+                       tickfont=dict(size=10, color="#9aa1ab"))
     fig.update_layout(
-        title=dict(text=title, x=0.5, y=0.95),
+        title=dict(text=title, x=0.5, y=0.97 if compact else 0.95,
+                  font=dict(size=15 if compact else 13)),
         scene=dict(
-            xaxis=dict(title="", range=[-3, 14], showbackground=False,
-                      gridcolor="rgba(0,0,0,0.06)", zeroline=False,
-                      tickfont=dict(size=10, color="#9aa1ab")),
-            yaxis=dict(title="", range=[-4, 14], showbackground=False,
-                      gridcolor="rgba(0,0,0,0.06)", zeroline=False,
-                      tickfont=dict(size=10, color="#9aa1ab")),
-            zaxis=dict(title=t(lang, "fuelviz.axis.height"),
-                      range=[-4.4, 4.2], showbackground=False,
+            xaxis=dict(title="", range=[-3, 14],
+                      gridcolor="rgba(0,0,0,0.06)", **axis_common),
+            yaxis=dict(title="", range=[-4, 14],
+                      gridcolor="rgba(0,0,0,0.06)", **axis_common),
+            zaxis=dict(title="" if compact else t(lang, "fuelviz.axis.height"),
+                      range=[-4.4, 4.2],
                       gridcolor="rgba(0,0,0,0.05)", zeroline=True,
                       zerolinecolor="#5b4632", zerolinewidth=2,
+                      showbackground=False,
+                      showticklabels=not compact,
                       tickfont=dict(size=10, color="#9aa1ab"),
                       title_font=dict(size=11, color="#9aa1ab")),
             aspectmode="data",
@@ -283,14 +294,18 @@ def build_station_figure(station: dict, unload: Optional[dict],
             # разбросом глубины (площадка + котлован ~17 м по y) сильно
             # сжимает дальние цистерны к линии горизонта, и они
             # визуально «слипаются» у края котлована вместо читаемого
-            # ряда с равными промежутками
-            camera=dict(eye=dict(x=1.1, y=-1.9, z=2.15),
+            # ряда с равными промежутками. В компакте камера придвинута
+            # ближе — сцена заполняет маленький кадр, а не треть его.
+            camera=dict(eye=(dict(x=0.82, y=-1.35, z=1.55) if compact
+                             else dict(x=1.1, y=-1.9, z=2.15)),
                        center=dict(x=0.08, y=0.1, z=-0.1),
                        projection=dict(type="orthographic")),
         ),
+        showlegend=not compact,
         legend=dict(x=1.0, y=0.9, title=dict(
             text=t(lang, "fuelviz.legend_title"))),
-        margin=dict(l=0, r=0, t=90, b=0),
+        margin=(dict(l=0, r=0, t=40, b=0) if compact
+               else dict(l=0, r=0, t=90, b=0)),
         template="plotly_white",
         paper_bgcolor="#f7f5f1",
     )
@@ -299,12 +314,30 @@ def build_station_figure(station: dict, unload: Optional[dict],
 
 def build_station_page(station: dict, unload: Optional[dict],
                        back_url: str, lang: str = DEFAULT_LANG,
-                       include_plotlyjs=True) -> str:
-    """Автономная HTML-страница сцены + шапка со сводкой по станции."""
-    fig = build_station_figure(station, unload, lang)
+                       include_plotlyjs=True, compact: bool = False) -> str:
+    """Автономная HTML-страница сцены + шапка со сводкой по станции.
+
+    ``compact`` — компактная демонстрационная вёрстка (см.
+    ``build_station_figure``): сцена почти во весь кадр, вместо таблицы
+    цистерн и ссылок — одна крупная строка-подпись фазы наверху, чтобы
+    в маленьком окне сразу было видно, что происходит."""
+    fig = build_station_figure(station, unload, lang, compact=compact)
     page = fig.to_html(include_plotlyjs=include_plotlyjs, full_html=True,
-                       default_height="78vh")
+                       default_height=("94vh" if compact else "78vh"))
     tanks = station_tanks(station)
+
+    if compact:
+        caption = (
+            f'🚛 {t(lang, "fuelviz.panel.unloading", driver=unload["driver"], liters=unload["liters"], pct=round(unload["frac"] * 100))}'
+            if unload else f'⛽ {station["name"]}')
+        panel = (
+            '<div style="position:fixed;top:0;left:0;right:0;z-index:9;'
+            'padding:6px 14px;font-family:sans-serif;font-size:15px;'
+            'font-weight:700;color:#8a4b00;background:rgba(255,243,224,.94);'
+            'border-bottom:2px solid #ffcc80;text-align:center">'
+            f'{caption}</div>')
+        return page.replace("</body>", panel + "</body>")
+
     rows = "".join(
         f'<tr><td style="padding:4px 10px"><span style="display:inline-block;'
         f'width:10px;height:10px;border-radius:2px;background:{tk["color"]};'

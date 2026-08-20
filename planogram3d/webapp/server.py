@@ -121,21 +121,52 @@ _FUEL_JS_KEYS = (
     "unit.sec_short", "unit.liters_short", "fuel.trip.done",
     "fuel.trip.enroute", "fuel.trips.empty", "fuel.runs.empty",
     "fuel.station.tooltip", "fuel.tanker.tooltip", "fuel.open_3d",
+    "fuel.demo.phase_waiting", "fuel.demo.phase_enroute",
+    "fuel.demo.phase_arriving",
 )
 
 
 @app.get("/fuel")
 def fuel_page():
-    """Карта топливной сети Молдовы: нефтебаза, АЗС, рейсы бензовозов."""
+    """Карта топливной сети Молдовы: нефтебаза, АЗС, рейсы бензовозов.
+
+    ``?compact=1`` — компактный режим для маленького демонстрационного
+    окна (без боковой панели, крупная подпись фазы, карта в кадр).
+    ``?focus=<station_id>`` — сценарная демонстрация автозаказа: страница
+    сама следит за станцией и рейсом к ней и при начале разгрузки сама
+    переходит на 3D-планограмму станции (см.
+    ``webapp/tools/demo_autoorder.py``)."""
     lang = _lang()
     erp_url = f"{ARTGRANIT_BASE_URL}/UNA.md/orasldev/planograms#fuel"
-    return render_template("fuel.html", lang=lang, erp_url=erp_url,
-                           i18n_json=client_catalog(lang, _FUEL_JS_KEYS))
+    try:
+        focus_id = int(request.args.get("focus", ""))
+    except (TypeError, ValueError):
+        focus_id = 0
+    return render_template(
+        "fuel.html", lang=lang, erp_url=erp_url,
+        compact=request.args.get("compact") == "1", focus=focus_id,
+        i18n_json=client_catalog(lang, _FUEL_JS_KEYS))
 
 
 @app.get("/api/fuel/state")
 def api_fuel_state():
     return jsonify(fuel.state(_lang()))
+
+
+@app.post("/api/fuel/force_low/<station_id>")
+def api_fuel_force_low(station_id):
+    """Тестовый/демонстрационный хук: принудительно опустить остаток
+    станции ниже порога автозаказа — дальше рейс рождается штатным
+    путём внутри ``FuelNetwork.state()`` (см. ``FuelNetwork.force_low``).
+    Нужен воспроизводимой демонстрации (``demo_autoorder.py``), не
+    подменяет механизм диспетчеризации."""
+    try:
+        sid = int(station_id)
+    except (TypeError, ValueError):
+        abort(404)
+    if not fuel.force_low(sid):
+        abort(404)
+    return jsonify({"ok": True})
 
 
 @app.get("/fuel/station/<station_id>")
@@ -169,7 +200,9 @@ def fuel_station_page(station_id):
     if unload is None and request.args.get("demo_unload"):
         unload = {"driver": t(lang, "fuelviz.demo_driver"),
                  "liters": 6000, "frac": 0.45}
-    return build_station_page(station, unload, f"/fuel?lang={lang}", lang)
+    compact = request.args.get("compact") == "1"
+    return build_station_page(station, unload, f"/fuel?lang={lang}", lang,
+                              compact=compact)
 
 
 @app.get("/api/eta/fuel/<station_id>")

@@ -715,6 +715,23 @@ MESSAGES: Dict[str, Dict[str, _Entry]] = {
         "ro": "{id} · {driver} · {liters} l · progres {pct}%",
         "en": "{id} · {driver} · {liters} L · progress {pct}%",
     },
+    # ---- сценарная демонстрация автозаказа (fuel.html, ?focus=<id>) -----
+    "fuel.demo.phase_waiting": {
+        "ru": "🛢 Сработал автозаказ — {name}. Собираем бензовоз в рейс…",
+        "ro": "🛢 Comandă automată declanșată — {name}. Se pregătește "
+              "autocisternă…",
+        "en": "🛢 Auto-order triggered — {name}. Dispatching a tanker…",
+    },
+    "fuel.demo.phase_enroute": {
+        "ru": "🚛 Бензовоз в пути → {name} · {liters} л · {driver}",
+        "ro": "🚛 Autocisternă în drum → {name} · {liters} l · {driver}",
+        "en": "🚛 Tanker en route → {name} · {liters} L · {driver}",
+    },
+    "fuel.demo.phase_arriving": {
+        "ru": "⛽ Прибыл на {name} — переходим на планограмму станции…",
+        "ro": "⛽ A ajuns la {name} — se trece la planograma stației…",
+        "en": "⛽ Arrived at {name} — switching to the station layout…",
+    },
     "unit.liters_short": {"ru": "л", "ro": "l", "en": "L"},
     "unit.kg_short": {"ru": "кг", "ro": "kg", "en": "kg"},
     "unit.meters_short": {"ru": "м", "ro": "m", "en": "m"},
