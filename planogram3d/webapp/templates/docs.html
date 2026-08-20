@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
 <title>{{ title }} — planogram3d</title>
@@ -30,13 +30,14 @@
 </style>
 </head>
 <body>
+{% include "_langbar.html" %}
 <header><b>📖 planogram3d</b>
-  {% for key, t in nav %}
-  <a href="/docs/{{ key }}" class="{{ 'on' if key == current }}">{{ t }}</a>
+  {% for key, doc_title in nav %}
+  <a href="/docs/{{ key }}?lang={{ lang }}" class="{{ 'on' if key == current }}">{{ doc_title }}</a>
   {% endfor %}
   <a href="/docs/presentation.pptx">PPTX</a>
-  <a href="/presentation" style="margin-left:auto">📽 Презентация</a>
-  <a href="/">🗺 Демо</a>
+  <a href="/presentation" style="margin-left:auto">📽 {{ t(lang, "map.link.presentation") }}</a>
+  <a href="/?lang={{ lang }}">🗺 {{ t(lang, "docs.demo_link") }}</a>
 </header>
 <main>{{ content | safe }}</main>
 </body>

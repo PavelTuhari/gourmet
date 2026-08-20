@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
 <title>Команда «Гурман» — баллы и поощрения</title>
@@ -28,30 +28,32 @@
 </style>
 </head>
 <body>
+{% include "_langbar.html" %}
 <header><span style="font-size:22px">🏅</span>
-  <b>Команда «Гурман»: баллы и поощрения</b>
-  <span class="mode">{{ "Roblox Open Cloud" if mode == "roblox"
-                        else "эмуляция Roblox" }}</span>
-  <a href="/store/st17/game">→ тренажёр</a>
+  <b>{{ t(lang, "team.header") }}</b>
+  <span class="mode">{{ t(lang, "team.mode.roblox") if mode == "roblox"
+                        else t(lang, "team.mode.emulation") }}</span>
+  <a href="/store/st17/game?lang={{ lang }}">→ {{ t(lang, "team.link.trainer") }}</a>
 </header>
 <div class="wrap">
   <div class="panel">
-    <h2>🏆 Лидерборд</h2>
+    <h2>🏆 {{ t(lang, "team.leaderboard") }}</h2>
     {% for m in members %}
     <div class="m"><span class="place">{{ loop.index }}.</span>
       <span><b>{{ m.name }}</b> ({{ m.roblox_user }})<br>
-        <span class="badges">{{ m.badges | join(" · ") or "без бейджей" }}
+        <span class="badges">{{ m.badges | join(" · ") or t(lang, "team.no_badges") }}
         </span></span>
       <span class="pts">{{ m.points }}</span></div>
     {% else %}
-    <div>Пока никто не зарегистрирован — пройдите смену в
-      <a href="/store/st17/game">тренажёре</a>.</div>
+    <div>{{ t(lang, "team.no_members",
+              link='<a href="/store/st17/game?lang=' + lang + '">'
+                   + t(lang, "team.trainer_link_text") + '</a>') | safe }}</div>
     {% endfor %}
   </div>
   <div class="panel feed">
-    <h2>💎 Лента поощрений</h2>
+    <h2>💎 {{ t(lang, "team.feed") }}</h2>
     {% for e in feed %}<div>{{ e.text }}</div>
-    {% else %}<div>Событий пока нет.</div>{% endfor %}
+    {% else %}<div>{{ t(lang, "team.feed_empty") }}</div>{% endfor %}
   </div>
 </div>
 </body>

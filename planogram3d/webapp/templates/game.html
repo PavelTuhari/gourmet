@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
 <title>{{ store_name }} — тренажёр персонала</title>
@@ -69,6 +69,7 @@
 </style>
 </head>
 <body>
+{% include "_langbar.html" %}
 <div id="wrap">
   <div id="hud">
     <div class="cell money"><b id="h-money">0 L</b><span>выручка</span>

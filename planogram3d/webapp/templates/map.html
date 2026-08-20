@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
 <title>Сеть «Гурман» — карта магазинов</title>
@@ -196,68 +196,69 @@
 </style>
 </head>
 <body>
+{% include "_langbar.html" %}
 <div id="map"></div>
 
 <div id="hud">
-  <h1>🏪 Сеть «Гурман» · Кишинёв</h1>
-  <div class="sub">Эмуляция торгового дня · <b id="clock">—</b>
-    (1 с = 10 мин)</div>
+  <h1>🏪 {{ t(lang, "map.title") }}</h1>
+  <div class="sub">{{ t(lang, "map.sub") }} · <b id="clock">—</b>
+    (1 {{ t(lang, "unit.sec_short") }} = 10 {{ t(lang, "unit.min_short") }})</div>
   <div class="totals">
-    <div class="tot"><b id="t-rev">0 L</b><span>выручка сети</span></div>
-    <div class="tot"><b id="t-trx">0</b><span>продаж</span></div>
-    <div class="tot"><b id="t-stores">0</b><span>магазинов</span></div>
-    <div class="tot"><b id="t-oos">0</b><span>пустых полок</span></div>
+    <div class="tot"><b id="t-rev">0 L</b><span>{{ t(lang, "map.kpi.revenue") }}</span></div>
+    <div class="tot"><b id="t-trx">0</b><span>{{ t(lang, "map.kpi.sales") }}</span></div>
+    <div class="tot"><b id="t-stores">0</b><span>{{ t(lang, "map.kpi.stores") }}</span></div>
+    <div class="tot"><b id="t-oos">0</b><span>{{ t(lang, "map.kpi.empty_shelves") }}</span></div>
     <div class="tot" style="grid-column:1/-1"><b id="t-zbx">0</b>
-      <span id="t-zbx-label">активных проблем Zabbix</span></div>
+      <span id="t-zbx-label">{{ t(lang, "map.kpi.zabbix_active") }}</span></div>
   </div>
   <div id="events"></div>
-  <a href="/delivery" style="display:block;margin-top:10px;text-align:center;
+  <a href="/delivery?lang={{ lang }}" style="display:block;margin-top:10px;text-align:center;
      background:#2f6fed;color:#fff;text-decoration:none;font-weight:600;
      font-size:13px;padding:8px;border-radius:9px">
-     🛵 Интернет-заказы и доставка →</a>
+     🛵 {{ t(lang, "map.link.delivery") }}</a>
   <div style="display:flex;gap:8px;margin-top:8px">
-    <a href="/docs/" target="_blank" style="flex:1;text-align:center;
+    <a href="/docs/?lang={{ lang }}" target="_blank" style="flex:1;text-align:center;
        background:#eef1f5;color:#23303f;text-decoration:none;
        font-weight:600;font-size:12px;padding:7px;border-radius:9px">
-       📖 Документация</a>
+       📖 {{ t(lang, "map.link.docs") }}</a>
     <a href="/presentation" target="_blank" style="flex:1;text-align:center;
        background:#eef1f5;color:#23303f;text-decoration:none;
        font-weight:600;font-size:12px;padding:7px;border-radius:9px">
-       📽 Презентация</a>
+       📽 {{ t(lang, "map.link.presentation") }}</a>
   </div>
 </div>
 
 <div id="mode">
-  <button id="btn2d" class="active">2D</button>
-  <button id="btn3d">3D</button>
+  <button id="btn2d" class="active">{{ t(lang, "map.mode.2d") }}</button>
+  <button id="btn3d">{{ t(lang, "map.mode.3d") }}</button>
 </div>
 
 <div id="card">
   <button id="close">✕</button>
   <h2 id="c-name"></h2>
-  <div class="kpi"><span>Уровень</span><b class="lvl" id="c-level"></b></div>
-  <div class="kpi"><span>Выручка</span><b id="c-rev"></b></div>
-  <div class="kpi"><span>Продаж</span><b id="c-trx"></b></div>
-  <div class="kpi"><span>Покупателей в зале</span><b id="c-vis"></b></div>
-  <div class="kpi"><span>Заполненность полок</span><b id="c-fill"></b></div>
-  <div class="kpi"><span>Нарушений (критич.)</span><b id="c-viol"></b></div>
+  <div class="kpi"><span>{{ t(lang, "map.card.level") }}</span><b class="lvl" id="c-level"></b></div>
+  <div class="kpi"><span>{{ t(lang, "map.card.revenue") }}</span><b id="c-rev"></b></div>
+  <div class="kpi"><span>{{ t(lang, "map.card.sales") }}</span><b id="c-trx"></b></div>
+  <div class="kpi"><span>{{ t(lang, "map.card.visitors") }}</span><b id="c-vis"></b></div>
+  <div class="kpi"><span>{{ t(lang, "map.card.fill") }}</span><b id="c-fill"></b></div>
+  <div class="kpi"><span>{{ t(lang, "map.card.violations") }}</span><b id="c-viol"></b></div>
   <div class="oos" id="c-oos"></div>
   <div id="c-zbx"></div>
   <div id="c-eta"></div>
-  <a class="btn" id="c-link" href="#">🚪 Войти в магазин</a>
+  <a class="btn" id="c-link" href="#">🚪 {{ t(lang, "map.card.enter") }}</a>
 </div>
 
 <div id="dccard">
   <button id="dcclose">✕</button>
   <h2>🏭 <span id="dc-name"></span></h2>
-  <div class="kpi"><span>Остаток на складе</span><b id="dc-stock"></b></div>
-  <div class="kpi"><span>SKU ниже точки заказа</span><b id="dc-low"></b></div>
-  <div class="kpi"><span>Машин в пути</span><b id="dc-out"></b></div>
+  <div class="kpi"><span>{{ t(lang, "map.dc.stock") }}</span><b id="dc-stock"></b></div>
+  <div class="kpi"><span>{{ t(lang, "map.dc.low_sku") }}</span><b id="dc-low"></b></div>
+  <div class="kpi"><span>{{ t(lang, "map.dc.trucks") }}</span><b id="dc-out"></b></div>
   <div id="dc-ships"></div>
 </div>
 
 <div id="enter-fx"><div class="door"><span class="d">🚪</span>
-  <span id="fx-name"></span><br>входим в магазин…</div></div>
+  <span id="fx-name"></span><br>{{ t(lang, "map.enter.text") }}</div></div>
 
 <div id="interior">
   <header>
@@ -265,17 +266,24 @@
     <div><div class="t" id="i-name"></div>
          <div class="z" id="i-zbx"></div></div>
     <div class="itabs">
-      <button id="tab-plan" class="active">📋 Планограмма 3D</button>
-      <button id="tab-live">🎮 Симуляция зала</button>
-      <button id="tab-game">🎓 Тренажёр</button>
+      <button id="tab-plan" class="active">📋 {{ t(lang, "map.interior.tab_plan") }}</button>
+      <button id="tab-live">🎮 {{ t(lang, "map.interior.tab_live") }}</button>
+      <button id="tab-game">🎓 {{ t(lang, "map.interior.tab_game") }}</button>
     </div>
-    <button id="i-back">← Назад на карту</button>
+    <button id="i-back">← {{ t(lang, "map.interior.back") }}</button>
   </header>
   <iframe id="i-frame" src="about:blank"></iframe>
 </div>
 
 <script src="/static/vendor/maplibre-gl.js"></script>
+<script src="/static/js/i18n.js"></script>
 <script>
+// var, а не const: i18n.js читает эти переменные как window.LANG/I18N —
+// top-level const/let в браузере не попадают в window, только var
+var LANG = {{ lang|tojson }};
+var I18N = {{ i18n_json|tojson }};
+var I18NP = {{ i18n_plural_json|tojson }};
+var DT_LOCALE = { ru: "ru-RU", ro: "ro-RO", en: "en-US" }[LANG] || "ru-RU";
 const CENTER = [28.8450, 47.0210];
 
 const roadW = (z12, z16) =>
@@ -402,27 +410,29 @@ function showCard() {
   document.getElementById("c-level").textContent =
     "★".repeat(s.level) + "☆".repeat(5 - s.level);
   document.getElementById("c-rev").textContent =
-    s.revenue.toLocaleString("ru-RU") + " L";
+    s.revenue.toLocaleString(DT_LOCALE) + " L";
   document.getElementById("c-trx").textContent = s.transactions;
   document.getElementById("c-vis").textContent = s.visitors;
   document.getElementById("c-fill").textContent =
     Math.round(s.fill_avg * 100) + "%";
   document.getElementById("c-viol").textContent = s.violations_critical;
   document.getElementById("c-oos").textContent = s.oos
-    ? "⛔ Пустые полки: " + s.oos_skus.join(", ") : "";
+    ? "⛔ " + tt("map.card.empty_shelves") + s.oos_skus.join(", ") : "";
 
   const SEV_COLORS = { 1: "#7499ff", 2: "#ffc859", 3: "#ffa059",
                        4: "#e97659", 5: "#e45959" };
   const z = s.zabbix || { active: 0, problems: [] };
   document.getElementById("c-zbx").innerHTML = z.active
-    ? `<div class="zhead">🛠 Zabbix: ${z.active} актив. проблем</div>` +
+    ? `<div class="zhead">🛠 ${tt("map.zabbix.head", { n: z.active,
+        problems_word: ttn("map.zabbix.head.problems_word", z.active) }
+        )}</div>` +
       z.problems.map(p =>
         `<div class="zp"><span class="dot" style="background:${
            SEV_COLORS[p.severity] || "#97a4b1"}"></span>` +
         `<span>${p.name}</span><span class="age">${fmtAge(p.age_sec)}` +
         `</span></div>`).join("")
-    : `<div class="zhead" style="color:var(--ok)">🛠 Zabbix: проблем нет` +
-      `</div>`;
+    : `<div class="zhead" style="color:var(--ok)">🛠 ${
+        tt("map.zabbix.none")}</div>`;
 
   const link = document.getElementById("c-link");
   link.onclick = (e) => { e.preventDefault(); enterStore(s); };
@@ -435,33 +445,37 @@ async function updateEtaBoard(storeId) {
   if (etaBoardBusy) return;
   etaBoardBusy = true;
   try {
-    const b = await (await fetch("/api/eta/store/" + storeId)).json();
+    const b = await (await fetch("/api/eta/store/" + storeId
+      + "?lang=" + LANG)).json();
     if (selected !== storeId) return;      // карточку уже закрыли
     const el = document.getElementById("c-eta");
     if (!b.rows.length) {
-      el.innerHTML = `<div class="ehead">🚏 Табло прибытия · ИИ</div>` +
-        `<div class="esrc">машин поставщиков в пути нет</div>`;
+      el.innerHTML = `<div class="ehead">🚏 ${tt("map.eta.head")}</div>` +
+        `<div class="esrc">${tt("map.eta.none")}</div>`;
       return;
     }
-    el.innerHTML = `<div class="ehead">🚏 Табло прибытия · ИИ</div>` +
+    const secU = tt("unit.sec_short");
+    el.innerHTML = `<div class="ehead">🚏 ${tt("map.eta.head")}</div>` +
       b.rows.map(r => {
-        const t = new Date(r.eta_ts * 1000).toLocaleTimeString("ru-RU",
+        const t = new Date(r.eta_ts * 1000).toLocaleTimeString(DT_LOCALE,
           { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-        const sig = r.sigma_sec != null ? `±${r.sigma_sec} с` : "план";
+        const sig = r.sigma_sec != null ? `±${r.sigma_sec} ${secU}`
+          : tt("map.plan_short");
         return `<div class="erow"><span>${r.icon}</span>` +
           `<span class="lbl" title="${r.label}">${r.label}</span>` +
           `<span class="eta">${t}</span>` +
-          `<span class="sig">~${r.eta_sec} с ${sig}</span></div>`;
+          `<span class="sig">~${r.eta_sec} ${secU} ${sig}</span></div>`;
       }).join("") +
-      `<div class="esrc">${b.rows[0].source} · GPS-телеметрия рейсов → ` +
-      `онлайн-обучение</div>`;
+      `<div class="esrc">${b.rows[0].source} · ${
+        tt("map.eta.telemetry_note")}</div>`;
   } catch (e) { /* сервер занят — обновимся следующим опросом */ }
   finally { etaBoardBusy = false; }
 }
 function fmtAge(sec) {
-  if (sec < 60) return sec + " с";
-  if (sec < 3600) return Math.floor(sec / 60) + " мин";
-  return Math.floor(sec / 3600) + " ч " + Math.floor(sec % 3600 / 60) + " м";
+  if (sec < 60) return sec + " " + tt("unit.sec_short");
+  if (sec < 3600) return Math.floor(sec / 60) + " " + tt("unit.min_short");
+  return Math.floor(sec / 3600) + " " + tt("unit.hour_short") + " "
+    + Math.floor(sec % 3600 / 60) + " " + tt("unit.min_short");
 }
 document.getElementById("close").onclick = () => {
   selected = null; document.getElementById("card").style.display = "none";
@@ -501,10 +515,10 @@ function enterStore(s) {
     const z = s.zabbix || { active: 0 };
     document.getElementById("i-name").textContent = s.name;
     document.getElementById("i-zbx").textContent =
-      `выручка ${s.revenue.toLocaleString("ru-RU")} L · ` +
-      `полки ${Math.round(s.fill_avg * 100)}% · ` +
-      (z.active ? `Zabbix: ${z.active} актив. проблем ⚠`
-                : "Zabbix: проблем нет ✓");
+      tt("map.interior.status_line", { rev: s.revenue.toLocaleString(
+        DT_LOCALE), fill: Math.round(s.fill_avg * 100) }) + " · " +
+      (z.active ? tt("map.interior.zabbix_active", { n: z.active }) + " ⚠"
+                : tt("map.interior.zabbix_none") + " ✓");
     setInteriorTab(false);           // по умолчанию — планограмма
     document.getElementById("interior").classList.add("on");
     document.getElementById("enter-fx").classList.remove("on");
@@ -616,15 +630,15 @@ function renderDCCard() {
   document.getElementById("card").style.display = "none";
   document.getElementById("dc-name").textContent = dcData.name;
   document.getElementById("dc-stock").textContent =
-    dcData.stock_total.toLocaleString("ru-RU") + " шт.";
+    dcData.stock_total.toLocaleString(DT_LOCALE) + " " + tt("unit.pcs_short");
   document.getElementById("dc-low").textContent = dcData.sku_low;
   document.getElementById("dc-out").textContent = dcData.outbound.length;
   document.getElementById("dc-ships").innerHTML =
     dcData.outbound.map(o =>
       `<div class="ship">🚚 ${o.sku} × ${o.qty}</div>`).join("") +
     dcData.inbound.map(o =>
-      `<div class="ship">📦 от поставщика: ${o.sku} × ${o.qty} ` +
-      `(~${o.eta_sec} с)</div>`).join("");
+      `<div class="ship">📦 ${tt("map.dc.supplier_line",
+        { sku: o.sku, qty: o.qty, eta_sec: o.eta_sec })}</div>`).join("");
 }
 document.getElementById("dcclose").onclick = () => {
   dcCardOpen = false;
@@ -634,10 +648,10 @@ document.getElementById("dcclose").onclick = () => {
 /* ---------- опрос состояния сети ---------- */
 async function poll() {
   try {
-    const st = await (await fetch("/api/state")).json();
+    const st = await (await fetch("/api/state?lang=" + LANG)).json();
     document.getElementById("clock").textContent = st.sim_clock;
     document.getElementById("t-rev").textContent =
-      st.totals.revenue.toLocaleString("ru-RU") + " L";
+      st.totals.revenue.toLocaleString(DT_LOCALE) + " L";
     document.getElementById("t-trx").textContent = st.totals.transactions;
     document.getElementById("t-stores").textContent =
       st.totals.stores + (st.totals.critical
@@ -646,8 +660,8 @@ async function poll() {
     document.getElementById("t-zbx").textContent =
       st.totals.zabbix_active ?? 0;
     document.getElementById("t-zbx-label").textContent =
-      "активных проблем Zabbix" +
-      (st.zabbix_mode === "emulation" ? " (эмуляция)" : "");
+      tt("map.kpi.zabbix_active") +
+      (st.zabbix_mode === "emulation" ? tt("map.kpi.zabbix_emulation") : "");
     st.stores.forEach(updateMarker);
     updateDC(st.dc, st.now);
     if (selected) showCard();

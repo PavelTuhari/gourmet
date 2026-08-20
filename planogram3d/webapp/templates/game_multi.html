@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
 <title>{{ store_name }} — командная смена</title>
@@ -73,6 +73,7 @@
 </style>
 </head>
 <body>
+{% include "_langbar.html" %}
 <div id="wrap">
   <div id="stage">
     <canvas id="cv"></canvas>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
 <title>Интернет-заказы и доставка — сеть «Гурман»</title>
@@ -93,37 +93,47 @@
 </style>
 </head>
 <body>
+{% include "_langbar.html" %}
 <div id="layout">
   <header>
-    <span class="t">🛵 Интернет-заказы и доставка</span>
-    <span class="k">сборка: <b id="k-new">0</b></span>
-    <span class="k">готово: <b id="k-packed">0</b></span>
-    <span class="k">в доставке: <b id="k-del">0</b></span>
-    <span class="k">доставлено: <b id="k-done">0</b></span>
-    <span class="k">чеков: <b id="k-rc">0</b></span>
-    <a href="/">← карта сети</a>
+    <span class="t">🛵 {{ t(lang, "delivery.title") }}</span>
+    <span class="k">{{ t(lang, "delivery.kpi.picking") }}: <b id="k-new">0</b></span>
+    <span class="k">{{ t(lang, "delivery.kpi.packed") }}: <b id="k-packed">0</b></span>
+    <span class="k">{{ t(lang, "delivery.kpi.delivering") }}: <b id="k-del">0</b></span>
+    <span class="k">{{ t(lang, "delivery.kpi.delivered") }}: <b id="k-done">0</b></span>
+    <span class="k">{{ t(lang, "delivery.kpi.receipts") }}: <b id="k-rc">0</b></span>
+    <a href="/?lang={{ lang }}">{{ t(lang, "delivery.back_to_map") }}</a>
   </header>
 
   <div id="side">
-    <h3>Маршруты и курьеры</h3>
+    <h3>{{ t(lang, "delivery.side.routes") }}</h3>
     <div id="routes"></div>
-    <h3>Заказы</h3>
+    <h3>{{ t(lang, "delivery.side.orders") }}</h3>
     <div id="orders"></div>
-    <h3>События</h3>
+    <h3>{{ t(lang, "delivery.side.events") }}</h3>
     <div id="events"></div>
   </div>
 
   <div id="map"></div>
 
   <div id="bottom">
-    <div id="gantt"><h3>Диаграмма Ганта — доставка по маршрутам
-      (план / факт)</h3><div id="gantt-rows"></div></div>
-    <div id="receipts"><h3>🧾 Чеки при вручении</h3>
+    <div id="gantt"><h3>{{ t(lang, "delivery.gantt.title") }}</h3>
+      <div id="gantt-rows"></div></div>
+    <div id="receipts"><h3>🧾 {{ t(lang, "delivery.receipts.title") }}</h3>
       <div id="rc-rows"></div></div>
   </div>
 </div>
 
 <script src="/static/vendor/maplibre-gl.js"></script>
+<script src="/static/js/i18n.js"></script>
+<script>
+// var, а не const: i18n.js читает эти переменные как window.LANG/I18N —
+// top-level const/let в браузере не попадают в window, только var
+var LANG = {{ lang|tojson }};
+var I18N = {{ i18n_json|tojson }};
+var I18NP = {};
+var DT_LOCALE = { ru: "ru-RU", ro: "ro-RO", en: "en-US" }[LANG] || "ru-RU";
+</script>
 <script>
 const style = {
   version: 8,
@@ -170,11 +180,11 @@ const ROUTE_COLORS = ["#7b1fa2", "#2f6fed", "#e5533d", "#00897b"];
 
 function fmtT(ts) {
   const d = new Date(ts * 1000);
-  return d.toLocaleTimeString("ru-RU", {hour: "2-digit",
-                                        minute: "2-digit"});
+  return d.toLocaleTimeString(DT_LOCALE, {hour: "2-digit",
+                                          minute: "2-digit"});
 }
 function fmtTs(ts) {
-  return new Date(ts * 1000).toLocaleTimeString("ru-RU",
+  return new Date(ts * 1000).toLocaleTimeString(DT_LOCALE,
     {hour: "2-digit", minute: "2-digit", second: "2-digit"});
 }
 
@@ -182,23 +192,28 @@ function fmtTs(ts) {
 let etaPopup = null, etaPopupOrder = null;
 async function showEtaBoard(orderId, lon, lat) {
   let b;
-  try { b = await (await fetch("/api/eta/order/" + orderId)).json(); }
-  catch (e) { return; }
+  try {
+    b = await (await fetch("/api/eta/order/" + orderId
+      + "?lang=" + LANG)).json();
+  } catch (e) { return; }
+  const secU = tt("unit.sec_short");
   const rows = b.rows.length ? b.rows.map(r => `
     <tr class="${r.this_point ? "this" : ""}">
       <td>${r.icon} ${r.queue_pos ?? "—"}</td>
-      <td>${r.order}${r.this_point ? " ← эта точка" : ""}</td>
+      <td>${r.order}${r.this_point ? " ← " + tt("eta.this_point") : ""}</td>
       <td><b>${fmtTs(r.eta_ts)}</b>
-        <span class="sig">±${r.sigma_sec} с</span></td>
-      <td class="sig">план ${fmtT(r.plan_ts)}</td>
+        <span class="sig">±${r.sigma_sec} ${secU}</span></td>
+      <td class="sig">${tt("eta.plan_short")} ${fmtT(r.plan_ts)}</td>
     </tr>`).join("")
-    : `<tr><td colspan="4">курьер назначается…</td></tr>`;
+    : `<tr><td colspan="4">${tt("eta.courier_assigning")}</td></tr>`;
   const html = `<div class="eta-board">
-    <div class="bh">🚏 Табло прибытия <span class="ai">ИИ</span></div>
+    <div class="bh">🚏 ${tt("eta.board_title")} <span class="ai">${
+      tt("delivery.eta.ai_badge")}</span></div>
     <div class="bp">${b.point}</div>
     <table>${rows}</table>
     <div class="src">${b.rows.length ? b.rows[0].source + " · GPS: "
-      + b.rows[0].gps_source : "заказ: " + b.status}</div></div>`;
+      + b.rows[0].gps_source : tt("eta.order_status_prefix",
+        {status: b.status})}</div></div>`;
   if (etaPopup && etaPopupOrder === orderId) {     // живое обновление
     etaPopup.setHTML(html);
     return;
@@ -212,8 +227,9 @@ async function showEtaBoard(orderId, lon, lat) {
 
 async function poll() {
   let st;
-  try { st = await (await fetch("/api/delivery/state")).json(); }
-  catch (e) { return; }
+  try {
+    st = await (await fetch("/api/delivery/state?lang=" + LANG)).json();
+  } catch (e) { return; }
 
   for (const k of ["new", "packed"])
     document.getElementById("k-" + (k === "new" ? "new" : "packed"))
@@ -229,11 +245,11 @@ async function poll() {
     return `<div class="route" style="border-color:${
         ROUTE_COLORS[i % 4]}">
       <span class="rt">${r.id}</span> · ${r.store_name} ·
-      ${cur}/${r.stops.length} адресов<br>
+      ${tt("delivery.routes.addresses", {cur, total: r.stops.length})}<br>
       <span class="app">${c.name} · ${c.app_title} · 🔋${c.battery}%</span>
       <br><span class="gps">GPS: ${c.lat ? c.lat.toFixed(5) + ", "
         + c.lon.toFixed(5) : "—"} · ${c.gps_source}</span></div>`;
-  }).join("") || "<div class='ev'>ожидание сборки заказов…</div>";
+  }).join("") || "<div class='ev'>" + tt("delivery.routes.empty") + "</div>";
 
   const lines = [], seenC = new Set(), seenS = new Set();
   st.routes.forEach((r, i) => {
@@ -268,7 +284,7 @@ async function poll() {
       }
       stopMarks[key].el.className = "stop-mark " + s.status;
       stopMarks[key].el.title = `${s.order} · ${s.customer}, ${s.address}` +
-        ` — клик: табло прибытия (ИИ)`;
+        ` — ${tt("delivery.stop.tooltip")}`;
     }
     // курьер
     const c = r.courier;
@@ -297,20 +313,20 @@ async function poll() {
       { type: "FeatureCollection", features: lines });
 
   /* --- заказы и события --- */
-  const ST_TITLES = { new: "новый", picking: "сборка", packed: "собран",
-                      routed: "в доставке", delivered: "доставлен" };
+  // подпись статуса (status_label) переведена сервером на язык запроса
+  // (см. delivery.py::state) — здесь только числа/данные
   const orderAi = {};
   st.routes.forEach(r => r.stops.forEach(s => {
     if (s.ai_arrive && s.status !== "done") orderAi[s.order] = s; }));
   document.getElementById("orders").innerHTML = st.orders.slice(0, 12)
     .map(o => `<div class="ord"><span class="st ${o.status}">
-      ${ST_TITLES[o.status]}</span><b>${o.id}</b> · ${o.total} L<br>
+      ${o.status_label}</span><b>${o.id}</b> · ${o.total} L<br>
       ${o.customer} · ${o.address}<br>
       <span style="color:#8a94a1">${o.store_name}${
         o.route ? " · " + o.route : ""}</span>${orderAi[o.id]
-        ? `<br><span style="color:#7b1fa2">🚏 ИИ-прибытие: ${
-            fmtT(orderAi[o.id].ai_arrive)} ±${
-            orderAi[o.id].ai_sigma} с</span>` : ""}</div>`).join("");
+        ? `<br><span style="color:#7b1fa2">🚏 ${tt("delivery.ai_arrival",
+            {t: fmtT(orderAi[o.id].ai_arrive),
+             sigma: orderAi[o.id].ai_sigma})}</span>` : ""}</div>`).join("");
   document.getElementById("events").innerHTML = st.events.map(e =>
     `<div class="ev">${e.text}</div>`).join("");
 
@@ -353,23 +369,25 @@ async function poll() {
             Math.max(0.6, pct(hEnd) - pct(s.actual_arrive))}%"></div>`;
         }
         rows.push(`<div class="grow"><div class="glabel" style=
-          "padding-left:16px">↳ ${s.order} · ${s.customer} · план ${
-          fmtT(s.plan_arrive)}${s.ai_arrive && s.status !== "done"
-            ? ` · ИИ ${fmtT(s.ai_arrive)}±${s.ai_sigma}с` : ""}</div>
+          "padding-left:16px">↳ ${s.order} · ${s.customer} · ${
+          tt("eta.plan_short")} ${fmtT(s.plan_arrive)}${
+            s.ai_arrive && s.status !== "done"
+            ? ` · AI ${fmtT(s.ai_arrive)}±${s.ai_sigma}${
+                tt("unit.sec_short")}` : ""}</div>
           <div class="gtrack">${bars}<div class="gnow" style="left:${
           pct(st.now)}%"></div></div></div>`);
       }
     }
   }
   document.getElementById("gantt-rows").innerHTML = rows.join("")
-    || "<div class='ev'>маршруты появятся после сборки заказов</div>";
+    || "<div class='ev'>" + tt("delivery.gantt.empty") + "</div>";
 
   /* --- чеки --- */
   document.getElementById("rc-rows").innerHTML = st.receipts.map(r =>
-    `<div class="rc"><a href="/receipt/${r.id}" target="_blank">
+    `<div class="rc"><a href="/receipt/${r.id}?lang=${LANG}" target="_blank">
       🧾 ${r.id}</a> · ${r.order} · ${r.total} L · ${fmtT(r.printed_at)}
       <br><span class="w">${r.print_way}</span></div>`).join("")
-    || "<div class='ev'>чеки появятся при вручении заказов</div>";
+    || "<div class='ev'>" + tt("delivery.receipts.empty") + "</div>";
 }
 setInterval(poll, 1500); poll();
 </script>

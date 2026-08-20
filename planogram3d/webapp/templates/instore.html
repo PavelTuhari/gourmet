@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
 <title>{{ store_name }} — симуляция зала</title>
@@ -48,6 +48,7 @@
 </style>
 </head>
 <body>
+{% include "_langbar.html" %}
 <div id="wrap">
   <div id="stage"><canvas id="cv" width="920" height="600"></canvas></div>
   <div id="side">
