@@ -24,18 +24,26 @@ import threading
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-_KX = 111320 * math.cos(math.radians(56.86))   # метров в градусе долготы
-_KY = 110540                                   # метров в градусе широты
+_REF_LAT = 56.86                               # широта Твери — масштаб по умолчанию
+_KX = 111320 * math.cos(math.radians(_REF_LAT))  # метров в градусе долготы (Тверь)
+_KY = 110540                                   # метров в градусе широты (не зависит от широты)
 
 Node = Tuple[float, float]                     # (lon, lat)
 
 
-def _dist(a: Node, b: Node) -> float:
-    return math.hypot((a[0] - b[0]) * _KX, (a[1] - b[1]) * _KY)
+def _dist(a: Node, b: Node, kx: float = _KX) -> float:
+    return math.hypot((a[0] - b[0]) * kx, (a[1] - b[1]) * _KY)
 
 
 class RoadNet:
-    def __init__(self, geojson_path: Path):
+    def __init__(self, geojson_path: Path, ref_lat: float = _REF_LAT):
+        # Масштаб градуса долготы зависит от широты (метров в градусе
+        # долготы = 111320*cos(широта)); на модульной константе,
+        # рассчитанной под Тверь (56.86°), молдавские расстояния (~47°)
+        # занижались на ~20%. Поэтому масштаб — атрибут экземпляра, а
+        # параметр по умолчанию воспроизводит ровно прежнее поведение
+        # тверского контура.
+        self.kx = 111320 * math.cos(math.radians(ref_lat))
         data = json.loads(Path(geojson_path).read_text(encoding="utf-8"))
         self.adj: dict = {}
         for f in data["features"]:
@@ -44,7 +52,7 @@ class RoadNet:
             coords = f["geometry"]["coordinates"]
             for a, b in zip(coords, coords[1:]):
                 a, b = tuple(a), tuple(b)
-                d = _dist(a, b)
+                d = _dist(a, b, self.kx)
                 if d < 0.1:
                     continue
                 self.adj.setdefault(a, []).append((b, d))
@@ -71,7 +79,7 @@ class RoadNet:
 
     def snap(self, lon: float, lat: float) -> Node:
         p = (lon, lat)
-        return min(self.nodes, key=lambda n: _dist(n, p))
+        return min(self.nodes, key=lambda n: _dist(n, p, self.kx))
 
     def route(self, lon1: float, lat1: float,
               lon2: float, lat2: float):
@@ -94,7 +102,7 @@ class RoadNet:
                 ng = g + d
                 if ng < gscore.get(nxt, float("inf")):
                     gscore[nxt] = ng
-                    heapq.heappush(openq, (ng + _dist(nxt, goal),
+                    heapq.heappush(openq, (ng + _dist(nxt, goal, self.kx),
                                            next(counter), ng, nxt, cur))
         if goal not in came:                       # изолированная точка
             path = [src, dst]
@@ -109,19 +117,25 @@ class RoadNet:
         # убрать дубли подряд
         cleaned = [path[0]]
         for p in path[1:]:
-            if _dist(cleaned[-1], p) > 0.5:
+            if _dist(cleaned[-1], p, self.kx) > 0.5:
                 cleaned.append(p)
         if len(cleaned) < 2:
             cleaned = [src, dst]
-        length = sum(_dist(a, b) for a, b in zip(cleaned, cleaned[1:]))
+        length = sum(_dist(a, b, self.kx) for a, b in zip(cleaned, cleaned[1:]))
         return cleaned, max(length, 1.0)
 
 
-def cumulative(path: List[Node]) -> List[float]:
-    """Накопленные длины (м) для точек полилинии."""
+def cumulative(path: List[Node], kx: float = _KX) -> List[float]:
+    """Накопленные длины (м) для точек полилинии.
+
+    ``kx`` по умолчанию — масштаб долготы Твери (обратная совместимость
+    для ``delivery.py``); контуры на других широтах (например, топливный
+    по Молдове) обязаны передавать ``net.kx`` своего ``RoadNet``, иначе
+    длины плеч и ETA будут систематически занижены/завышены.
+    """
     cum = [0.0]
     for a, b in zip(path, path[1:]):
-        cum.append(cum[-1] + _dist(a, b))
+        cum.append(cum[-1] + _dist(a, b, kx))
     return cum
 
 
