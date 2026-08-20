@@ -269,13 +269,15 @@ def build_station_figure(station: dict, unload: Optional[dict],
         for tr in _legend_traces(lang):
             fig.add_trace(tr)
 
-    title = t(lang, "fuelviz.title", name=station["name"])
+    # В компактном режиме страница рисует свою плашку с названием станции
+    # поверх сцены, поэтому заголовок самой фигуры убираем — иначе две
+    # подписи накладываются друг на друга и обе становятся нечитаемыми.
+    title = "" if compact else t(lang, "fuelviz.title", name=station["name"])
     axis_common = dict(showbackground=False, zeroline=False,
                        showticklabels=not compact,
                        tickfont=dict(size=10, color="#9aa1ab"))
     fig.update_layout(
-        title=dict(text=title, x=0.5, y=0.97 if compact else 0.95,
-                  font=dict(size=15 if compact else 13)),
+        title=dict(text=title, x=0.5, y=0.95, font=dict(size=13)),
         scene=dict(
             xaxis=dict(title="", range=[-3, 14],
                       gridcolor="rgba(0,0,0,0.06)", **axis_common),
