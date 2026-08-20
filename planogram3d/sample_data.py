@@ -143,7 +143,7 @@ def build_demo_store(seed: int = 42) -> Store:
 
     return Store(
         store_id="ST-017",
-        name="Магазин №17 «Гурман», г. Тверь",
+        name="Магазин №17 «Гурман», г. Кишинёв",
         gondolas=gondolas,
         products=products,
         suppliers=suppliers,

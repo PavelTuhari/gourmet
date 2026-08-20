@@ -199,7 +199,7 @@
 <div id="map"></div>
 
 <div id="hud">
-  <h1>🏪 Сеть «Гурман» · Тверь</h1>
+  <h1>🏪 Сеть «Гурман» · Кишинёв</h1>
   <div class="sub">Эмуляция торгового дня · <b id="clock">—</b>
     (1 с = 10 мин)</div>
   <div class="totals">
@@ -276,7 +276,7 @@
 
 <script src="/static/vendor/maplibre-gl.js"></script>
 <script>
-const CENTER = [35.9040, 56.8590];
+const CENTER = [28.8450, 47.0200];
 
 const roadW = (z12, z16) =>
   ["interpolate", ["linear"], ["zoom"], 12, z12, 16, z16];
@@ -288,7 +288,7 @@ const style = {
     "fog-color": "#f2e9da", "sky-horizon-blend": 0.6,
     "horizon-fog-blend": 0.65, "fog-ground-blend": 0.82,
   },
-  sources: { city: { type: "geojson", data: "/static/data/tver_map.geojson" } },
+  sources: { city: { type: "geojson", data: "/static/data/chisinau_map.geojson" } },
   layers: [
     { id: "bg", type: "background",
       paint: { "background-color": "#edefe4" } },
@@ -535,7 +535,7 @@ map.on("load", () => {
 
 /* накопленные длины полилинии (для позиции грузовика вдоль пути) */
 function cumLen(path) {
-  const kx = 111320 * Math.cos(56.86 * Math.PI / 180), ky = 110540;
+  const kx = 111320 * Math.cos(47.02 * Math.PI / 180), ky = 110540;
   const cum = [0];
   for (let i = 1; i < path.length; i++)
     cum.push(cum[i-1] + Math.hypot((path[i][0]-path[i-1][0]) * kx,

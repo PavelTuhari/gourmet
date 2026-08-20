@@ -128,7 +128,7 @@
 const style = {
   version: 8,
   sources: { city: { type: "geojson",
-                     data: "/static/data/tver_map.geojson" } },
+                     data: "/static/data/chisinau_map.geojson" } },
   layers: [
     { id: "bg", type: "background",
       paint: { "background-color": "#edefe4" } },
@@ -152,7 +152,7 @@ const style = {
   ]
 };
 const map = new maplibregl.Map({ container: "map", style,
-  center: [35.9000, 56.8600], zoom: 13.6, attributionControl: false });
+  center: [28.8450, 47.0200], zoom: 13.6, attributionControl: false });
 map.addControl(new maplibregl.NavigationControl(), "bottom-right");
 
 let routeLinesReady = false;
