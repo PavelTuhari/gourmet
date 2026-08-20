@@ -21,6 +21,7 @@ from flask import (Flask, abort, jsonify, redirect, render_template,
 
 from ..core import build_report_page, check_compliance
 from .delivery import DeliveryHub
+from .i18n import client_catalog, normalize_lang, t
 from .instore import InstoreHub
 from .multigame import MultiHub
 from .network import StoreNetwork
@@ -36,6 +37,19 @@ team = TeamHub()
 delivery = DeliveryHub(network)
 mgames = MultiHub(network)
 fuel = FuelNetwork()          # контур топлива — своя карта (Молдова), свой граф
+
+
+def _lang() -> str:
+    """Язык интерфейса из ``?lang=ru|ro|en``.
+
+    Сознательно без чтения ``Accept-Language``: система — демо-стенд
+    (см. `docs/HANDOFF.md`), выбор языка явный и повторяемый по ссылке
+    (важно для скриншотов/проверок на всех трёх языках), а автоопределение
+    добавило бы источник несовпадения между тем, что видит проверяющий,
+    и тем, что видит браузер пользователя — без реальной пользы на этом
+    этапе. Неизвестный/отсутствующий код молча откатывается на 'ru'.
+    """
+    return normalize_lang(request.args.get("lang"))
 
 
 @app.get("/delivery")
@@ -101,12 +115,44 @@ def eta_fuel(station_id):
     return jsonify(board)
 
 
+#: ключи каталога, нужные клиентскому JS чека (кнопка печати) — доказательство
+#: механизма из части 1 ТЗ; полный перевод ~270 строк JS других шаблонов —
+#: следующий этап, здесь достаточно, что путь "сервер → JSON → JS" работает.
+_RECEIPT_JS_KEYS = ("receipt.print_button",)
+
+
 @app.get("/receipt/<receipt_id>")
 def receipt_page(receipt_id):
     r = delivery.receipt(receipt_id)
     if r is None:
         abort(404)
-    return render_template("receipt.html", r=r)
+    lang = _lang()
+    labels = {key.split(".", 1)[1]: t(lang, key) for key in (
+        "receipt.header_title", "receipt.company_line2", "receipt.idno",
+        "receipt.subdivision_address", "receipt.ecc_serial",
+        "receipt.ecc_reg", "receipt.receipt_no", "receipt.order",
+        "receipt.route", "receipt.customer", "receipt.deliver_address",
+        "receipt.courier", "receipt.register", "receipt.subtotal_no_vat",
+        "receipt.total", "receipt.cashless", "receipt.thanks",
+        "receipt.print_button")}
+    # печать чека — единственный источник фразы print_way (см. delivery.py:
+    # _fiscal_receipt формирует его ключом, а не готовой строкой), поэтому
+    # лента событий и чек не могут разойтись в формулировке
+    print_way = t(lang, f"receipt.print_way.{r['app']}")
+    vat_lines = [{
+        "rate": v["rate"],
+        "label": t(lang, "receipt.vat_total_at_rate", rate=v["rate"]),
+        "base": v["base"], "vat": v["vat"],
+    } for v in r["vat_breakdown"]]
+    # адрес подразделения: в модели сети нет отдельного поля "улица" —
+    # название магазина уже несёт локацию ("«Гурман» №17 · Штефан чел
+    # Маре"), не переводим его (решение владельца — данные как есть),
+    # только город перед ним
+    subdivision_address = f"{t(lang, 'city.chisinau')}, {r['store_name']}"
+    return render_template(
+        "receipt.html", r=r, lang=lang, lbl=labels, print_way=print_way,
+        vat_lines=vat_lines, subdivision_address=subdivision_address,
+        i18n_json=client_catalog(lang, _RECEIPT_JS_KEYS))
 
 
 @app.post("/api/roblox/register")

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
-<title>Чек {{ r.id }}</title>
+<title>{{ lbl.header_title }} {{ r.id }}</title>
 <style>
   body { background:#3a4450; margin:0; padding:30px 0;
          display:flex; flex-direction:column; align-items:center;
@@ -14,13 +14,12 @@
   .b { font-weight:700; }
   hr { border:none; border-top:1px dashed #999; margin:8px 0; }
   .row { display:flex; justify-content:space-between; }
+  .vat { font-size:11px; color:#555; }
   .qr { width:132px; height:132px; margin:10px auto 4px;
         background:
           repeating-linear-gradient(0deg,#111 0 6px,transparent 6px 12px),
           repeating-linear-gradient(90deg,#111 0 6px,#fff 6px 12px);
         border:6px solid #fff; outline:1px solid #ccc; }
-  .qrtext { font-size:8.5px; word-break:break-all; color:#555;
-            text-align:center; }
   #print { margin-top:18px; border:0; border-radius:9px; padding:11px 26px;
            background:#2f6fed; color:#fff; font-size:14px; font-weight:700;
            cursor:pointer; font-family:'Segoe UI',sans-serif; }
@@ -30,33 +29,55 @@
 </head>
 <body>
 <div class="tape">
-  <div class="c b">ООО «Гурман Ритейл»</div>
-  <div class="c">Кишинёв, доставка интернет-заказов</div>
-  <div class="c">КАССОВЫЙ ЧЕК · ПРИХОД</div>
+  <div class="c b">{{ r.company_name }}</div>
+  <div class="c">{{ lbl.company_line2 }}</div>
+  <div class="c">{{ lbl.header_title }}</div>
   <hr>
-  <div>Заказ: {{ r.order }} · Маршрут: {{ r.route }}</div>
-  <div>Получатель: {{ r.customer }}</div>
-  <div>Адрес: {{ r.address }}</div>
-  <div>Курьер: {{ r.courier }}</div>
-  <div>Касса: {{ r.app_title }}</div>
+  <div>{{ lbl.idno }}: {{ r.idno }}</div>
+  <div>{{ lbl.subdivision_address }}: {{ subdivision_address }}</div>
+  <div>{{ lbl.ecc_serial }}: {{ r.ecc_serial }}</div>
+  <div>{{ lbl.ecc_reg }}: {{ r.ecc_reg }}</div>
+  <div>{{ lbl.receipt_no }}: {{ r.id }}</div>
+  <hr>
+  <div>{{ lbl.order }}: {{ r.order }} · {{ lbl.route }}: {{ r.route }}</div>
+  <div>{{ lbl.customer }}: {{ r.customer }}</div>
+  <div>{{ lbl.deliver_address }}: {{ r.address }}</div>
+  <div>{{ lbl.courier }}: {{ r.courier }}</div>
+  <div>{{ lbl.register }}: {{ r.app_title }}</div>
   <hr>
   {% for it in r["items"] %}
   <div class="row"><span>{{ it.name }}</span></div>
   <div class="row"><span>{{ it.qty }} × {{ it.price }}.00</span>
     <span>{{ it.qty * it.price }}.00</span></div>
+  <div class="vat">TVA {{ it.vat_rate }}%</div>
   {% endfor %}
   <hr>
-  <div class="row b"><span>ИТОГО</span><span>{{ r.total }}.00 L</span></div>
-  <div class="row"><span>БЕЗНАЛИЧНЫМИ</span><span>{{ r.total }}.00</span></div>
+  {% for v in vat_lines %}
+  <div class="row vat"><span>{{ v.label }} ({{ lbl.subtotal_no_vat }}
+    {{ v.base }}.00)</span><span>{{ v.vat }}.00</span></div>
+  {% endfor %}
   <hr>
-  <div class="row"><span>ФН</span><span>{{ r.fn }}</span></div>
-  <div class="row"><span>ФД</span><span>{{ r.fd }}</span></div>
-  <div class="row"><span>ФП</span><span>{{ r.fp }}</span></div>
-  <div>{{ r.print_way }}</div>
+  <div class="row b"><span>{{ lbl.total }}</span><span>{{ r.total }}.00 L</span></div>
+  <div class="row"><span>{{ lbl.cashless }}</span><span>{{ r.total }}.00</span></div>
+  <hr>
+  <div>{{ print_way }}</div>
   <div class="qr"></div>
-  <div class="qrtext">{{ r.qr }}</div>
-  <div class="c">Спасибо за покупку!</div>
+  <div class="c">{{ lbl.thanks }}</div>
 </div>
-<button id="print" onclick="window.print()">🖨 Печать чека</button>
+<button id="print" onclick="window.print()">🖨 <span id="print-label">{{ lbl.print_button }}</span></button>
+<script id="i18n-data" type="application/json">{{ i18n_json | tojson }}</script>
+<script>
+  // Доказательство механизма части 1 ТЗ: клиентский JS достаёт перевод
+  // не из Jinja-переменной, а из embedded JSON-каталога — так же будет
+  // работать в шаблонах с логикой на стороне браузера (delivery.html и
+  // др.), когда до них дойдёт очередь перевода на следующем этапе.
+  (function () {
+    var I18N = JSON.parse(document.getElementById('i18n-data').textContent);
+    var el = document.getElementById('print-label');
+    if (el && I18N['receipt.print_button']) {
+      el.textContent = I18N['receipt.print_button'];
+    }
+  })();
+</script>
 </body>
 </html>

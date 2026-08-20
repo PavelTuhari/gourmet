@@ -35,10 +35,42 @@ from collections import deque
 from typing import Dict, List, Optional
 
 from .eta_ai import get_predictor
+from .i18n import t as i18n_t
 from .network import DistributionCenter, StoreNetwork, price_for
 from .roadnet import cumulative, get_roadnet, point_along
 
 REAL_GPS_TIMEOUT = 45.0     # с: реальная телеметрия активна
+
+# ----- реквизиты фискального чека (bon fiscal), молдавское законодательство -
+#
+# HG 141/2019 требует: наименование и IDNO налогоплательщика, адрес
+# подразделения, заводской и регистрационный (SFS) номера ECC, номер чека,
+# наименование/стоимость/код ставки TVA по каждой позиции, итоги TVA по
+# каждой ставке отдельно. Реквизиты 54-ФЗ (ФН/ФД/ФП, QR t=&s=&fn=...) сюда
+# не переносим — это другой правовой режим.
+COMPANY_NAME = 'SRL "Gurman Retail"'          # официальное имя — латиницей,
+                                               # как в регистрации, не переводим
+COMPANY_IDNO = "1003600123456"                # фискальный код, 13 цифр (демо)
+
+#: ставки TVA Молдовы: 20% стандартная, 8% льготная (хлеб, молоко и
+#: молочные продукты — HG 141/2019). В демо-каталоге проекта только одна
+#: льготная категория, остальные — по стандартной ставке.
+VAT_STANDARD = 20
+VAT_REDUCED = 8
+VAT_REDUCED_CATEGORIES = {"Молочные продукты"}
+
+
+def vat_rate_for(category: str) -> int:
+    return VAT_REDUCED if category in VAT_REDUCED_CATEGORIES else VAT_STANDARD
+
+
+#: ECC (Echipament de casă și de control) — молдавский аналог ККМ. Два типа
+#: регистрации по типу приложения курьера, как и раньше для ФН: облачная
+#: касса (android) и терминал со встроенным ECC (smartpos).
+_ECC_BY_APP = {
+    "android": {"serial_prefix": "ECC-CLD", "reg_prefix": "SFS-00417"},
+    "smartpos": {"serial_prefix": "ECC-SPT", "reg_prefix": "SFS-00512"},
+}
 
 CUSTOMERS = ["Попеску А.", "Чобану С.", "Русу М.", "Морару Д.",
              "Лунгу Е.", "Балан И.", "Врабие О.", "Цуркану П.",
@@ -107,8 +139,9 @@ class DeliveryHub:
             product = store.store.product(sku)
             qty = rng.randint(1, 3)
             price = round(price_for(product.category, sku))
+            # категория несём в заказ — нужна на чеке для кода ставки TVA
             items.append({"sku": sku, "name": product.name, "qty": qty,
-                          "price": price})
+                          "price": price, "category": product.category})
             total += qty * price
         oid = f"WEB-{self._order_seq:04d}"
         self._order_seq += 1
@@ -210,9 +243,16 @@ class DeliveryHub:
             }
             courier["route"] = rid
             courier["lat"], courier["lon"] = emu.lat, emu.lon
-            self._log(f"🗺 Маршрут {rid}: {len(stops)} заказ(а) из "
-                      f"{emu.title} → {courier['name']} "
-                      f"({APP_TITLES[courier['app']]})")
+            # лента событий остаётся русской на этом этапе (см. отчёт), но
+            # берём фразу из каталога переводов, а не пишем "заказ(а)" руками —
+            # правильная форма множественного числа через механизм i18n
+            self._log(
+                "🗺 " + i18n_t("ru", "log.route_built", count=len(stops),
+                         route=rid,
+                         orders_word=i18n_t("ru", "log.route_built.orders_word",
+                                       count=len(stops)),
+                         store=emu.title, courier=courier["name"],
+                         app_title=APP_TITLES[courier["app"]]))
 
     # ----- чек в момент вручения ---------------------------------------
     def _fiscal_receipt(self, route: dict, stop: dict, now: float) -> str:
@@ -221,25 +261,39 @@ class DeliveryHub:
         rng = self.rng
         rid = f"FD-{self._receipt_seq:05d}"
         self._receipt_seq += 1
-        fn = ("9960440300" + str(100000 + rng.randint(0, 899999))
-              if courier["app"] == "smartpos" else
-              "7280440700" + str(100000 + rng.randint(0, 899999)))
-        fp = rng.randint(10 ** 9, 10 ** 10 - 1)
-        stamp = time.strftime("%Y%m%dT%H%M", time.localtime(now))
+        ecc = _ECC_BY_APP[courier["app"]]
+        # серийный/регистрационный номер ECC — стабильны для типа кассы,
+        # но с демо-хвостом, чтобы у разных чеков не совпадали буквально
+        ecc_serial = f"{ecc['serial_prefix']}-{100000 + rng.randint(0, 899999)}"
+        ecc_reg = f"{ecc['reg_prefix']}-{1000 + self._receipt_seq}"
+        # TVA считаем от цены с включённым налогом (розничная цена в
+        # каталоге — конечная), по каждой ставке — отдельная сумма
+        vat_totals: Dict[int, Dict[str, float]] = {}
+        for it in order["items"]:
+            rate = vat_rate_for(it.get("category", ""))
+            it["vat_rate"] = rate
+            line_total = it["qty"] * it["price"]
+            line_base = line_total / (1 + rate / 100)
+            bucket = vat_totals.setdefault(rate, {"base": 0.0, "vat": 0.0})
+            bucket["base"] += line_base
+            bucket["vat"] += line_total - line_base
+        vat_breakdown = [
+            {"rate": rate, "base": round(v["base"]), "vat": round(v["vat"])}
+            for rate, v in sorted(vat_totals.items())]
         receipt = {
             "id": rid, "order": order["id"], "route": route["id"],
             "customer": order["customer"], "address": order["address"],
-            "items": order["items"], "total": order["total"],
+            "store_name": order["store_name"], "items": order["items"],
+            "total": order["total"], "vat_breakdown": vat_breakdown,
             "courier": courier["name"], "app": courier["app"],
             "app_title": APP_TITLES[courier["app"]],
-            "fn": fn, "fd": self._receipt_seq + 4200, "fp": fp,
-            "qr": (f"t={stamp}&s={order['total']}.00&fn={fn}"
-                   f"&i={self._receipt_seq + 4200}&fp={fp}&n=1"),
+            "company_name": COMPANY_NAME, "idno": COMPANY_IDNO,
+            "ecc_serial": ecc_serial, "ecc_reg": ecc_reg,
             "printed_at": now,
-            "print_way": ("напечатан на терминале SmartOne (ФН на борту)"
-                          if courier["app"] == "smartpos" else
-                          "фискализирован облачной кассой, электронный "
-                          "чек отправлен покупателю"),
+            # печатается фразой по print_way.<app> из webapp/i18n.py — тот же
+            # ключ используют и /receipt (нужный язык), и лента событий ниже
+            # (всегда по-русски), чтобы формулировка не расходилась
+            "print_way": i18n_t("ru", f"receipt.print_way.{courier['app']}"),
         }
         self.receipts.appendleft(receipt)
         order["receipt"] = rid
