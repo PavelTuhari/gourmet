@@ -48,13 +48,23 @@ def _plural_ru(n: int) -> int:
 
 
 def _plural_ro(n: int) -> int:
-    """Румынский: 2 формы, но с той самой особенностью CLDR — числа,
-    оканчивающиеся на 01-19 (в том числе после сотен: 101, 119, 219),
-    используют ту же форму, что единица, а не «множественную»."""
+    """Румынский: 3 формы (CLDR one/few/other), а не две.
+
+    Ошибиться здесь легко и заметно носителю: «2 cursă» вместо «2 curse»
+    выглядит так же неграмотно, как «2 рейс» по-русски. Правило:
+
+    * 0 — ровно 1 («o cursă»);
+    * 1 — few: ноль и всё, что по модулю 100 попадает в 1..19, кроме самой
+      единицы («2 curse», «19 curse», «101 curse»);
+    * 2 — other: остальное, и здесь румынский требует предлога «de»
+      («20 de curse»), поэтому это отдельная форма, а не та же, что few.
+    """
     n = abs(int(n))
-    if n == 1 or 1 <= (n % 100) <= 19:
-        return 0                                   # comandă, comenzi (1..19, 101..119...)
-    return 1                                        # comenzi (20, 30, 100, 200...)
+    if n == 1:
+        return 0                                   # o cursă
+    if n == 0 or 1 <= (n % 100) <= 19:
+        return 1                                   # 2..19, 101..119 curse
+    return 2                                        # 20 de curse, 100 de curse
 
 
 def _plural_en(n: int) -> int:
@@ -93,7 +103,7 @@ MESSAGES: Dict[str, Dict[str, _Entry]] = {
     },
     "log.route_built.orders_word": {
         "ru": ["заказ", "заказа", "заказов"],
-        "ro": ["comandă", "comenzi"],
+        "ro": ["comandă", "comenzi", "de comenzi"],
         "en": ["order", "orders"],
     },
 
@@ -238,7 +248,7 @@ MESSAGES: Dict[str, Dict[str, _Entry]] = {
     },
     "log.new_order.items_word": {
         "ru": ["позиция", "позиции", "позиций"],
-        "ro": ["produs", "produse"],
+        "ro": ["produs", "produse", "de produse"],
         "en": ["item", "items"],
     },
     "log.picking_started": {
@@ -293,7 +303,7 @@ MESSAGES: Dict[str, Dict[str, _Entry]] = {
     },
     "ai.model_trained.legs_word": {
         "ru": ["плечо", "плеча", "плеч"],
-        "ro": ["cursă", "curse"],
+        "ro": ["cursă", "curse", "de curse"],
         "en": ["leg", "legs"],
     },
     "ai.model_prior": {
@@ -311,7 +321,7 @@ MESSAGES: Dict[str, Dict[str, _Entry]] = {
     },
     "ai.forecast_trained_trips.trips_word": {
         "ru": ["рейс", "рейса", "рейсов"],
-        "ro": ["cursă", "curse"],
+        "ro": ["cursă", "curse", "de curse"],
         "en": ["trip", "trips"],
     },
     "ai.forecast_prior": {
@@ -436,7 +446,7 @@ MESSAGES: Dict[str, Dict[str, _Entry]] = {
     },
     "map.zabbix.head.problems_word": {
         "ru": ["активная проблема", "активные проблемы", "активных проблем"],
-        "ro": ["problemă activă", "probleme active"],
+        "ro": ["problemă activă", "probleme active", "de probleme active"],
         "en": ["active issue", "active issues"],
     },
     "map.zabbix.none": {

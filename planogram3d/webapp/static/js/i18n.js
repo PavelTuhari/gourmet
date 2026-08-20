@@ -12,8 +12,11 @@
         return 1;
       return 2;
     }
-    if (lang === "ro") return (n === 1 || (n % 100 >= 1 && n % 100 <= 19))
-      ? 0 : 1;
+    if (lang === "ro") {                  // three CLDR forms, see _plural_ro
+      if (n === 1) return 0;              // o cursă
+      if (n === 0 || (n % 100 >= 1 && n % 100 <= 19)) return 1;  // 2 curse
+      return 2;                           // 20 de curse — с предлогом
+    }
     return n === 1 ? 0 : 1;               // en и по умолчанию
   }
 
