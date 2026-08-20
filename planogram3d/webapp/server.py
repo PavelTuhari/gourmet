@@ -139,6 +139,9 @@ def receipt_page(receipt_id):
     # _fiscal_receipt формирует его ключом, а не готовой строкой), поэтому
     # лента событий и чек не могут разойтись в формулировке
     print_way = t(lang, f"receipt.print_way.{r['app']}")
+    # тип кассы приходит из модели строкой по-русски; на чеке это подпись,
+    # а не данные, поэтому переводим здесь, а не храним три варианта в чеке
+    app_title = t(lang, f"receipt.app.{r['app']}")
     vat_lines = [{
         "rate": v["rate"],
         "label": t(lang, "receipt.vat_total_at_rate", rate=v["rate"]),
@@ -151,6 +154,7 @@ def receipt_page(receipt_id):
     subdivision_address = f"{t(lang, 'city.chisinau')}, {r['store_name']}"
     return render_template(
         "receipt.html", r=r, lang=lang, lbl=labels, print_way=print_way,
+        app_title=app_title,
         vat_lines=vat_lines, subdivision_address=subdivision_address,
         i18n_json=client_catalog(lang, _RECEIPT_JS_KEYS))
 

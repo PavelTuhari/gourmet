@@ -172,6 +172,20 @@ MESSAGES: Dict[str, Dict[str, _Entry]] = {
         "en": "fiscalized via the cloud register, the e-receipt was sent "
               "to the customer",
     },
+    # Тип кассы курьера — подпись интерфейса, а не данные: печатается в чеке
+    # («Касса: …») и показывается в карточке маршрута на /delivery, поэтому
+    # переводится наравне с остальными подписями. Эмодзи держим в шаблоне
+    # вывода, а не в переводимой строке.
+    "receipt.app.android": {
+        "ru": "Android (облачная касса)",
+        "ro": "Android (casă de marcat în cloud)",
+        "en": "Android (cloud register)",
+    },
+    "receipt.app.smartpos": {
+        "ru": "SmartOne (ECC на борту)",
+        "ro": "SmartOne (ECC la bord)",
+        "en": "SmartOne (onboard ECC)",
+    },
 }
 
 
