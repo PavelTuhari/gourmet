@@ -159,6 +159,10 @@ planogram3d/
 |---|---|
 | `PLANOGRAM_DC=0` | отключить логистический центр |
 | `ZABBIX_URL`, `ZABBIX_TOKEN`, `ZABBIX_HOSTS` | реальный Zabbix вместо эмулятора |
+| `ARTGRANIT_URL` | адрес ERP Artgranit (например `http://127.0.0.1:3003`); не задана — топливный контур (`peco_fuel.py`) полностью автономен, ни одного сетевого вызова |
+| `ARTGRANIT_TIMEOUT=3.0` | таймаут одного GET-запроса к Artgranit, с |
+| `ARTGRANIT_POLL_INTERVAL=5.0` | не опрашивать Artgranit чаще этого интервала (evolve-on-poll, без потока) |
+| `REAL_ARTGRANIT_TIMEOUT=20.0` | окно свежести реальных данных после последнего успешного опроса — истекло, контур сам возвращается к эмуляции (образец — `REAL_GPS_TIMEOUT` в `delivery.py`) |
 | `ROBLOX_API_KEY`, `ROBLOX_UNIVERSE_ID` | реальный Open Cloud (DataStore + MessagingService) |
 | `PLANOGRAM_TEAM_FILE` | путь файла-реестра команды (default `planogram_team.json` в cwd) |
 | `PLANOGRAM3D_NO_GUI=1` | desktop.py: только сервер, без окна (для CI) |

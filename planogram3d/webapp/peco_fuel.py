@@ -28,8 +28,12 @@ API::
     # st["source"] == "emulation"; st["stations"], st["trips"], ...
 """
 
+import email.utils
+import json
+import os
 import random
 import time
+import urllib.request
 from collections import deque
 from pathlib import Path
 from typing import Deque, Dict, List, Optional, Tuple
@@ -184,6 +188,76 @@ def _geo_dist(net: RoadNet, a: Node, b: Node) -> float:
     return _dist(a, b, net.kx)
 
 
+# ---------------------------------------------------------------------------
+# Задача 3: живой поток из Artgranit — тот же приём, что REAL_GPS_TIMEOUT
+# в delivery.py и create_provider в zabbix.py: реальные данные глушат
+# эмулятор по таймауту, а не заменяют его насовсем.
+# ---------------------------------------------------------------------------
+
+#: адрес ERP Artgranit; без переменной окружения контур остаётся
+#: полностью автономным (клиент не создаётся, опросов нет) — так и
+#: должно быть по умолчанию (инвариант «карта автономна», HANDOFF §3.5)
+ARTGRANIT_URL = os.environ.get("ARTGRANIT_URL", "").rstrip("/") or None
+#: таймаут одного HTTP-запроса к Artgranit, с
+ARTGRANIT_TIMEOUT = float(os.environ.get("ARTGRANIT_TIMEOUT", "3.0"))
+#: не опрашивать Artgranit чаще этого интервала (evolve-on-poll: опрос
+#: вписан в state(), отдельного потока нет — см. Задачу 3 плана)
+ARTGRANIT_POLL_INTERVAL = float(
+    os.environ.get("ARTGRANIT_POLL_INTERVAL", "5.0"))
+#: реальные данные считаются «свежими» и глушат эмуляцию это время после
+#: последнего успешного опроса; истёк — контур сам возвращается к
+#: эмуляции (образец — REAL_GPS_TIMEOUT в delivery.py: там 45 с при
+#: телеметрии courier-приложения раз в несколько секунд; здесь опрос
+#: реже, поэтому окно шире — переживает 3-4 подряд неудачных опроса)
+REAL_ARTGRANIT_TIMEOUT = float(
+    os.environ.get("REAL_ARTGRANIT_TIMEOUT", "20.0"))
+
+#: сколько секунд после act_return показывать завершённый реальный рейс
+#: на карте (то же окно, что у эмулятора, см. FuelNetwork._evolve_trips)
+DONE_TRIP_RETENTION_S = 90.0
+
+
+class ArtgranitClient:
+    """HTTP-клиент внешней ERP Artgranit — только чтение (GET).
+
+    Никаких записей: инициацию автозаказа выполняет оператор в самой
+    Artgranit (POST /api/plg/fuel/autoorder), planogram3d — витрина.
+    """
+
+    def __init__(self, base_url: str, timeout: float = ARTGRANIT_TIMEOUT):
+        self.base_url = base_url.rstrip("/")
+        self.timeout = timeout
+
+    def _get(self, path: str) -> list:
+        req = urllib.request.Request(
+            self.base_url + path, method="GET",
+            headers={"Accept": "application/json"})
+        with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+            if resp.status != 200:
+                raise RuntimeError(f"Artgranit {path}: HTTP {resp.status}")
+            body = resp.read().decode("utf-8")
+        payload = json.loads(body)
+        if not payload.get("success"):
+            raise RuntimeError(f"Artgranit {path}: success=false в ответе")
+        return payload.get("data", [])
+
+    def get_stations(self) -> list:
+        return self._get("/api/plg/fuel/stations")
+
+    def get_trips(self) -> list:
+        return self._get("/api/plg/fuel/trips")
+
+
+def _parse_rfc1123(value: Optional[str]) -> Optional[float]:
+    """RFC 1123 → unix-время; Artgranit отдаёт даты только так."""
+    if not value:
+        return None
+    try:
+        return email.utils.parsedate_to_datetime(value).timestamp()
+    except (TypeError, ValueError):
+        return None
+
+
 class FuelNetwork:
     """Эмулятор сети АЗС, нефтебазы и рейсов бензовозов (evolve-on-poll)."""
 
@@ -214,6 +288,16 @@ class FuelNetwork:
         self._driver_idx = 0
         self._last = time.time()
         self._next_trip_check = time.time() + 2.0
+
+        # Задача 3: клиент Artgranit создаётся только если задан адрес —
+        # иначе контур не делает ни одного сетевого вызова (автономность
+        # по умолчанию сохраняется)
+        self._client = (ArtgranitClient(ARTGRANIT_URL)
+                        if ARTGRANIT_URL else None)
+        self._next_poll = 0.0          # evolve-on-poll: время следующего опроса
+        self._last_real = 0.0          # время последнего успешного опроса
+        self._real_cache: Optional[dict] = None   # {"stations":…, "trips":…}
+        self._real_mode = False        # для лога переходов эмуляция↔реал
 
     # ----- события --------------------------------------------------------
     def _log(self, text: str) -> None:
@@ -365,6 +449,153 @@ class FuelNetwork:
                       if v["status"] == "en_route"
                       or now - v.get("_done_at", now) < 90}
 
+    # ----- Artgranit: опрос и преобразование форм ---------------------------
+    def _station_from_artgranit(self, s: dict) -> dict:
+        """Форма Artgranit → форма станции контура (та же, что у эмулятора)."""
+        capacity = float(s["capacity_l"])
+        current = float(s["current_l"])
+        fill = current / capacity if capacity else 0.0
+        daily_rate = float(s.get("daily_rate_l") or 0.0)
+        days_to_dry = current / daily_rate if daily_rate > 0 else 999.0
+        return {
+            "id": s["station_id"], "code": s["station_code"],
+            "name": s["station_name"], "lat": s["lat"], "lon": s["lon"],
+            "region": s.get("region") or "", "capacity_l": round(capacity),
+            "current_l": round(current), "fill_pct": round(100 * fill, 1),
+            "days_to_dry": round(days_to_dry, 2),
+            "is_low": fill < REORDER_FRACTION,
+        }
+
+    def _trip_from_artgranit(self, t: dict, now: float) -> Optional[dict]:
+        """Форма Artgranit → форма рейса контура, или None, если рейс не
+        интересен экрану (ещё не выехал, либо завершился давно)."""
+        status = t.get("status")
+        act_return = _parse_rfc1123(t.get("act_return"))
+        if status == "en_route":
+            pass
+        elif (status == "done" and act_return is not None
+              and now - act_return < DONE_TRIP_RETENTION_S):
+            pass
+        else:
+            return None                     # planned/cancelled/старый done
+
+        depart = (_parse_rfc1123(t.get("act_depart"))
+                 or _parse_rfc1123(t.get("plan_depart")) or now)
+
+        # компоненты (секции цистерны) группируются в станции-остановки —
+        # у Artgranit несколько строк stops с одинаковым station_id это
+        # разные отсеки одной физической остановки, а не разные заезды
+        by_station: "Dict[int, dict]" = {}
+        order: List[int] = []
+        for raw in t.get("stops") or []:
+            sid = raw.get("station_id")
+            if sid is None:
+                continue
+            if sid not in by_station:
+                by_station[sid] = {
+                    "station_id": sid, "name": raw.get("station_name", ""),
+                    "lat": raw.get("lat"), "lon": raw.get("lon"),
+                    "liters": 0.0,
+                    "eta_ts": _parse_rfc1123(raw.get("plan_arrive")),
+                }
+                order.append(sid)
+            liters = raw.get("liters_fact")
+            if liters is None:
+                liters = raw.get("liters_plan") or 0.0
+            by_station[sid]["liters"] += float(liters)
+
+        # маршрут строится нашим RoadNet по молдавской карте — своей
+        # полилинии у рейса Artgranit нет (см. Задачу 3 плана)
+        prev = (self.depot["lon"], self.depot["lat"])
+        full_path: List[Node] = []
+        cum_dist = 0.0
+        for sid in order:
+            stop = by_station[sid]
+            if stop["lat"] is None or stop["lon"] is None:
+                continue                    # без координат остановку не проложить
+            leg_path, leg_m = self.net.route(prev[0], prev[1],
+                                             stop["lon"], stop["lat"])
+            if full_path and leg_path and full_path[-1] == leg_path[0]:
+                leg_path = leg_path[1:]
+            full_path.extend(leg_path)
+            cum_dist += leg_m
+            stop["cum_dist"] = cum_dist
+            stop["status"] = "done" if status == "done" else "pending"
+            prev = (stop["lon"], stop["lat"])
+        if len(full_path) < 2:
+            return None                     # ни одной остановки с координатами
+
+        cum = cumulative(full_path, self.net.kx)
+        total_len = cum[-1]
+        stops_out = [{"station_id": by_station[sid]["station_id"],
+                      "name": by_station[sid]["name"],
+                      "liters": round(by_station[sid]["liters"]),
+                      "eta_ts": by_station[sid]["eta_ts"],
+                      "status": by_station[sid]["status"]}
+                     for sid in order if "cum_dist" in by_station[sid]]
+        eta = max((s["eta_ts"] for s in stops_out if s["eta_ts"]),
+                 default=depart + total_len / TANKER_SPEED)
+
+        # позиция: реальный GPS, если Artgranit его отдаёт (last_lat/lon);
+        # почти всегда null (провайдер GPS не подключён, см. план) —
+        # тогда считаем позицию по маршруту и плановому времени, как в
+        # эмуляции, а не показываем рейс неподвижным у нефтебазы
+        if t.get("last_lat") is not None and t.get("last_lon") is not None:
+            lat, lon = float(t["last_lat"]), float(t["last_lon"])
+            progress = 0.0 if total_len <= 0 else min(
+                1.0, _geo_dist(self.net, (self.depot["lon"],
+                                          self.depot["lat"]),
+                               (lon, lat)) / total_len)
+        else:
+            span = max(1.0, eta - depart)
+            progress = 0.0 if status == "done" else max(
+                0.0, min(1.0, (now - depart) / span))
+            path_pts = [tuple(p) for p in full_path]
+            lon, lat = point_along(path_pts, cum, progress * total_len)
+
+        return {
+            "id": f"AG-{t['id']}", "driver": t.get("driver_name") or "—",
+            "liters": round(float(t.get("liters_total") or 0.0)),
+            "load_pct": round(float(t.get("load_pct") or 0.0)),
+            "depart": depart, "eta": eta,
+            "progress": round(1.0 if status == "done" else progress, 3),
+            "lat": round(lat, 5), "lon": round(lon, 5),
+            "status": status,
+            "path": [[round(p[0], 5), round(p[1], 5)] for p in full_path],
+            "stops": stops_out,
+        }
+
+    def _poll_artgranit(self, now: float) -> None:
+        """Опрос Artgranit — не чаще ARTGRANIT_POLL_INTERVAL, без потока:
+        вызывается изнутри state(), как и весь остальной evolve-on-poll."""
+        if self._client is None or now < self._next_poll:
+            return
+        self._next_poll = now + ARTGRANIT_POLL_INTERVAL
+        try:
+            stations_raw = self._client.get_stations()
+            if not stations_raw:
+                raise ValueError("пустой список станций")
+            trips_raw = self._client.get_trips()
+            stations_out = [self._station_from_artgranit(s)
+                            for s in stations_raw]
+            trips_out = [trip for trip in
+                        (self._trip_from_artgranit(t, now)
+                         for t in trips_raw) if trip is not None]
+        except Exception as exc:
+            # сеть, таймаут, не-200, битый JSON — контур остаётся на
+            # последних свежих данных до истечения REAL_ARTGRANIT_TIMEOUT,
+            # а не падает и не показывает пустой экран (инвариант плана)
+            if self._real_mode:
+                self._log(f"⚠ Artgranit недоступен ({exc}), "
+                          "переход на эмуляцию по истечении окна свежести")
+            return
+        self._real_cache = {"stations": stations_out, "trips": trips_out}
+        self._last_real = now
+        if not self._real_mode:
+            self._log(f"🔌 Artgranit на связи: {len(stations_out)} АЗС, "
+                      f"{len(trips_out)} рейс(ов)")
+        self._real_mode = True
+
     # ----- снимок состояния (evolve-on-poll) --------------------------------
     def state(self) -> dict:
         now = time.time()
@@ -374,6 +605,25 @@ class FuelNetwork:
         self._consume(dt)
         self._maybe_dispatch(now)
         self._evolve_trips(now, dt)
+        self._poll_artgranit(now)
+
+        is_real = (self._real_cache is not None
+                  and now - self._last_real < REAL_ARTGRANIT_TIMEOUT)
+        if self._real_mode and not is_real:
+            self._log("↩️ Artgranit молчит дольше "
+                      f"{REAL_ARTGRANIT_TIMEOUT:.0f} с — эмуляция")
+            self._real_mode = False
+        if is_real:
+            return {
+                "now": now, "source": "artgranit",
+                "depot": {**self.depot,
+                         "fill_pct": round(100 * self.depot["current_l"]
+                                           / self.depot["capacity_l"], 1)},
+                "stations": self._real_cache["stations"],
+                "trips": self._real_cache["trips"],
+                "runs": list(self.runs),
+                "events": list(self.events)[:20],
+            }
 
         stations_out = []
         for st in self.stations.values():
