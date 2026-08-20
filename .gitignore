@@ -22,3 +22,4 @@ po/.intltool-merge-cache
 # planogram3d build artifacts
 planogram3d/build/
 .venv-planogram3d/
+.DS_Store
