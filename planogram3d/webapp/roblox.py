@@ -28,13 +28,23 @@ import urllib.request
 from pathlib import Path
 from typing import List, Optional
 
-#: бейджи за пройденные обучающие кейсы (смены тренажёра)
+from .i18n import DEFAULT_LANG, t
+
+#: бейджи за пройденные обучающие кейсы (смены тренажёра) — хранятся как
+#: ключи каталога i18n, а не готовый текст: язык неизвестен в момент
+#: начисления (реестр общий для всех языков), переводится при отдаче
+#: (см. `_badge_text`), тот же приём, что и у ленты событий в `t()`/
+#: `render_event` (webapp/i18n.py).
 BADGES = {
-    1: "🥉 Кассир-новичок",
-    2: "🥈 Хранитель чистоты",
-    3: "🥇 Герой часа пик",
+    1: "roblox.badge.cashier_novice",
+    2: "roblox.badge.cleanliness_guardian",
+    3: "roblox.badge.rush_hour_hero",
 }
-MASTER_BADGE = "🏆 Наставник смены"   # все три смены на 3 звезды
+MASTER_BADGE = "roblox.badge.shift_master"   # все три смены на 3 звезды
+
+
+def _badge_text(key: str, lang: str) -> str:
+    return t(lang, key)
 
 
 class RobloxCloud:
@@ -125,7 +135,13 @@ class TeamHub:
         except OSError:
             pass
 
-    # ----- API ----------------------------------------------------------
+    # ----- API ------------------------------------------------------------
+    # Лента (self.feed) хранит событие как ключ+параметры (не готовый
+    # текст) — язык неизвестен в момент записи (общий реестр на все
+    # языки), переводится на лету при отдаче (`_render_feed`), тот же
+    # приём, что и у ленты событий сети/доставки — см. `render_event` в
+    # webapp/i18n.py. Бейджи в `member["badges"]` тоже хранятся ключами
+    # (значения BADGES/MASTER_BADGE), переводятся в `_public_member`.
     def register(self, name: str, roblox_user: str,
                  store_id: str) -> dict:
         key = roblox_user.strip().lower()
@@ -138,10 +154,9 @@ class TeamHub:
                           "registered_at": time.time()}
                 self.members[key] = member
                 self.feed.insert(0, {
-                    "t": time.time(),
-                    "text": f"👋 {member['name']} "
-                            f"({member['roblox_user']}) присоединился "
-                            f"к команде"})
+                    "t": time.time(), "key": "roblox.feed.joined",
+                    "params": {"name": member["name"],
+                              "roblox_user": member["roblox_user"]}})
             else:
                 member["name"] = name.strip() or member["name"]
                 member["store_id"] = store_id or member["store_id"]
@@ -150,7 +165,7 @@ class TeamHub:
 
     def progress(self, name: str, roblox_user: str, store_id: str,
                  level: int, stars: int, revenue: int,
-                 stats: dict) -> dict:
+                 stats: dict, lang: str = DEFAULT_LANG) -> dict:
         """Результат смены тренажёра → бонусы и поощрения."""
         member = self.register(name, roblox_user, store_id)
         key = member["roblox_user"].strip().lower()
@@ -175,14 +190,24 @@ class TeamHub:
                     bonus += 200
             member["points"] += bonus
 
-            reason = (f"смена {level} " +
-                      ("пройдена, " + "★" * stars if stars else
-                       "не пройдена") + f", выручка {revenue} L")
-            self.feed.insert(0, {
-                "t": time.time(),
-                "text": f"💎 {member['name']}: +{bonus} баллов — {reason}"
-                        + (" · " + ", ".join(new_badges)
-                           if new_badges else "")})
+            if stars:
+                reason = (t(lang, "roblox.feed.shift_passed", level=level,
+                           stars="★" * stars)
+                          + t(lang, "roblox.feed.revenue_suffix",
+                              revenue=revenue))
+            else:
+                reason = (t(lang, "roblox.feed.shift_failed", level=level)
+                          + t(lang, "roblox.feed.revenue_suffix",
+                              revenue=revenue))
+            badge_names = [_badge_text(b, lang) for b in new_badges]
+            feed_text = t(lang, "roblox.feed.points_award",
+                         name=member["name"], points=bonus, reason=reason)
+            if badge_names:
+                feed_text += " · " + ", ".join(badge_names)
+            # лента поощрений хранит уже собранный текст (а не ключ),
+            # т.к. reason/бейджи здесь уже переведены под lang текущего
+            # запроса — конкатенация двух ключей на лету, без ре-перевода
+            self.feed.insert(0, {"t": time.time(), "text": feed_text})
             self._save()
             snapshot = dict(member)
 
@@ -197,21 +222,28 @@ class TeamHub:
         except Exception:
             ok = False
         return {"bonus": bonus, "total": snapshot["points"],
-                "badges": snapshot["badges"], "new_badges": new_badges,
+                "badges": [_badge_text(b, lang) for b in snapshot["badges"]],
+                "new_badges": badge_names,
                 "mode": self.cloud.mode, "delivered": ok,
-                "top": self.leaderboard()[:5]}
+                "top": self.leaderboard(lang)[:5]}
 
     def award(self, name: str, roblox_user: str, store_id: str,
-              points: int, reason: str) -> dict:
-        """Прямое поощрение (например, за командную смену тренажёра)."""
+              points: int, reason: str, lang: str = DEFAULT_LANG) -> dict:
+        """Прямое поощрение (например, за командную смену тренажёра).
+
+        ``reason`` приходит от вызывающего кода уже готовой строкой (см.
+        `webapp/multigame.py`) — там она собирается из своего каталога
+        под lang текущего запроса; здесь она только подставляется в
+        обёртку `roblox.feed.points_award`.
+        """
         member = self.register(name, roblox_user, store_id)
         key = member["roblox_user"].strip().lower()
         with self._lock:
             member = self.members[key]
             member["points"] += int(points)
-            self.feed.insert(0, {
-                "t": time.time(),
-                "text": f"💎 {member['name']}: +{points} баллов — {reason}"})
+            feed_text = t(lang, "roblox.feed.points_award",
+                         name=member["name"], points=points, reason=reason)
+            self.feed.insert(0, {"t": time.time(), "text": feed_text})
             self._save()
             snapshot = dict(member)
         try:
@@ -221,18 +253,34 @@ class TeamHub:
                                  "points": int(points), "reason": reason})
         except Exception:
             pass
-        return snapshot
+        return self._public_member(snapshot, lang)
 
-    def leaderboard(self) -> List[dict]:
+    def _public_member(self, mm: dict, lang: str) -> dict:
+        out = dict(mm)
+        out["badges"] = [_badge_text(b, lang) for b in mm["badges"]]
+        return out
+
+    def _render_feed(self, lang: str) -> List[dict]:
+        out = []
+        for ev in self.feed[:20]:
+            if "key" in ev:
+                out.append({"t": ev["t"],
+                            "text": t(lang, ev["key"], **ev.get("params", {}))})
+            else:
+                out.append(ev)          # уже переведённая запись (progress/award)
+        return out
+
+    def leaderboard(self, lang: str = DEFAULT_LANG) -> List[dict]:
         with self._lock:
             rows = sorted(self.members.values(),
                           key=lambda mm: -mm["points"])
             return [{"name": mm["name"],
                      "roblox_user": mm["roblox_user"],
                      "store_id": mm["store_id"], "points": mm["points"],
-                     "badges": mm["badges"]} for mm in rows]
+                     "badges": [_badge_text(b, lang) for b in mm["badges"]]}
+                    for mm in rows]
 
-    def team(self) -> dict:
+    def team(self, lang: str = DEFAULT_LANG) -> dict:
         return {"mode": self.cloud.mode,
-                "members": self.leaderboard(),
-                "feed": self.feed[:20]}
+                "members": self.leaderboard(lang),
+                "feed": self._render_feed(lang)}

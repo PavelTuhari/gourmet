@@ -15,6 +15,7 @@
 from dataclasses import dataclass
 from typing import Callable, Iterable, List, Optional
 
+from .i18n import DEFAULT_LANG, t
 from .models import Planogram, Store
 
 #: Сигнатура пользовательской проверки для ``check_compliance``:
@@ -35,7 +36,8 @@ def _shelf_z(store: Store, gondola_id: str, shelf_index: int) -> float:
     return store.gondola(gondola_id).shelf(shelf_index).z
 
 
-def check_regulations(store: Store, planogram: Planogram) -> List[Violation]:
+def check_regulations(store: Store, planogram: Planogram,
+                      lang: str = DEFAULT_LANG) -> List[Violation]:
     """Внутренний регламент: вес, габариты, переполнение полок."""
     reg = store.regulations
     out: List[Violation] = []
@@ -44,29 +46,30 @@ def check_regulations(store: Store, planogram: Planogram) -> List[Violation]:
         product = store.product(p.sku)
         gondola = store.gondola(p.gondola_id)
         shelf = gondola.shelf(p.shelf_index)
-        where = f"{gondola.name}, полка {p.shelf_index + 1}, {product.name}"
+        where = t(lang, "rules.where_shelf", gondola=gondola.name,
+                 n=p.shelf_index + 1, product=product.name)
 
         if (product.weight > reg.max_weight_high_shelf
                 and shelf.z > reg.heavy_shelf_max_z):
             out.append(Violation(
                 "regulation", "critical", where,
-                f"Тяжёлый товар ({product.weight:.1f} кг) на полке высотой "
-                f"{shelf.z:.2f} м — по регламенту тяжелее "
-                f"{reg.max_weight_high_shelf:.0f} кг только ниже "
-                f"{reg.heavy_shelf_max_z:.1f} м"))
+                t(lang, "rules.heavy_on_high_shelf",
+                  weight=product.weight, z=shelf.z,
+                  max_weight=reg.max_weight_high_shelf,
+                  max_z=reg.heavy_shelf_max_z)))
 
         if product.height > shelf.clearance:
             out.append(Violation(
                 "regulation", "critical", where,
-                f"Товар высотой {product.height:.2f} м не помещается в "
-                f"просвет полки {shelf.clearance:.2f} м"))
+                t(lang, "rules.too_tall_for_shelf",
+                  height=product.height, clearance=shelf.clearance)))
 
         if p.offset + p.facings * product.width > gondola.width + 1e-9:
             out.append(Violation(
                 "regulation", "critical", where,
-                f"Выкладка выходит за край полки: {p.facings} фейс. × "
-                f"{product.width:.2f} м со смещением {p.offset:.2f} м при "
-                f"длине полки {gondola.width:.2f} м"))
+                t(lang, "rules.overflow_shelf_edge",
+                  facings=p.facings, width=product.width,
+                  offset=p.offset, gwidth=gondola.width)))
 
     # взаимное перекрытие выкладок на одной полке
     by_shelf = {}
@@ -80,13 +83,15 @@ def check_regulations(store: Store, planogram: Planogram) -> List[Violation]:
                 gondola = store.gondola(gid)
                 out.append(Violation(
                     "regulation", "critical",
-                    f"{gondola.name}, полка {sidx + 1}",
-                    f"Пересечение выкладок «{store.product(a.sku).name}» и "
-                    f"«{store.product(b.sku).name}»"))
+                    t(lang, "rules.where_shelf_only", gondola=gondola.name,
+                      n=sidx + 1),
+                    t(lang, "rules.overlap", a=store.product(a.sku).name,
+                      b=store.product(b.sku).name)))
     return out
 
 
-def check_contracts(store: Store, planogram: Planogram) -> List[Violation]:
+def check_contracts(store: Store, planogram: Planogram,
+                    lang: str = DEFAULT_LANG) -> List[Violation]:
     """Контракты с поставщиками: доля полки, обязательные SKU, уровень глаз."""
     reg = store.regulations
     out: List[Violation] = []
@@ -114,8 +119,8 @@ def check_contracts(store: Store, planogram: Planogram) -> List[Violation]:
             if share + 1e-9 < contract.min_share_pct:
                 out.append(Violation(
                     "contract", "critical", supplier.name,
-                    f"Доля полки {share:.1f}% меньше контрактной "
-                    f"{contract.min_share_pct:.1f}%"))
+                    t(lang, "rules.share_below_contract", share=share,
+                      min_share=contract.min_share_pct)))
 
         for sku, min_facings in contract.mandatory_skus.items():
             have = facings_by_sku.get(sku, 0)
@@ -123,8 +128,8 @@ def check_contracts(store: Store, planogram: Planogram) -> List[Violation]:
                 name = store.product(sku).name if sku in store.products else sku
                 out.append(Violation(
                     "contract", "critical", f"{supplier.name} — {name}",
-                    f"Обязательный SKU: {have} фейс. вместо минимум "
-                    f"{min_facings} по контракту"))
+                    t(lang, "rules.mandatory_sku_shortage", have=have,
+                      need=min_facings)))
 
         lo, hi = reg.eye_level_range
         for sku in contract.eye_level_skus:
@@ -138,12 +143,12 @@ def check_contracts(store: Store, planogram: Planogram) -> List[Violation]:
                 name = store.product(sku).name
                 out.append(Violation(
                     "contract", "warning", f"{supplier.name} — {name}",
-                    f"По контракту SKU должен стоять на уровне глаз "
-                    f"({lo:.1f}–{hi:.1f} м), фактически — нет"))
+                    t(lang, "rules.eye_level_missing", lo=lo, hi=hi)))
     return out
 
 
-def check_against_approved(store: Store) -> List[Violation]:
+def check_against_approved(store: Store,
+                           lang: str = DEFAULT_LANG) -> List[Violation]:
     """Расхождения фактической выкладки с утверждённой планограммой."""
     out: List[Violation] = []
     approved = store.approved_planogram
@@ -160,17 +165,18 @@ def check_against_approved(store: Store) -> List[Violation]:
     for k, ap in approved_map.items():
         product = store.product(ap.sku)
         gondola = store.gondola(ap.gondola_id)
-        where = f"{gondola.name}, полка {ap.shelf_index + 1}, {product.name}"
+        where = t(lang, "rules.where_shelf", gondola=gondola.name,
+                 n=ap.shelf_index + 1, product=product.name)
         cp = current_map.get(k)
         if cp is None:
             out.append(Violation(
                 "planogram", "critical", where,
-                "Позиция из утверждённой планограммы отсутствует на полке"))
+                t(lang, "rules.missing_from_shelf")))
         elif cp.facings != ap.facings:
             out.append(Violation(
                 "planogram", "warning", where,
-                f"Число фейсингов {cp.facings} вместо утверждённых "
-                f"{ap.facings}"))
+                t(lang, "rules.facings_mismatch", facings=cp.facings,
+                  approved=ap.facings)))
 
     for k, cp in current_map.items():
         if k not in approved_map:
@@ -178,12 +184,13 @@ def check_against_approved(store: Store) -> List[Violation]:
             gondola = store.gondola(cp.gondola_id)
             out.append(Violation(
                 "planogram", "warning",
-                f"{gondola.name}, полка {cp.shelf_index + 1}, {product.name}",
-                "Позиция выложена вне утверждённой планограммы"))
+                t(lang, "rules.where_shelf", gondola=gondola.name,
+                  n=cp.shelf_index + 1, product=product.name),
+                t(lang, "rules.unapproved_placement")))
     return out
 
 
-def check_sales(store: Store) -> List[Violation]:
+def check_sales(store: Store, lang: str = DEFAULT_LANG) -> List[Violation]:
     """Операционные алерты по текущему состоянию продаж."""
     reg = store.regulations
     out: List[Violation] = []
@@ -200,24 +207,24 @@ def check_sales(store: Store) -> List[Violation]:
         if info.stock == 0:
             out.append(Violation(
                 "sales", "critical", product.name,
-                "Товар закончился на полке (out-of-stock), продажи "
-                "остановлены"))
+                t(lang, "rules.out_of_stock")))
         elif info.fill_ratio < reg.low_stock_threshold:
             out.append(Violation(
                 "sales", "warning", product.name,
-                f"Низкий остаток: полка заполнена на "
-                f"{info.fill_ratio * 100:.0f}%"))
+                t(lang, "rules.low_stock", pct=info.fill_ratio * 100)))
         elif info.days_of_supply < reg.min_days_of_supply:
             out.append(Violation(
                 "sales", "warning", product.name,
-                f"Запаса меньше чем на {reg.min_days_of_supply:.0f} день "
-                f"продаж ({info.days_of_supply:.1f} дн.)"))
+                t(lang, "rules.low_days_of_supply",
+                  min_days=reg.min_days_of_supply,
+                  days=info.days_of_supply)))
     return out
 
 
 def check_compliance(
         store: Store,
         extra_checks: Optional[Iterable[ComplianceCheck]] = None,
+        lang: str = DEFAULT_LANG,
 ) -> List[Violation]:
     """Полная проверка: регламент и контракты — по фактической выкладке,
     плюс расхождения с утверждённой планограммой и алерты по продажам.
@@ -225,14 +232,16 @@ def check_compliance(
     ``extra_checks`` — дополнительные пользовательские проверки
     (например, специфичные правила конкретной сети); каждая получает
     ``store`` и возвращает список :class:`Violation`.
+    ``lang`` — язык текстов нарушений (``ru`` по умолчанию — прежнее
+    поведение для существующих вызовов, включая CLI-отчёт).
     """
     planogram = store.current_planogram or store.approved_planogram
     out: List[Violation] = []
     if planogram is not None:
-        out += check_regulations(store, planogram)
-        out += check_contracts(store, planogram)
-    out += check_against_approved(store)
-    out += check_sales(store)
+        out += check_regulations(store, planogram, lang)
+        out += check_contracts(store, planogram, lang)
+    out += check_against_approved(store, lang)
+    out += check_sales(store, lang)
     for check in (extra_checks or []):
         out += list(check(store))
     severity_rank = {"critical": 0, "warning": 1}

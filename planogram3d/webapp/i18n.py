@@ -897,6 +897,694 @@ MESSAGES: Dict[str, Dict[str, _Entry]] = {
         "ro": "pungile au fost reaprovizionate (acum {n} buc.)",
         "en": "bags restocked (now {n} pcs)",
     },
+
+    # ---- аварии мониторинга (zabbix.py, эмуляция) — показываются в -----
+    # ---- карточке магазина на карте -------------------------------------
+    "zabbix.problem.pos_offline": {
+        "ru": "Касса №2: нет связи с сервером",
+        "ro": "Casa nr. 2: fără legătură cu serverul",
+        "en": "Register #2: no connection to server",
+    },
+    "zabbix.problem.acquiring_timeout": {
+        "ru": "Эквайринг: тайм-ауты авторизации",
+        "ro": "Acceptare carduri: timeout la autorizare",
+        "en": "Card acquiring: authorization timeouts",
+    },
+    "zabbix.problem.fridge_temp": {
+        "ru": "Холодильная витрина: температура выше нормы",
+        "ro": "Vitrină frigorifică: temperatură peste normă",
+        "en": "Chiller display: temperature above normal",
+    },
+    "zabbix.problem.ups_battery": {
+        "ru": "ИБП: переход на питание от батареи",
+        "ro": "UPS: trecere pe alimentare cu baterie",
+        "en": "UPS: switched to battery power",
+    },
+    "zabbix.problem.disk_full": {
+        "ru": "Сервер магазина: диск заполнен > 90%",
+        "ro": "Serverul magazinului: disc ocupat > 90%",
+        "en": "Store server: disk over 90% full",
+    },
+    "zabbix.problem.scales_unresponsive": {
+        "ru": "Весы в торговом зале не отвечают",
+        "ro": "Cântarul din sala de vânzare nu răspunde",
+        "en": "Sales floor scale not responding",
+    },
+    "zabbix.problem.scanner_errors": {
+        "ru": "Сканер ШК на кассе №1: ошибки чтения",
+        "ro": "Scanerul de coduri de bare la casa nr. 1: erori de citire",
+        "en": "Barcode scanner at register #1: read errors",
+    },
+    "zabbix.problem.camera_offline": {
+        "ru": "Камера видеонаблюдения №4 офлайн",
+        "ro": "Camera de supraveghere nr. 4 offline",
+        "en": "CCTV camera #4 offline",
+    },
+    "zabbix.severity.0": {
+        "ru": "не классифицировано", "ro": "neclasificat",
+        "en": "not classified",
+    },
+    "zabbix.severity.1": {
+        "ru": "информация", "ro": "informare", "en": "information",
+    },
+    "zabbix.severity.2": {
+        "ru": "предупреждение", "ro": "avertizare", "en": "warning",
+    },
+    "zabbix.severity.3": {"ru": "средняя", "ro": "medie", "en": "average"},
+    "zabbix.severity.4": {"ru": "высокая", "ro": "ridicată", "en": "high"},
+    "zabbix.severity.5": {
+        "ru": "чрезвычайная", "ro": "critică", "en": "disaster",
+    },
+
+    # ---- навигация документации (server.py _DOCS) ------------------------
+    "docs.nav.readme": {
+        "ru": "О модуле", "ro": "Despre modul", "en": "About the module",
+    },
+    "docs.nav.tz": {
+        "ru": "Техзадание", "ro": "Caiet de sarcini",
+        "en": "Requirements spec",
+    },
+    "docs.nav.erp3d": {
+        "ru": "3D для ERP", "ro": "3D pentru ERP", "en": "3D for ERP",
+    },
+    "docs.nav.library": {
+        "ru": "Справочник API", "ro": "Referință API",
+        "en": "API reference",
+    },
+    "docs.nav.integration": {
+        "ru": "Интеграция", "ro": "Integrare", "en": "Integration",
+    },
+    "docs.nav.article": {
+        "ru": "Методичка", "ro": "Ghid metodic", "en": "Training guide",
+    },
+    "docs.nav.roadmap": {
+        "ru": "Роадмап ИИ", "ro": "Foaia de parcurs AI",
+        "en": "AI roadmap",
+    },
+    "docs.nav.plan": {
+        "ru": "План презентации", "ro": "Planul prezentării",
+        "en": "Presentation plan",
+    },
+    "docs.nav.handoff": {
+        "ru": "База знаний", "ro": "Bază de cunoștințe",
+        "en": "Knowledge base",
+    },
+
+    # ---- встроенные ИИ-боты командной смены (server.py, mgame_bot) -------
+    "game.bot.cashier": {
+        "ru": "ИИ-Кассир", "ro": "AI-Casier", "en": "AI Cashier",
+    },
+    "game.bot.merch": {
+        "ru": "ИИ-Мерч", "ro": "AI-Merchandiser", "en": "AI Merchandiser",
+    },
+    "game.bot.cleaner": {
+        "ru": "ИИ-Клинер", "ro": "AI-Curățenie", "en": "AI Cleaner",
+    },
+    "game.bot.tech": {
+        "ru": "ИИ-Техник", "ro": "AI-Tehnician", "en": "AI Technician",
+    },
+    "game.bot.supervisor": {
+        "ru": "ИИ-Супервайзер", "ro": "AI-Supervizor",
+        "en": "AI Supervisor",
+    },
+    "game.bot.default": {
+        "ru": "ИИ-Бот", "ro": "AI-Bot", "en": "AI Bot",
+    },
+
+    # ---- команда: бейджи и лента поощрений (roblox.py) -------------------
+    "roblox.badge.cashier_novice": {
+        "ru": "🥉 Кассир-новичок", "ro": "🥉 Casier debutant",
+        "en": "🥉 Rookie cashier",
+    },
+    "roblox.badge.cleanliness_guardian": {
+        "ru": "🥈 Хранитель чистоты", "ro": "🥈 Gardianul curățeniei",
+        "en": "🥈 Cleanliness guardian",
+    },
+    "roblox.badge.rush_hour_hero": {
+        "ru": "🥇 Герой часа пик", "ro": "🥇 Eroul orei de vârf",
+        "en": "🥇 Rush hour hero",
+    },
+    "roblox.badge.shift_master": {
+        "ru": "🏆 Наставник смены", "ro": "🏆 Mentorul turei",
+        "en": "🏆 Shift mentor",
+    },
+    "roblox.feed.joined": {
+        "ru": "👋 {name} ({roblox_user}) присоединился к команде",
+        "ro": "👋 {name} ({roblox_user}) s-a alăturat echipei",
+        "en": "👋 {name} ({roblox_user}) joined the team",
+    },
+    "roblox.feed.shift_passed": {
+        "ru": "смена {level} пройдена, {stars}",
+        "ro": "tura {level} finalizată, {stars}",
+        "en": "shift {level} passed, {stars}",
+    },
+    "roblox.feed.shift_failed": {
+        "ru": "смена {level} не пройдена",
+        "ro": "tura {level} nereușită",
+        "en": "shift {level} not passed",
+    },
+    "roblox.feed.revenue_suffix": {
+        "ru": ", выручка {revenue} L", "ro": ", venit {revenue} L",
+        "en": ", revenue {revenue} L",
+    },
+    "roblox.feed.points_award": {
+        "ru": "💎 {name}: +{points} баллов — {reason}",
+        "ro": "💎 {name}: +{points} puncte — {reason}",
+        "en": "💎 {name}: +{points} points — {reason}",
+    },
+
+    # ---- тренажёр соло (game.html) ---------------------------------------
+    #
+    # Часть строк — константы уровней и подсказки, зашитые в JS шаблона
+    # (LEVELS/TUTOR): переводятся через client_catalog + tt() на клиенте,
+    # т.к. это статичная конфигурация игры, а не данные с сервера при
+    # каждом опросе. Общие с командным тренажёром подписи (busy-лейблы,
+    # тексты попапов, "СКЛАД"/"НЕТ ЛЕНТЫ") держим одним ключом на оба
+    # файла — см. переиспользование в group ниже (game_multi.html).
+    "game.page_title_suffix": {
+        "ru": "— тренажёр персонала", "ro": "— simulator de instruire",
+        "en": "— staff trainer",
+    },
+    "game.hud.revenue": {"ru": "выручка", "ro": "venit", "en": "revenue"},
+    "game.hud.shift_time": {
+        "ru": "время смены", "ro": "timp tură", "en": "shift time",
+    },
+    "game.hud.reputation": {
+        "ru": "репутация", "ro": "reputație", "en": "reputation",
+    },
+    "game.hud.shift": {"ru": "смена", "ro": "tură", "en": "shift"},
+    "game.hud.carrying": {
+        "ru": "в руках", "ro": "în mâini", "en": "carrying",
+    },
+    "game.hud.loading": {
+        "ru": "Загрузка…", "ro": "Se încarcă…", "en": "Loading…",
+    },
+    "game.brief.title": {
+        "ru": "🎓 Тренажёр персонала магазина",
+        "ro": "🎓 Simulator de instruire pentru personal",
+        "en": "🎓 Store staff trainer",
+    },
+    "game.brief.name_placeholder": {
+        "ru": "Имя сотрудника", "ro": "Numele angajatului",
+        "en": "Employee name",
+    },
+    "game.brief.roblox_placeholder": {
+        "ru": "Ник в Roblox", "ro": "Nume Roblox", "en": "Roblox username",
+    },
+    "game.brief.start_btn": {
+        "ru": "▶ Начать смену", "ro": "▶ Începe tura", "en": "▶ Start shift",
+    },
+    "game.brief.multi_link": {
+        "ru": "👥 Командная смена: до 10 игроков и ИИ-ботов →",
+        "ro": "👥 Tură de echipă: până la 10 jucători și boți AI →",
+        "en": "👥 Team shift: up to 10 players and AI bots →",
+    },
+    "game.brief.goal": {
+        "ru": "🎯 Цель смены: выручка {goal} L за {mins} {min_unit}",
+        "ro": "🎯 Obiectivul turei: venit {goal} L în {mins} {min_unit}",
+        "en": "🎯 Shift goal: {goal} L revenue in {mins} {min_unit}",
+    },
+    "game.level1.title": {
+        "ru": "Смена 1 · Основы", "ro": "Tura 1 · Bazele",
+        "en": "Shift 1 · Basics",
+    },
+    "game.level1.brief1": {
+        "ru": "Пополняйте полки со склада 📦 до того, как они опустеют",
+        "ro": "Reaprovizionați rafturile din depozit 📦 înainte să se "
+              "golească",
+        "en": "Restock shelves from the storeroom 📦 before they run empty",
+    },
+    "game.level1.brief2": {
+        "ru": "Обслуживайте покупателей на кассе — кликните по кассе",
+        "ro": "Deserviți clienții la casă — faceți clic pe casă",
+        "en": "Serve customers at the register — click the register",
+    },
+    "game.level1.brief3": {
+        "ru": "У покупателей есть терпение ❤ — не заставляйте их ждать",
+        "ro": "Clienții au răbdare ❤ — nu-i lăsați să aștepte",
+        "en": "Customers have patience ❤ — don't make them wait",
+    },
+    "game.level2.title": {
+        "ru": "Смена 2 · Чистота и лента",
+        "ro": "Tura 2 · Curățenie și bandă",
+        "en": "Shift 2 · Cleanliness and paper roll",
+    },
+    "game.level2.brief1": {
+        "ru": "Появились новые заботы: разливы на полу 🫗 — убирайте их",
+        "ro": "Au apărut griji noi: lichide vărsate pe podea 🫗 — "
+              "curățați-le",
+        "en": "New concerns appeared: floor spills 🫗 — clean them up",
+    },
+    "game.level2.brief2": {
+        "ru": "Следите за чековой лентой кассы 🧻 — меняйте вовремя",
+        "ro": "Urmăriți banda de casă 🧻 — schimbați-o la timp",
+        "en": "Watch the register's paper roll 🧻 — replace it in time",
+    },
+    "game.level2.brief3": {
+        "ru": "Поток покупателей вырос — планируйте цепочки действий",
+        "ro": "Fluxul de clienți a crescut — planificați lanțuri de "
+              "acțiuni",
+        "en": "Customer flow has grown — plan action chains",
+    },
+    "game.level3.title": {
+        "ru": "Смена 3 · Час пик", "ro": "Tura 3 · Ora de vârf",
+        "en": "Shift 3 · Rush hour",
+    },
+    "game.level3.brief1": {
+        "ru": "Час пик: покупатели нетерпеливее, поток плотнее",
+        "ro": "Ora de vârf: clienții sunt mai nerăbdători, fluxul e mai "
+              "dens",
+        "en": "Rush hour: customers are less patient, the flow is denser",
+    },
+    "game.level3.brief2": {
+        "ru": "Холодильники дают сбои 🧊 — реагируйте на тревоги",
+        "ro": "Frigiderele dau erori 🧊 — reacționați la alarme",
+        "en": "Chillers are failing 🧊 — respond to the alarms",
+    },
+    "game.level3.brief3": {
+        "ru": "Держите репутацию: злые покупатели уходят без покупок",
+        "ro": "Păstrați reputația: clienții supărați pleacă fără "
+              "cumpărături",
+        "en": "Protect your reputation: angry customers leave without "
+              "buying",
+    },
+    "game.result.title_ok": {
+        "ru": "✅ Смена пройдена!", "ro": "✅ Tură reușită!",
+        "en": "✅ Shift complete!",
+    },
+    "game.result.title_fail": {
+        "ru": "❌ План не выполнен", "ro": "❌ Planul nu a fost îndeplinit",
+        "en": "❌ Target missed",
+    },
+    "game.result.stat.revenue_label": {
+        "ru": "Выручка", "ro": "Venit", "en": "Revenue",
+    },
+    "game.result.revenue_value": {
+        "ru": "{money} L из {goal} L", "ro": "{money} L din {goal} L",
+        "en": "{money} L of {goal} L",
+    },
+    "game.result.stat.served": {
+        "ru": "Обслужено покупателей", "ro": "Clienți deserviți",
+        "en": "Customers served",
+    },
+    "game.result.stat.lost": {
+        "ru": "Ушли недовольными", "ro": "Au plecat nemulțumiți",
+        "en": "Left dissatisfied",
+    },
+    "game.result.stat.restocks": {
+        "ru": "Пополнений полок", "ro": "Reaprovizionări rafturi",
+        "en": "Shelf restocks",
+    },
+    "game.result.stat.cleaned": {
+        "ru": "Убрано разливов", "ro": "Curățări lichide vărsate",
+        "en": "Spills cleaned",
+    },
+    "game.result.stat.papers_fridges": {
+        "ru": "Замен ленты / ремонтов ХВ",
+        "ro": "Schimbări bandă / reparații frig.",
+        "en": "Paper changes / fridge repairs",
+    },
+    "game.result.stat.reputation": {
+        "ru": "Репутация", "ro": "Reputație", "en": "Reputation",
+    },
+    "game.tip.lost": {
+        "ru": "Много потерянных покупателей — обслуживайте кассу раньше, "
+              "чем кончится терпение.",
+        "ro": "Mulți clienți pierduți — deserviți casa înainte să se "
+              "termine răbdarea.",
+        "en": "Too many lost customers — serve the register before "
+              "patience runs out.",
+    },
+    "game.tip.restocks": {
+        "ru": "Полки пустели: держите запас — берите со склада до "
+              "out-of-stock.",
+        "ro": "Rafturile s-au golit: mențineți stocul — luați din depozit "
+              "înainte de out-of-stock.",
+        "en": "Shelves ran empty: keep stock up — restock from the "
+              "storeroom before out-of-stock.",
+    },
+    "game.tip.reputation": {
+        "ru": "Репутация страдает от разливов и тревог — реагируйте на "
+              "события сразу.",
+        "ro": "Reputația suferă din cauza lichidelor vărsate și a "
+              "alarmelor — reacționați imediat la evenimente.",
+        "en": "Reputation suffers from spills and alarms — react to "
+              "events right away.",
+    },
+    "game.tip.great": {
+        "ru": "Отличная работа: процессы кассира, мерчандайзера и "
+              "клининга под контролем!",
+        "ro": "Muncă excelentă: procesele de casier, merchandiser și "
+              "curățenie sunt sub control!",
+        "en": "Great work: cashier, merchandising and cleaning processes "
+              "are under control!",
+    },
+    "game.rbx.points_word": {
+        "ru": ["балл", "балла", "баллов"],
+        "ro": ["punct", "puncte", "de puncte"],
+        "en": ["point", "points"],
+    },
+    "game.rbx.total_label": {"ru": "всего", "ro": "total", "en": "total"},
+    "game.rbx.new_badge_label": {
+        "ru": "🏅 Новый бейдж: ", "ro": "🏅 Insignă nouă: ",
+        "en": "🏅 New badge: ",
+    },
+    "game.rbx.top_team_label": {
+        "ru": "Топ команды:", "ro": "Top echipă:", "en": "Team leaderboard:",
+    },
+    "game.rbx.no_roblox": {
+        "ru": "🎮 Укажите ник в Roblox на брифинге — баллы и бейджи будут "
+              "начисляться в командный опыт Roblox.",
+        "ro": "🎮 Indicați numele Roblox la briefing — punctele și "
+              "insignele vor fi acordate în experiența de echipă Roblox.",
+        "en": "🎮 Enter your Roblox username at the briefing — points and "
+              "badges will be credited to the team's Roblox experience.",
+    },
+    "game.result.next_btn": {
+        "ru": "▶ Следующая смена", "ro": "▶ Tura următoare",
+        "en": "▶ Next shift",
+    },
+    "game.result.done_btn": {
+        "ru": "🏆 Обучение пройдено — играть снова",
+        "ro": "🏆 Instruire finalizată — joacă din nou",
+        "en": "🏆 Training complete — play again",
+    },
+    "game.result.retry_btn": {
+        "ru": "↻ Повторить смену", "ro": "↻ Repetă tura",
+        "en": "↻ Retry shift",
+    },
+    "game.tutor.1": {
+        "ru": "Кликните на СКЛАД 📦 (дверь на задней стене справа), "
+              "чтобы взять товар",
+        "ro": "Faceți clic pe DEPOZIT 📦 (ușa din peretele din spate, "
+              "dreapta) pentru a lua marfă",
+        "en": "Click the STOREROOM 📦 (door on the back wall, right "
+              "side) to grab stock",
+    },
+    "game.tutor.2": {
+        "ru": "Теперь кликните на стеллаж, чтобы пополнить полку",
+        "ro": "Acum faceți clic pe raft pentru a-l reaproviziona",
+        "en": "Now click a shelf to restock it",
+    },
+    "game.tutor.3": {
+        "ru": "Покупатель идёт на кассу — кликните на КАССУ, чтобы "
+              "обслужить",
+        "ro": "Clientul merge la casă — faceți clic pe CASĂ pentru a-l "
+              "deservi",
+        "en": "A customer is heading to the register — click the "
+              "REGISTER to serve them",
+    },
+    "game.tutor.4": {
+        "ru": "Отлично! Следите за полками, кассой и терпением "
+              "покупателей ❤",
+        "ro": "Excelent! Urmăriți rafturile, casa și răbdarea "
+              "clienților ❤",
+        "en": "Great! Keep an eye on shelves, the register and customer "
+              "patience ❤",
+    },
+    "game.hint.no_paper": {
+        "ru": "🧻 Кончилась чековая лента! Кликните на кассу, чтобы "
+              "заменить",
+        "ro": "🧻 S-a terminat banda de casă! Faceți clic pe casă pentru "
+              "a o schimba",
+        "en": "🧻 Out of paper roll! Click the register to replace it",
+    },
+    "game.hint.replace_paper": {
+        "ru": "🧻 Замените ленту: кликните на кассу!",
+        "ro": "🧻 Schimbați banda: faceți clic pe casă!",
+        "en": "🧻 Replace the paper roll: click the register!",
+    },
+    "game.hint.queue_status": {
+        "ru": "Очередь: {n} · Кликайте: склад → полки, касса, уборка",
+        "ro": "Coadă: {n} · Faceți clic: depozit → rafturi, casă, "
+              "curățenie",
+        "en": "Queue: {n} · Click: storeroom → shelves, register, "
+              "cleaning",
+    },
+    "game.hint.need_stock": {
+        "ru": "Сначала возьмите товар на складе 📦!",
+        "ro": "Mai întâi luați marfă din depozit 📦!",
+        "en": "First grab stock from the storeroom 📦!",
+    },
+    "game.busy.storeroom": {
+        "ru": "берём товар 📦", "ro": "luăm marfă 📦",
+        "en": "grabbing stock 📦",
+    },
+    "game.busy.shelf": {
+        "ru": "выкладка…", "ro": "aranjare pe raft…",
+        "en": "stocking shelf…",
+    },
+    "game.busy.paper": {
+        "ru": "замена ленты 🧻", "ro": "schimbare bandă 🧻",
+        "en": "replacing paper roll 🧻",
+    },
+    "game.busy.mess": {
+        "ru": "уборка 🧹", "ro": "curățenie 🧹", "en": "cleaning 🧹",
+    },
+    "game.busy.fridge": {
+        "ru": "ремонт ХВ 🧊", "ro": "reparare frig. 🧊",
+        "en": "fixing chiller 🧊",
+    },
+    "game.popup.item_added": {
+        "ru": "+товар", "ro": "+marfă", "en": "+stock",
+    },
+    "game.popup.clean": {"ru": "чисто ✓", "ro": "curat ✓", "en": "clean ✓"},
+    "game.popup.fridge_fixed": {
+        "ru": "холод ✓", "ro": "frig ✓", "en": "fixed ✓",
+    },
+    "game.popup.paper_replaced": {
+        "ru": "лента ✓", "ro": "bandă ✓", "en": "paper ✓",
+    },
+    "game.popup.mess": {
+        "ru": "разлив! 🫗", "ro": "vărsare! 🫗", "en": "spill! 🫗",
+    },
+    "game.popup.fridge_alarm": {
+        "ru": "тревога! 🧊", "ro": "alarmă! 🧊", "en": "alarm! 🧊",
+    },
+    "game.label.storeroom": {
+        "ru": "📦 СКЛАД", "ro": "📦 DEPOZIT", "en": "📦 STOREROOM",
+    },
+    "game.label.no_paper": {
+        "ru": "🧻 НЕТ ЛЕНТЫ", "ro": "🧻 FĂRĂ BANDĂ", "en": "🧻 NO PAPER",
+    },
+    "game.default_name": {
+        "ru": "Стажёр", "ro": "Stagiar", "en": "Trainee",
+    },
+
+    # ---- командная смена (game_multi.html, multigame.py) -----------------
+    #
+    # Лента событий и всплывающие подсказки командной смены собираются
+    # сервером (multigame.py) как ключ+параметры, но рендерятся в
+    # браузере через tt()/ttn() — тот же принцип "ключ+параметры,
+    # рендер при отдаче", только "отдача" здесь означает JS-рендер в
+    # момент опроса, а не Python-рендер в `state()`: `/api/mgame/.../
+    # state` не входит в состав этой задачи (см. отчёт), поэтому язык
+    # рендера событий берётся из каталога, загруженного один раз при
+    # первом открытии страницы (`store_game_multi`), а не из query
+    # запроса опроса. Переключение языка на лету не перекрашивает уже
+    # накопленную ленту заново — ограничение, а не баг данного этапа.
+    "mgame.page_title_suffix": {
+        "ru": "— командная смена", "ro": "— tură de echipă",
+        "en": "— team shift",
+    },
+    "mgame.lobby.title": {
+        "ru": "👥 Командная смена — до 10 игроков",
+        "ro": "👥 Tură de echipă — până la 10 jucători",
+        "en": "👥 Team shift — up to 10 players",
+    },
+    "mgame.lobby.name_placeholder": {
+        "ru": "Имя студента", "ro": "Numele studentului",
+        "en": "Student name",
+    },
+    "mgame.lobby.roblox_placeholder": {
+        "ru": "Ник в Roblox (необязательно — для баллов команды)",
+        "ro": "Nume Roblox (opțional — pentru puncte de echipă)",
+        "en": "Roblox username (optional — for team points)",
+    },
+    "mgame.lobby.join_btn": {
+        "ru": "Войти в смену", "ro": "Intră în tură", "en": "Join shift",
+    },
+    "mgame.lobby.add_ai_label": {
+        "ru": "Добавить ИИ:", "ro": "Adaugă AI:", "en": "Add AI:",
+    },
+    "mgame.side.title": {
+        "ru": "👥 Командная смена", "ro": "👥 Tură de echipă",
+        "en": "👥 Team shift",
+    },
+    "mgame.side.lobby_status": {
+        "ru": "лобби", "ro": "lobby", "en": "lobby",
+    },
+    "mgame.side.revenue_goal": {
+        "ru": "выручка / цель", "ro": "venit / obiectiv",
+        "en": "revenue / goal",
+    },
+    "mgame.side.time": {"ru": "время", "ro": "timp", "en": "time"},
+    "mgame.side.reputation": {
+        "ru": "репутация", "ro": "reputație", "en": "reputation",
+    },
+    "mgame.side.queue": {
+        "ru": "очередь кассы", "ro": "coadă casă", "en": "register queue",
+    },
+    "mgame.side.team": {"ru": "Команда", "ro": "Echipă", "en": "Team"},
+    "mgame.result.retry_btn": {
+        "ru": "↻ Ещё смена", "ro": "↻ Încă o tură", "en": "↻ Another shift",
+    },
+    "mgame.role.cashier": {
+        "ru": "Кассир", "ro": "Casier", "en": "Cashier",
+    },
+    "mgame.role.merch": {
+        "ru": "Мерчандайзер", "ro": "Merchandiser", "en": "Merchandiser",
+    },
+    "mgame.role.cleaner": {
+        "ru": "Клинер", "ro": "Cleaner", "en": "Cleaner",
+    },
+    "mgame.role.tech": {
+        "ru": "Техник", "ro": "Tehnician", "en": "Technician",
+    },
+    "mgame.role.supervisor": {
+        "ru": "Супервайзер", "ro": "Supervizor", "en": "Supervisor",
+    },
+    "mgame.role.cashier_word": {
+        "ru": ["кассир", "кассира", "кассиров"],
+        "ro": ["casier", "casieri", "de casieri"],
+        "en": ["cashier", "cashiers"],
+    },
+    "mgame.role.merch_word": {
+        "ru": ["мерчандайзер", "мерчандайзера", "мерчандайзеров"],
+        "ro": ["merchandiser", "merchandiseri", "de merchandiseri"],
+        "en": ["merchandiser", "merchandisers"],
+    },
+    "mgame.role.cleaner_word": {
+        "ru": ["клинер", "клинера", "клинеров"],
+        "ro": ["cleaner", "cleaneri", "de cleaneri"],
+        "en": ["cleaner", "cleaners"],
+    },
+    "mgame.role.tech_word": {
+        "ru": ["техник", "техника", "техников"],
+        "ro": ["tehnician", "tehnicieni", "de tehnicieni"],
+        "en": ["technician", "technicians"],
+    },
+    "mgame.role.supervisor_word": {
+        "ru": ["супервайзер", "супервайзера", "супервайзеров"],
+        "ro": ["supervizor", "supervizori", "de supervizori"],
+        "en": ["supervisor", "supervisors"],
+    },
+    "mgame.lobby.free_label": {
+        "ru": "своб.: ", "ro": "liber: ", "en": "free: ",
+    },
+    "mgame.lobby.room_line": {
+        "ru": "{store} · комната «{code}» · роли: ",
+        "ro": "{store} · camera «{code}» · roluri: ",
+        "en": "{store} · room «{code}» · roles: ",
+    },
+    "mgame.api_hint": {
+        "ru": 'API для внешних ИИ-агентов: POST {api}/join '
+              '{{"name","role","kind":"api"}} → цикл GET {api}/state и '
+              'POST {api}/action {{"player","action":"serve|storeroom|'
+              'restock|clean|fix_fridge|paper|move"}}',
+        "ro": 'API pentru agenți AI externi: POST {api}/join '
+              '{{"name","role","kind":"api"}} → ciclu GET {api}/state și '
+              'POST {api}/action {{"player","action":"serve|storeroom|'
+              'restock|clean|fix_fridge|paper|move"}}',
+        "en": 'API for external AI agents: POST {api}/join '
+              '{{"name","role","kind":"api"}} → loop GET {api}/state and '
+              'POST {api}/action {{"player","action":"serve|storeroom|'
+              'restock|clean|fix_fridge|paper|move"}}',
+    },
+    "mgame.lobby.roster_label": {
+        "ru": "В лобби:", "ro": "În lobby:", "en": "In lobby:",
+    },
+    "mgame.lobby.empty": {
+        "ru": "пока никого", "ro": "deocamdată nimeni", "en": "no one yet",
+    },
+    "mgame.ai_suffix": {
+        "ru": " (ИИ)", "ro": " (AI)", "en": " (AI)",
+    },
+    "mgame.table.player": {"ru": "Игрок", "ro": "Jucător", "en": "Player"},
+    "mgame.table.role": {"ru": "Роль", "ro": "Rol", "en": "Role"},
+    "mgame.table.shelves": {
+        "ru": "Полки", "ro": "Rafturi", "en": "Shelves",
+    },
+    "mgame.table.cleaning": {
+        "ru": "Уборка", "ro": "Curățenie", "en": "Cleaning",
+    },
+    "mgame.table.tech": {"ru": "Техника", "ro": "Tehnică", "en": "Tech"},
+    "mgame.table.points": {"ru": "Баллы", "ro": "Puncte", "en": "Points"},
+    "mgame.result.title_ok": {
+        "ru": "✅ Командная смена пройдена!",
+        "ro": "✅ Tura de echipă reușită!",
+        "en": "✅ Team shift complete!",
+    },
+    "mgame.status.play": {
+        "ru": "смена идёт", "ro": "tura este în desfășurare",
+        "en": "shift in progress",
+    },
+    "mgame.status.ended": {
+        "ru": "смена завершена", "ro": "tura s-a încheiat",
+        "en": "shift ended",
+    },
+    "mgame.status.lobby": {
+        "ru": "лобби — ждём игроков", "ro": "lobby — așteptăm jucători",
+        "en": "lobby — waiting for players",
+    },
+    "mgame.you_suffix": {"ru": " (вы)", "ro": " (tu)", "en": " (you)"},
+    "mgame.join_error_prefix": {
+        "ru": "Не удалось войти: ", "ro": "Intrarea a eșuat: ",
+        "en": "Failed to join: ",
+    },
+    "mgame.joined_label": {
+        "ru": "✓ Вы в смене ({name})", "ro": "✓ Sunteți în tură ({name})",
+        "en": "✓ You're on shift ({name})",
+    },
+    "mgame.label.sco_self": {
+        "ru": "СКО (само)", "ro": "self-checkout (auto)",
+        "en": "self-checkout (auto)",
+    },
+    "mgame.event.joined": {
+        "ru": "👋 {name} вошёл в смену — {icon} {role}{ai}",
+        "ro": "👋 {name} a intrat în tură — {icon} {role}{ai}",
+        "en": "👋 {name} joined the shift — {icon} {role}{ai}",
+    },
+    "mgame.event.left": {
+        "ru": "🚪 {name} покинул смену", "ro": "🚪 {name} a părăsit tura",
+        "en": "🚪 {name} left the shift",
+    },
+    "mgame.event.started": {
+        "ru": "▶ Смена началась! Команда: {n} {team_word}, цель {goal} L",
+        "ro": "▶ Tura a început! Echipă: {n} {team_word}, obiectiv "
+              "{goal} L",
+        "en": "▶ Shift started! Team: {n} {team_word}, goal {goal} L",
+    },
+    "mgame.event.started.team_word": {
+        "ru": ["чел.", "чел.", "чел."],
+        "ro": ["membru", "membri", "de membri"],
+        "en": ["member", "members"],
+    },
+    "mgame.event.disconnected": {
+        "ru": "🚪 {name} отключился", "ro": "🚪 {name} s-a deconectat",
+        "en": "🚪 {name} disconnected",
+    },
+    "mgame.event.fridge_alarm": {
+        "ru": "🧊 {id}: тревога температуры!",
+        "ro": "🧊 {id}: alarmă de temperatură!",
+        "en": "🧊 {id}: temperature alarm!",
+    },
+    "mgame.event.finished_ok": {
+        "ru": "✅ Смена пройдена! Выручка {money} L из {goal} L",
+        "ro": "✅ Tură reușită! Venit {money} L din {goal} L",
+        "en": "✅ Shift complete! Revenue {money} L of {goal} L",
+    },
+    "mgame.event.finished_fail": {
+        "ru": "❌ План не выполнен. Выручка {money} L из {goal} L",
+        "ro": "❌ Planul nu a fost îndeplinit. Venit {money} L din "
+              "{goal} L",
+        "en": "❌ Target missed. Revenue {money} L of {goal} L",
+    },
+    "mgame.fx.need_stock": {
+        "ru": "нужен товар со склада!",
+        "ro": "e nevoie de marfă din depozit!",
+        "en": "need stock from the storeroom!",
+    },
 }
 
 

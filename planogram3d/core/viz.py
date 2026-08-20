@@ -11,6 +11,7 @@ from typing import List, Optional
 
 import plotly.graph_objects as go
 
+from .i18n import DEFAULT_LANG, t
 from .models import Planogram, SalesInfo, Store
 
 FRAME_COLOR = "#9aa1ab"       # каркас стеллажа
@@ -92,7 +93,7 @@ def edges_trace(segments: list, color: str = EDGE_COLOR,
                         hoverinfo="skip", showlegend=False)
 
 
-def gondola_traces(store: Store) -> List:
+def gondola_traces(store: Store, lang: str = DEFAULT_LANG) -> List:
     """Каркасы стеллажей: пол зала, боковины, задняя стенка, полки,
     контурные рёбра для чёткости."""
     traces: List = []
@@ -106,12 +107,13 @@ def gondola_traces(store: Store) -> List:
         y0 = min(g.y for g in store.gondolas) - 0.9
         y1 = max(g.y + g.depth for g in store.gondolas) + 0.6
         traces.append(cuboid(x0, y0, -0.025, x1 - x0, y1 - y0, 0.025,
-                             FLOOR_COLOR, "Пол",
+                             FLOOR_COLOR, t(lang, "viz.floor"),
                              f"<b>{store.name}</b>"))
 
     for g in store.gondolas:
         top = max(s.z + s.clearance for s in g.shelves) + 0.05
-        hover = f"<b>{g.name}</b><br>{g.width:.1f} × {g.depth:.1f} м"
+        hover = t(lang, "viz.gondola_hover", name=g.name, width=g.width,
+                 depth=g.depth)
         # боковины
         traces.append(cuboid(g.x - panel, g.y, 0, panel, g.depth, top,
                              FRAME_COLOR, g.name, hover))
@@ -129,8 +131,8 @@ def gondola_traces(store: Store) -> List:
             traces.append(cuboid(
                 g.x, g.y, s.z - panel, g.width, g.depth, panel,
                 SHELF_COLOR, g.name,
-                f"<b>{g.name}</b><br>Полка {s.index + 1} "
-                f"(h={s.z:.2f} м)"))
+                t(lang, "viz.shelf_hover", gondola=g.name,
+                  n=s.index + 1, z=s.z)))
             # передняя кромка полки — контур для чёткости
             edges.append(((g.x, g.y, s.z), (g.x + g.width, g.y, s.z)))
             edges.append(((g.x, g.y, s.z - panel),
@@ -140,32 +142,33 @@ def gondola_traces(store: Store) -> List:
 
 
 def _product_hover(store: Store, sku: str, facings: int,
-                   mode: str, sales: Optional[SalesInfo]) -> str:
+                   mode: str, sales: Optional[SalesInfo],
+                   lang: str = DEFAULT_LANG) -> str:
     product = store.product(sku)
     supplier = store.supplier_of(sku)
     lines = [
         f"<b>{product.name}</b>",
-        f"SKU: {product.sku} · {product.category}",
-        f"Поставщик: {supplier.name}",
-        f"Фейсингов: {facings}",
+        t(lang, "viz.hover.sku", sku=product.sku, category=product.category),
+        t(lang, "viz.hover.supplier", name=supplier.name),
+        t(lang, "viz.hover.facings", n=facings),
     ]
     if mode == "sales" and sales is not None:
         dos = ("∞" if sales.days_of_supply == float("inf")
                else f"{sales.days_of_supply:.1f}")
         lines += [
-            f"Остаток: {sales.stock} из {sales.capacity} шт. "
-            f"({sales.fill_ratio * 100:.0f}%)",
-            f"Продано сегодня: {sales.sold_today} шт.",
-            f"Скорость продаж: {sales.sales_rate:.1f} шт./день",
-            f"Запас: {dos} дн.",
+            t(lang, "viz.hover.stock", stock=sales.stock,
+              capacity=sales.capacity, pct=sales.fill_ratio * 100),
+            t(lang, "viz.hover.sold_today", n=sales.sold_today),
+            t(lang, "viz.hover.sales_rate", rate=sales.sales_rate),
+            t(lang, "viz.hover.days_of_supply", dos=dos),
         ]
         if sales.stock == 0:
-            lines.append("⚠ OUT-OF-STOCK")
+            lines.append(t(lang, "viz.hover.out_of_stock"))
     return "<br>".join(lines)
 
 
 def product_traces(store: Store, planogram: Planogram,
-                   mode: str) -> List[go.Mesh3d]:
+                   mode: str, lang: str = DEFAULT_LANG) -> List[go.Mesh3d]:
     """Фейсинги товара на полках.
 
     ``mode='approved'`` — цвет поставщика; ``mode='sales'`` — цвет по
@@ -189,7 +192,7 @@ def product_traces(store: Store, planogram: Planogram,
             depth_ratio = 1.0
             opacity = 1.0
 
-        hover = _product_hover(store, p.sku, p.facings, mode, sales)
+        hover = _product_hover(store, p.sku, p.facings, mode, sales, lang)
         depth = min(product.depth * 3, gondola.depth) * depth_ratio
         for i in range(p.facings):
             # лёгкая вариация тона между фейсингами — объёмнее выкладка
@@ -206,7 +209,8 @@ def product_traces(store: Store, planogram: Planogram,
     return traces
 
 
-def _legend_traces(store: Store, mode: str) -> List[go.Scatter3d]:
+def _legend_traces(store: Store, mode: str,
+                   lang: str = DEFAULT_LANG) -> List[go.Scatter3d]:
     """Фиктивные точки для легенды."""
     traces = []
     if mode == "approved":
@@ -216,21 +220,21 @@ def _legend_traces(store: Store, mode: str) -> List[go.Scatter3d]:
                 marker=dict(size=9, color=s.color, symbol="square"),
                 name=s.name, showlegend=True))
     else:
-        for label, val in [("Полная выкладка (≥90%)", 1.0),
-                           ("Средний остаток (~50%)", 0.5),
-                           ("Низкий остаток (≤30%)", 0.25)]:
+        for key, val in [("viz.legend.full", 1.0),
+                         ("viz.legend.medium", 0.5),
+                         ("viz.legend.low", 0.25)]:
             traces.append(go.Scatter3d(
                 x=[None], y=[None], z=[None], mode="markers",
                 marker=dict(size=9, color=fill_color(val), symbol="square"),
-                name=label, showlegend=True))
+                name=t(lang, key), showlegend=True))
         traces.append(go.Scatter3d(
             x=[None], y=[None], z=[None], mode="markers",
             marker=dict(size=9, color=OOS_COLOR, symbol="x"),
-            name="Out-of-stock", showlegend=True))
+            name=t(lang, "viz.legend.oos"), showlegend=True))
     return traces
 
 
-def build_figure(store: Store) -> go.Figure:
+def build_figure(store: Store, lang: str = DEFAULT_LANG) -> go.Figure:
     """Единая 3D-сцена с переключением режимов кнопками:
 
     1. Текущее состояние продаж (фактическая выкладка, теплокарта остатков);
@@ -238,20 +242,21 @@ def build_figure(store: Store) -> go.Figure:
     """
     fig = go.Figure()
 
-    frame = gondola_traces(store)
+    frame = gondola_traces(store, lang)
     for tr in frame:
         fig.add_trace(tr)
     n_frame = len(frame)
 
-    sales_traces = (product_traces(store, store.current_planogram, "sales")
-                    + _legend_traces(store, "sales"))
+    sales_traces = (product_traces(store, store.current_planogram, "sales",
+                                   lang)
+                    + _legend_traces(store, "sales", lang))
     for tr in sales_traces:
         fig.add_trace(tr)
     n_sales = len(sales_traces)
 
     approved_traces = (product_traces(store, store.approved_planogram,
-                                      "approved")
-                       + _legend_traces(store, "approved"))
+                                      "approved", lang)
+                       + _legend_traces(store, "approved", lang))
     for tr in approved_traces:
         tr.visible = False
         fig.add_trace(tr)
@@ -261,10 +266,9 @@ def build_figure(store: Store) -> go.Figure:
     vis_approved = ([True] * n_frame + [False] * n_sales
                     + [True] * n_approved)
 
-    title_sales = (f"{store.name} — текущее состояние продаж "
-                   f"(фактическая выкладка)")
-    title_approved = (f"{store.name} — {store.approved_planogram.name} "
-                      f"(регламент + контракты с поставщиками)")
+    title_sales = t(lang, "viz.title.sales", store=store.name)
+    title_approved = t(lang, "viz.title.approved", store=store.name,
+                       planogram=store.approved_planogram.name)
 
     fig.update_layout(
         title=dict(text=title_sales, x=0.5, y=0.93),
@@ -272,11 +276,11 @@ def build_figure(store: Store) -> go.Figure:
             type="buttons", direction="right",
             x=0.0, xanchor="left", y=1.18, yanchor="top",
             buttons=[
-                dict(label="📊 Текущее состояние продаж",
+                dict(label=t(lang, "viz.button.sales"),
                      method="update",
                      args=[{"visible": vis_sales},
                            {"title.text": title_sales}]),
-                dict(label="📋 Утверждённая планограмма",
+                dict(label=t(lang, "viz.button.approved"),
                      method="update",
                      args=[{"visible": vis_approved},
                            {"title.text": title_approved}]),
@@ -288,7 +292,7 @@ def build_figure(store: Store) -> go.Figure:
             yaxis=dict(title="", range=[-1.2, 5.6], showbackground=False,
                        gridcolor="rgba(0,0,0,0.07)", zeroline=False,
                        tickfont=dict(size=10, color="#9aa1ab")),
-            zaxis=dict(title="Высота, м", range=[-0.03, 2.4],
+            zaxis=dict(title=t(lang, "viz.axis.height"), range=[-0.03, 2.4],
                        showbackground=False,
                        gridcolor="rgba(0,0,0,0.05)", zeroline=False,
                        tickfont=dict(size=10, color="#9aa1ab"),

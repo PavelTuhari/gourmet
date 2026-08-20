@@ -204,7 +204,7 @@ def roblox_register():
 @app.get("/api/roblox/team")
 def roblox_team():
     """Команда: лидерборд по баллам и лента поощрений."""
-    return jsonify(team.team())
+    return jsonify(team.team(_lang()))
 
 
 @app.post("/api/roblox/progress")
@@ -216,7 +216,7 @@ def roblox_progress():
     return jsonify(team.progress(
         d.get("name", ""), d["roblox_user"], d.get("store_id", ""),
         int(d.get("level", 1)), int(d.get("stars", 0)),
-        int(d.get("revenue", 0)), d.get("stats", {})))
+        int(d.get("revenue", 0)), d.get("stats", {}), lang=_lang()))
 
 
 #: ключи каталога, нужные JS карты (табло прибытия, карточки, счётчики —
@@ -245,16 +245,19 @@ def index():
 
 # ----- презентация, документация, команда -------------------------------
 _PKG_ROOT = Path(__file__).resolve().parent.parent
+#: заголовки навигации — ключи каталога i18n, а не готовый текст: сами
+#: документы (docs/*.md) не переводятся (решение владельца, см. задачу),
+#: но название пункта меню — элемент интерфейса и переводится как обычно.
 _DOCS = {
-    "readme": ("README.md", "О модуле"),
-    "tz": ("docs/TZ.md", "Техзадание"),
-    "erp3d": ("docs/ARTICLE_3D_ERP.md", "3D для ERP"),
-    "library": ("docs/LIBRARY.md", "Справочник API"),
-    "integration": ("docs/INTEGRATION.md", "Интеграция"),
-    "article": ("docs/ARTICLE_TEAM_TRAINING.md", "Методичка"),
-    "roadmap": ("docs/ROADMAP_AI_WORKFORCE.md", "Роадмап ИИ"),
-    "plan": ("docs/PRESENTATION_PLAN.md", "План презентации"),
-    "handoff": ("docs/HANDOFF.md", "База знаний"),
+    "readme": ("README.md", "docs.nav.readme"),
+    "tz": ("docs/TZ.md", "docs.nav.tz"),
+    "erp3d": ("docs/ARTICLE_3D_ERP.md", "docs.nav.erp3d"),
+    "library": ("docs/LIBRARY.md", "docs.nav.library"),
+    "integration": ("docs/INTEGRATION.md", "docs.nav.integration"),
+    "article": ("docs/ARTICLE_TEAM_TRAINING.md", "docs.nav.article"),
+    "roadmap": ("docs/ROADMAP_AI_WORKFORCE.md", "docs.nav.roadmap"),
+    "plan": ("docs/PRESENTATION_PLAN.md", "docs.nav.plan"),
+    "handoff": ("docs/HANDOFF.md", "docs.nav.handoff"),
 }
 #: ссылки по имени файла (из markdown-документов) → ключ страницы
 _DOC_FILES = {path.split("/")[-1]: key
@@ -302,18 +305,20 @@ def docs_page(name):
         name = _DOC_FILES[name]
     if name not in _DOCS:
         abort(404)
-    path, title = _DOCS[name]
+    path, title_key = _DOCS[name]
+    lang = _lang()
     md = (_PKG_ROOT / path).read_text(encoding="utf-8")
     return render_template(
-        "docs.html", title=title, current=name, lang=_lang(),
-        nav=[(k, t) for k, (_, t) in _DOCS.items()],
+        "docs.html", title=t(lang, title_key), current=name, lang=lang,
+        nav=[(k, t(lang, title_key2)) for k, (_, title_key2) in _DOCS.items()],
         content=md_to_html(md))
 
 
 @app.get("/team")
 def team_page():
-    data = team.team()
-    return render_template("team.html", mode=data["mode"], lang=_lang(),
+    lang = _lang()
+    data = team.team(lang)
+    return render_template("team.html", mode=data["mode"], lang=lang,
                            members=data["members"], feed=data["feed"])
 
 
@@ -322,7 +327,7 @@ def api_state():
     state = network.state(_lang())
     state["zabbix_mode"] = zabbix_mode
     try:
-        problems = zabbix.problems()
+        problems = zabbix.problems(_lang())
     except Exception as exc:            # Zabbix недоступен — карта живёт
         app.logger.warning("Zabbix недоступен: %s", exc)
         problems = {}
@@ -340,8 +345,9 @@ def store_page(store_id):
         store = network.store(store_id)
     except KeyError:
         abort(404)
-    violations = check_compliance(store)
-    return build_report_page(store, violations)
+    lang = _lang()
+    violations = check_compliance(store, lang=lang)
+    return build_report_page(store, violations, lang=lang)
 
 
 #: ключи каталога для JS страницы /store/<id>/live — канвас (изометрия
@@ -372,14 +378,50 @@ def store_live(store_id):
         i18n_json=client_catalog(lang, _INSTORE_JS_KEYS))
 
 
+#: ключи каталога для JS страницы /store/<id>/game (тренажёр-соло):
+#: конфигурация уровней, брифинг, подсказки-туториал, попапы и итоги
+#: смены нарисованы в браузере (LEVELS/TUTOR — статичная конфигурация
+#: игры, не данные опроса, см. комментарий у ключей "game.*" в i18n.py)
+_GAME_JS_KEYS = (
+    "game.brief.goal", "unit.min_short",
+    "game.level1.title", "game.level1.brief1", "game.level1.brief2",
+    "game.level1.brief3", "game.level2.title", "game.level2.brief1",
+    "game.level2.brief2", "game.level2.brief3", "game.level3.title",
+    "game.level3.brief1", "game.level3.brief2", "game.level3.brief3",
+    "game.result.title_ok", "game.result.title_fail",
+    "game.result.stat.revenue_label", "game.result.revenue_value",
+    "game.result.stat.served", "game.result.stat.lost",
+    "game.result.stat.restocks", "game.result.stat.cleaned",
+    "game.result.stat.papers_fridges", "game.result.stat.reputation",
+    "game.tip.lost", "game.tip.restocks", "game.tip.reputation",
+    "game.tip.great", "team.mode.roblox", "team.mode.emulation",
+    "game.rbx.total_label", "game.rbx.new_badge_label",
+    "game.rbx.top_team_label", "game.rbx.no_roblox",
+    "game.result.next_btn", "game.result.done_btn",
+    "game.result.retry_btn", "game.tutor.1", "game.tutor.2",
+    "game.tutor.3", "game.tutor.4", "game.hint.no_paper",
+    "game.hint.replace_paper", "game.hint.queue_status",
+    "game.hint.need_stock", "game.busy.storeroom", "game.busy.shelf",
+    "game.busy.paper", "game.busy.mess", "game.busy.fridge",
+    "game.popup.item_added", "game.popup.clean",
+    "game.popup.fridge_fixed", "game.popup.paper_replaced",
+    "game.popup.mess", "game.popup.fridge_alarm", "game.label.storeroom",
+    "game.label.no_paper", "game.default_name",
+)
+_GAME_JS_PLURAL_KEYS = ("game.rbx.points_word",)
+
+
 @app.get("/store/<store_id>/game")
 def store_game(store_id):
     try:
         store = network.store(store_id)
     except KeyError:
         abort(404)
-    return render_template("game.html", store_id=store_id,
-                           store_name=store.name, lang=_lang())
+    lang = _lang()
+    return render_template(
+        "game.html", store_id=store_id, store_name=store.name, lang=lang,
+        i18n_json=client_catalog(lang, _GAME_JS_KEYS),
+        i18n_plural_json=client_plural_forms(lang, _GAME_JS_PLURAL_KEYS))
 
 
 @app.get("/api/game/<store_id>/config")
@@ -415,14 +457,52 @@ def game_config(store_id):
     })
 
 
+#: ключи каталога для JS страницы /store/<id>/game/multi (командная
+#: смена): лобби, ростер, табличка итогов и лента событий рисуются в
+#: браузере по данным опроса /api/mgame/.../state — тот роут не входит
+#: в эту задачу, поэтому события там хранятся как ключ+параметры и
+#: рендерятся здесь же, в браузере, через tt()/ttn() по каталогу,
+#: загруженному один раз при открытии страницы (см. комментарий у
+#: ключей "mgame.*" в i18n.py)
+_GAME_MULTI_JS_KEYS = (
+    "mgame.lobby.free_label", "mgame.lobby.room_line", "mgame.api_hint",
+    "mgame.lobby.roster_label", "mgame.lobby.empty", "mgame.ai_suffix",
+    "mgame.table.player", "mgame.table.role", "receipt.register",
+    "mgame.table.shelves", "mgame.table.cleaning", "mgame.table.tech",
+    "mgame.table.points", "mgame.result.title_ok", "game.result.title_fail",
+    "mgame.status.play", "mgame.status.ended", "mgame.status.lobby",
+    "mgame.you_suffix", "mgame.join_error_prefix", "mgame.joined_label",
+    "mgame.label.sco_self", "mgame.role.cashier", "mgame.role.merch",
+    "mgame.role.cleaner", "mgame.role.tech", "mgame.role.supervisor",
+    "mgame.event.joined", "mgame.event.left", "mgame.event.started",
+    "mgame.event.disconnected", "mgame.event.fridge_alarm",
+    "mgame.event.finished_ok", "mgame.event.finished_fail",
+    "mgame.fx.need_stock", "game.busy.storeroom", "game.busy.shelf",
+    "game.busy.paper", "game.busy.mess", "game.busy.fridge",
+    "game.popup.item_added", "game.popup.clean", "game.popup.fridge_fixed",
+    "game.popup.paper_replaced", "game.popup.mess", "game.label.storeroom",
+    "game.label.no_paper", "instore.label.scales",
+    "delivery.eta.ai_badge", "delivery.side.events",
+)
+_GAME_MULTI_JS_PLURAL_KEYS = (
+    "mgame.role.cashier_word", "mgame.role.merch_word",
+    "mgame.role.cleaner_word", "mgame.role.tech_word",
+    "mgame.role.supervisor_word", "mgame.event.started.team_word",
+)
+
+
 @app.get("/store/<store_id>/game/multi")
 def store_game_multi(store_id):
     try:
         store = network.store(store_id)
     except KeyError:
         abort(404)
-    return render_template("game_multi.html", store_id=store_id,
-                           store_name=store.name, lang=_lang())
+    lang = _lang()
+    return render_template(
+        "game_multi.html", store_id=store_id, store_name=store.name,
+        lang=lang, i18n_json=client_catalog(lang, _GAME_MULTI_JS_KEYS),
+        i18n_plural_json=client_plural_forms(
+            lang, _GAME_MULTI_JS_PLURAL_KEYS))
 
 
 @app.post("/api/mgame/<store_id>/<code>/join")
@@ -444,10 +524,14 @@ def mgame_bot(store_id, code):
     d = request.get_json(silent=True) or {}
     game = mgames.get(store_id, code)
     role = d.get("role", "merch")
-    names = {"cashier": "ИИ-Кассир", "merch": "ИИ-Мерч",
-             "cleaner": "ИИ-Клинер", "tech": "ИИ-Техник",
-             "supervisor": "ИИ-Супервайзер"}
-    return jsonify(game.join(names.get(role, "ИИ-Бот"), role, "bot"))
+    lang = _lang()
+    names = {"cashier": t(lang, "game.bot.cashier"),
+             "merch": t(lang, "game.bot.merch"),
+             "cleaner": t(lang, "game.bot.cleaner"),
+             "tech": t(lang, "game.bot.tech"),
+             "supervisor": t(lang, "game.bot.supervisor")}
+    return jsonify(game.join(
+        names.get(role, t(lang, "game.bot.default")), role, "bot"))
 
 
 @app.post("/api/mgame/<store_id>/<code>/start")

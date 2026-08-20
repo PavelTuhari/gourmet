@@ -31,9 +31,19 @@ import time
 import urllib.request
 from typing import Dict, List, Optional
 
-SEVERITY_NAMES = {0: "не классифицировано", 1: "информация",
-                  2: "предупреждение", 3: "средняя", 4: "высокая",
-                  5: "чрезвычайная"}
+from .i18n import DEFAULT_LANG, t
+
+#: имена уровней важности переведены через каталог i18n (ru/ro/en) —
+#: сюда складываются уже готовые строки для языка по умолчанию, чтобы не
+#: ломать код, который импортирует SEVERITY_NAMES напрямую (без lang);
+#: для конкретного языка запроса используйте `severity_name(sev, lang)`.
+SEVERITY_NAMES = {sev: t(DEFAULT_LANG, f"zabbix.severity.{sev}")
+                  for sev in range(6)}
+
+
+def severity_name(severity: int, lang: str = DEFAULT_LANG) -> str:
+    """Название уровня важности на нужном языке (0-5, см. докстринг модуля)."""
+    return t(lang, f"zabbix.severity.{severity}")
 
 
 class ZabbixClient:
@@ -71,7 +81,10 @@ class ZabbixClient:
                              if name in by_name}
         return self._hostids
 
-    def problems(self) -> Dict[str, dict]:
+    def problems(self, lang: str = DEFAULT_LANG) -> Dict[str, dict]:
+        # ``lang`` не используется: имена проблем реального Zabbix — живые
+        # данные из мониторинга, а не текст интерфейса, переводу не
+        # подлежат (см. правило проекта — не переводить данные владельца).
         hostids = self._resolve_hosts()
         rows = self._call("problem.get", {
             "output": ["eventid", "name", "severity", "clock"],
@@ -104,15 +117,18 @@ class ZabbixEmulator:
     у каждого магазина свой генератор, состояние живёт между опросами.
     """
 
+    #: ключ каталога i18n (не готовый текст — язык известен только в
+    #: момент отдачи `problems()`, см. `render_event` в webapp/i18n.py
+    #: для того же приёма) + severity
     CATALOG = [
-        ("Касса №2: нет связи с сервером", 4),
-        ("Эквайринг: тайм-ауты авторизации", 4),
-        ("Холодильная витрина: температура выше нормы", 3),
-        ("ИБП: переход на питание от батареи", 3),
-        ("Сервер магазина: диск заполнен > 90%", 2),
-        ("Весы в торговом зале не отвечают", 2),
-        ("Сканер ШК на кассе №1: ошибки чтения", 1),
-        ("Камера видеонаблюдения №4 офлайн", 1),
+        ("zabbix.problem.pos_offline", 4),
+        ("zabbix.problem.acquiring_timeout", 4),
+        ("zabbix.problem.fridge_temp", 3),
+        ("zabbix.problem.ups_battery", 3),
+        ("zabbix.problem.disk_full", 2),
+        ("zabbix.problem.scales_unresponsive", 2),
+        ("zabbix.problem.scanner_errors", 1),
+        ("zabbix.problem.camera_offline", 1),
     ]
 
     def __init__(self, store_ids: List[str], update_every: float = 6.0):
@@ -125,10 +141,10 @@ class ZabbixEmulator:
             self._rng[sid] = rng
             # стартовое состояние: у части магазинов уже есть проблемы
             self._state[sid] = []
-            for name, sev in self.CATALOG:
+            for key, sev in self.CATALOG:
                 if rng.random() < 0.12:
                     self._state[sid].append({
-                        "name": name, "severity": sev,
+                        "key": key, "severity": sev,
                         "since": time.time() - rng.uniform(60, 3600)})
 
     def _evolve(self) -> None:
@@ -141,13 +157,13 @@ class ZabbixEmulator:
             # закрытие существующих проблем
             self._state[sid] = [p for p in active if rng.random() > 0.10]
             # появление новых
-            current = {p["name"] for p in self._state[sid]}
-            for name, sev in self.CATALOG:
-                if name not in current and rng.random() < 0.035:
+            current = {p["key"] for p in self._state[sid]}
+            for key, sev in self.CATALOG:
+                if key not in current and rng.random() < 0.035:
                     self._state[sid].append(
-                        {"name": name, "severity": sev, "since": now})
+                        {"key": key, "severity": sev, "since": now})
 
-    def problems(self) -> Dict[str, dict]:
+    def problems(self, lang: str = DEFAULT_LANG) -> Dict[str, dict]:
         self._evolve()
         now = time.time()
         out = {}
@@ -156,7 +172,8 @@ class ZabbixEmulator:
             out[sid] = {
                 "active": len(active),
                 "worst": max((p["severity"] for p in active), default=0),
-                "problems": [{"name": p["name"], "severity": p["severity"],
+                "problems": [{"name": t(lang, p["key"]),
+                              "severity": p["severity"],
                               "age_sec": int(now - p["since"])}
                              for p in ordered[:5]]}
         return out

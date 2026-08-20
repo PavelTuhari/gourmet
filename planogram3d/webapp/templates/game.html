@@ -2,7 +2,7 @@
 <html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
-<title>{{ store_name }} — тренажёр персонала</title>
+<title>{{ store_name }} {{ t(lang, "game.page_title_suffix") }}</title>
 <style>
   html, body { margin:0; height:100%; font-family:'Segoe UI',system-ui,sans-serif;
                background:#141d28; color:#23303f; overflow:hidden;
@@ -72,32 +72,32 @@
 {% include "_langbar.html" %}
 <div id="wrap">
   <div id="hud">
-    <div class="cell money"><b id="h-money">0 L</b><span>выручка</span>
+    <div class="cell money"><b id="h-money">0 L</b><span>{{ t(lang, "game.hud.revenue") }}</span>
       <div class="goalbar"><i id="h-goal" style="width:0%"></i></div></div>
-    <div class="cell" id="timer"><b id="h-time">0:00</b><span>время смены</span></div>
-    <div class="cell" id="rep"><b id="h-rep">❤❤❤❤</b><span>репутация</span></div>
-    <div class="cell"><b id="h-level">1</b><span>смена</span></div>
-    <div class="cell" id="carry"><b id="h-carry">—</b><span>в руках</span></div>
-    <div id="hint">Загрузка…</div>
+    <div class="cell" id="timer"><b id="h-time">0:00</b><span>{{ t(lang, "game.hud.shift_time") }}</span></div>
+    <div class="cell" id="rep"><b id="h-rep">❤❤❤❤</b><span>{{ t(lang, "game.hud.reputation") }}</span></div>
+    <div class="cell"><b id="h-level">1</b><span>{{ t(lang, "game.hud.shift") }}</span></div>
+    <div class="cell" id="carry"><b id="h-carry">—</b><span>{{ t(lang, "game.hud.carrying") }}</span></div>
+    <div id="hint">{{ t(lang, "game.hud.loading") }}</div>
   </div>
   <div id="stage">
     <canvas id="cv"></canvas>
     <div class="overlay" id="brief">
       <div class="panel">
-        <h1>🎓 Тренажёр персонала магазина</h1>
+        <h1>{{ t(lang, "game.brief.title") }}</h1>
         <h2 id="b-store"></h2>
         <div id="b-body"></div>
         <div class="reg">
-          <input id="reg-name" placeholder="Имя сотрудника"
+          <input id="reg-name" placeholder="{{ t(lang, 'game.brief.name_placeholder') }}"
                  maxlength="40">
-          <input id="reg-roblox" placeholder="Ник в Roblox"
+          <input id="reg-roblox" placeholder="{{ t(lang, 'game.brief.roblox_placeholder') }}"
                  maxlength="40">
         </div>
-        <button id="b-start">▶ Начать смену</button>
+        <button id="b-start">{{ t(lang, "game.brief.start_btn") }}</button>
         <a href="multi" style="display:block;text-align:center;
            margin-top:10px;font-size:13px;color:#2f6fed;font-weight:600"
            onclick="this.href='/store/'+STORE_ID+'/game/multi'">
-           👥 Командная смена: до 10 игроков и ИИ-ботов →</a>
+           {{ t(lang, "game.brief.multi_link") }}</a>
       </div>
     </div>
     <div class="overlay" id="result" style="display:none">
@@ -113,6 +113,12 @@
   </div>
 </div>
 
+<script src="/static/js/i18n.js"></script>
+<script>
+var LANG = {{ lang|tojson }};
+var I18N = {{ i18n_json|tojson }};
+var I18NP = {{ i18n_plural_json|tojson }};
+</script>
 <script>
 const STORE_ID = {{ store_id | tojson }};
 
@@ -176,21 +182,18 @@ const fillColor = f => f > .6 ? "#4caf50" : f > .3 ? "#ffb300" : "#e5533d";
 /* ================= уровни-смены (сценарий «журнала») ================= */
 const LEVELS = [
   { goal: 700, time: 150, spawn: [6.5, 9], patience: 2.2,
-    events: {}, title: "Смена 1 · Основы",
-    brief: ["Пополняйте полки со склада 📦 до того, как они опустеют",
-            "Обслуживайте покупателей на кассе — кликните по кассе",
-            "У покупателей есть терпение ❤ — не заставляйте их ждать"] },
+    events: {}, title: tt("game.level1.title"),
+    brief: [tt("game.level1.brief1"), tt("game.level1.brief2"),
+            tt("game.level1.brief3")] },
   { goal: 1400, time: 150, spawn: [4.5, 7], patience: 2.8,
-    events: { mess: 18, paper: 1 }, title: "Смена 2 · Чистота и лента",
-    brief: ["Появились новые заботы: разливы на полу 🫗 — убирайте их",
-            "Следите за чековой лентой кассы 🧻 — меняйте вовремя",
-            "Поток покупателей вырос — планируйте цепочки действий"] },
+    events: { mess: 18, paper: 1 }, title: tt("game.level2.title"),
+    brief: [tt("game.level2.brief1"), tt("game.level2.brief2"),
+            tt("game.level2.brief3")] },
   { goal: 2100, time: 160, spawn: [3.5, 6], patience: 3.4,
     events: { mess: 14, paper: 1, fridge: 28 },
-    title: "Смена 3 · Час пик",
-    brief: ["Час пик: покупатели нетерпеливее, поток плотнее",
-            "Холодильники дают сбои 🧊 — реагируйте на тревоги",
-            "Держите репутацию: злые покупатели уходят без покупок"] },
+    title: tt("game.level3.title"),
+    brief: [tt("game.level3.brief1"), tt("game.level3.brief2"),
+            tt("game.level3.brief3")] },
 ];
 
 /* ================= состояние игры ==================================== */
@@ -225,9 +228,10 @@ function showBrief() {
   document.getElementById("b-store").textContent =
     CFG.store_name + " · " + L.title;
   document.getElementById("b-body").innerHTML =
-    "<ul>" + L.brief.map(t => `<li>${t}</li>`).join("") + "</ul>" +
-    `<div class="goal">🎯 Цель смены: выручка ${L.goal} L за ` +
-    `${Math.round(G.time / 60 * 10) / 10} мин</div>`;
+    "<ul>" + L.brief.map(b => `<li>${b}</li>`).join("") + "</ul>" +
+    `<div class="goal">${tt("game.brief.goal", {goal: L.goal,
+      mins: Math.round(G.time / 60 * 10) / 10,
+      min_unit: tt("unit.min_short")})}</div>`;
   document.getElementById("brief").style.display = "flex";
   document.getElementById("result").style.display = "none";
 }
@@ -242,7 +246,7 @@ document.getElementById("b-start").onclick = () => {
   if (regRoblox.value.trim())
     fetch("/api/roblox/register", {method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({name: regName.value || "Стажёр",
+      body: JSON.stringify({name: regName.value || tt("game.default_name"),
         roblox_user: regRoblox.value, store_id: STORE_ID})});
   document.getElementById("brief").style.display = "none";
   G.state = "play";
@@ -255,29 +259,26 @@ function endLevel() {
     : (G.money >= L.goal * 1.5 && G.rep >= 70) ? 3
     : (G.money >= L.goal * 1.2) ? 2 : 1;
   document.getElementById("r-title").textContent = ok
-    ? "✅ Смена пройдена!" : "❌ План не выполнен";
+    ? tt("game.result.title_ok") : tt("game.result.title_fail");
   document.getElementById("r-stars").textContent =
     "★".repeat(stars) + "☆".repeat(3 - stars);
   const s = G.stats;
   document.getElementById("r-stats").innerHTML = [
-    ["Выручка", `${G.money} L из ${L.goal} L`],
-    ["Обслужено покупателей", s.served],
-    ["Ушли недовольными", s.lost],
-    ["Пополнений полок", s.restocks],
-    ["Убрано разливов", s.cleaned],
-    ["Замен ленты / ремонтов ХВ", `${s.papers} / ${s.fridges}`],
-    ["Репутация", Math.round(G.rep) + "%"],
+    [tt("game.result.stat.revenue_label"),
+     tt("game.result.revenue_value", {money: G.money, goal: L.goal})],
+    [tt("game.result.stat.served"), s.served],
+    [tt("game.result.stat.lost"), s.lost],
+    [tt("game.result.stat.restocks"), s.restocks],
+    [tt("game.result.stat.cleaned"), s.cleaned],
+    [tt("game.result.stat.papers_fridges"), `${s.papers} / ${s.fridges}`],
+    [tt("game.result.stat.reputation"), Math.round(G.rep) + "%"],
   ].map(r => `<div class="stat"><span>${r[0]}</span><b>${r[1]}</b></div>`)
    .join("");
   const tips = [];
-  if (s.lost > 2) tips.push("Много потерянных покупателей — обслуживайте " +
-    "кассу раньше, чем кончится терпение.");
-  if (s.restocks < 3) tips.push("Полки пустели: держите запас — берите " +
-    "со склада до out-of-stock.");
-  if (G.rep < 60) tips.push("Репутация страдает от разливов и тревог — " +
-    "реагируйте на события сразу.");
-  if (!tips.length) tips.push("Отличная работа: процессы кассира, " +
-    "мерчандайзера и клининга под контролем!");
+  if (s.lost > 2) tips.push(tt("game.tip.lost"));
+  if (s.restocks < 3) tips.push(tt("game.tip.restocks"));
+  if (G.rep < 60) tips.push(tt("game.tip.reputation"));
+  if (!tips.length) tips.push(tt("game.tip.great"));
   document.getElementById("r-tips").innerHTML = "💡 " + tips.join("<br>💡 ");
 
   // бонусы и поощрения команды в Roblox
@@ -287,18 +288,21 @@ function endLevel() {
     fetch("/api/roblox/progress", {method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
-        name: regName.value || "Стажёр", roblox_user: regRoblox.value,
+        name: regName.value || tt("game.default_name"),
+        roblox_user: regRoblox.value,
         store_id: STORE_ID, level: G.level, stars,
         revenue: G.money, stats: s })})
       .then(r => r.json()).then(d => {
         rbx.style.display = "block";
         rbx.innerHTML =
-          `🎮 <b>Roblox</b> (${d.mode === "roblox" ? "Open Cloud"
-            : "эмуляция"}): <b class="big">+${d.bonus} баллов</b>, ` +
-          `всего <b>${d.total}</b>` +
+          `🎮 <b>Roblox</b> (${d.mode === "roblox" ? tt("team.mode.roblox")
+            : tt("team.mode.emulation")}): <b class="big">+${d.bonus} ` +
+          `${ttn("game.rbx.points_word", d.bonus)}</b>, ` +
+          `${tt("game.rbx.total_label")} <b>${d.total}</b>` +
           (d.new_badges.length
-            ? `<br>🏅 Новый бейдж: <b>${d.new_badges.join(", ")}</b>` : "") +
-          `<br><br><b>Топ команды:</b>` +
+            ? `<br>${tt("game.rbx.new_badge_label")}<b>${
+                d.new_badges.join(", ")}</b>` : "") +
+          `<br><br><b>${tt("game.rbx.top_team_label")}</b>` +
           d.top.map((mm, i) =>
             `<div class="lb"><span>${i + 1}. ${mm.name} ` +
             `(${mm.roblox_user})</span><b>${mm.points}</b></div>`)
@@ -306,18 +310,17 @@ function endLevel() {
       }).catch(() => {});
   } else {
     rbx.style.display = "block";
-    rbx.innerHTML = "🎮 Укажите ник в Roblox на брифинге — баллы и " +
-      "бейджи будут начисляться в командный опыт Roblox.";
+    rbx.innerHTML = tt("game.rbx.no_roblox");
   }
   const btn = document.getElementById("r-btn");
   if (ok && G.level < LEVELS.length) {
-    btn.textContent = "▶ Следующая смена";
+    btn.textContent = tt("game.result.next_btn");
     btn.onclick = () => newGame(G.level + 1);
   } else if (ok) {
-    btn.textContent = "🏆 Обучение пройдено — играть снова";
+    btn.textContent = tt("game.result.done_btn");
     btn.onclick = () => newGame(1);
   } else {
-    btn.textContent = "↻ Повторить смену";
+    btn.textContent = tt("game.result.retry_btn");
     btn.onclick = () => newGame(G.level);
   }
   document.getElementById("result").style.display = "flex";
@@ -325,10 +328,8 @@ function endLevel() {
 
 /* ================= подсказки-туториал ================================ */
 const TUTOR = [
-  "Кликните на СКЛАД 📦 (дверь на задней стене справа), чтобы взять товар",
-  "Теперь кликните на стеллаж, чтобы пополнить полку",
-  "Покупатель идёт на кассу — кликните на КАССУ, чтобы обслужить",
-  "Отлично! Следите за полками, кассой и терпением покупателей ❤",
+  tt("game.tutor.1"), tt("game.tutor.2"), tt("game.tutor.3"),
+  tt("game.tutor.4"),
 ];
 function hint(text) { document.getElementById("hint").innerHTML = text; }
 
@@ -451,7 +452,7 @@ function updRegister(dt) {
   const atRegister = Math.hypot(p.x - (R.x - 0.05), p.y - (R.y + 0.02)) < 0.45;
   if (!atRegister || !R.queue.length || p.busy > 0) { R.servingT = 0; return; }
   if (R.paper <= 0) {
-    hint("🧻 Кончилась чековая лента! Кликните на кассу, чтобы заменить");
+    hint(tt("game.hint.no_paper"));
     return;
   }
   const head = R.queue[0];
@@ -472,34 +473,36 @@ function updRegister(dt) {
 function performTask(t) {
   const p = G.player;
   if (t.type === "storeroom") {
-    p.busyMax = 1.0; p.busyLabel = "берём товар 📦";
+    p.busyMax = 1.0; p.busyLabel = tt("game.busy.storeroom");
     p.busyDone = () => { p.carry = 3;
       if (G.tutor === 0) G.tutor = 1; };
   } else if (t.type === "shelf") {
-    if (p.carry <= 0) { hint("Сначала возьмите товар на складе 📦!");
+    if (p.carry <= 0) { hint(tt("game.hint.need_stock"));
                         return; }
-    p.busyMax = 0.9; p.busyLabel = "выкладка…";
+    p.busyMax = 0.9; p.busyLabel = tt("game.busy.shelf");
     p.busyDone = () => { p.carry--; t.shelf.stock =
       Math.min(t.shelf.max, t.shelf.stock + 5);
-      G.stats.restocks++; popup(t.x, t.y, "+товар", "#8bc34a");
+      G.stats.restocks++; popup(t.x, t.y, tt("game.popup.item_added"),
+                                "#8bc34a");
       if (G.tutor === 1) G.tutor = 2; };
   } else if (t.type === "register") {
     if (G.register.paper <= 0) {
-      p.busyMax = 1.6; p.busyLabel = "замена ленты 🧻";
+      p.busyMax = 1.6; p.busyLabel = tt("game.busy.paper");
       p.busyDone = () => { G.register.paper = 100; G.stats.papers++;
-                           popup(t.x, t.y, "лента ✓", "#90caf9"); };
+                           popup(t.x, t.y, tt("game.popup.paper_replaced"),
+                                "#90caf9"); };
     }
   } else if (t.type === "mess") {
-    p.busyMax = 1.4; p.busyLabel = "уборка 🧹";
+    p.busyMax = 1.4; p.busyLabel = tt("game.busy.mess");
     p.busyDone = () => { const i = G.messes.indexOf(t.mess);
       if (i >= 0) G.messes.splice(i, 1);
       G.stats.cleaned++; G.rep = Math.min(100, G.rep + 2);
-      popup(t.x, t.y, "чисто ✓", "#8bc34a"); };
+      popup(t.x, t.y, tt("game.popup.clean"), "#8bc34a"); };
   } else if (t.type === "fridge") {
-    p.busyMax = 1.8; p.busyLabel = "ремонт ХВ 🧊";
+    p.busyMax = 1.8; p.busyLabel = tt("game.busy.fridge");
     p.busyDone = () => { G.fridgeAlarm = null; G.stats.fridges++;
       G.rep = Math.min(100, G.rep + 2);
-      popup(t.x, t.y, "холод ✓", "#90caf9"); };
+      popup(t.x, t.y, tt("game.popup.fridge_fixed"), "#90caf9"); };
   }
   if (p.busyDone) p.busy = 0.0001;
 }
@@ -538,7 +541,7 @@ function updEvents(dt) {
       G.messes.push({x: 2 + Math.random() * 4.5,
                      y: 0.8 + Math.random() * 3.6});
       popup(G.messes[G.messes.length-1].x, G.messes[G.messes.length-1].y,
-            "разлив! 🫗", "#ff8a80");
+            tt("game.popup.mess"), "#ff8a80");
     }
     G.rep = Math.max(0, G.rep - G.messes.length * 0.25 * dt);
   }
@@ -548,7 +551,7 @@ function updEvents(dt) {
       G.nextFridge = L.events.fridge * (0.8 + Math.random() * 0.5);
       G.fridgeAlarm = CFG.fridges[Math.floor(Math.random()
                                              * CFG.fridges.length)];
-      popup(G.fridgeAlarm.x + 0.5, G.fridgeAlarm.y, "тревога! 🧊",
+      popup(G.fridgeAlarm.x + 0.5, G.fridgeAlarm.y, tt("game.popup.fridge_alarm"),
             "#ff8a80");
     }
     if (G.fridgeAlarm) G.rep = Math.max(0, G.rep - 0.5 * dt);
@@ -586,9 +589,8 @@ function update(dt) {
     G.player.carry > 0 ? "📦".repeat(G.player.carry) : "—";
   if (G.tutor >= 0 && G.tutor < TUTOR.length) hint("👉 " + TUTOR[G.tutor]);
   else if (G.register.paper <= 0)
-    hint("🧻 Замените ленту: кликните на кассу!");
-  else hint(`Очередь: ${G.register.queue.length} · Кликайте: склад → ` +
-            `полки, касса, уборка`);
+    hint(tt("game.hint.replace_paper"));
+  else hint(tt("game.hint.queue_status", {n: G.register.queue.length}));
 }
 
 /* ================= отрисовка ======================================== */

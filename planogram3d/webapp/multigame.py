@@ -27,6 +27,12 @@ from .instore import (ENTRANCE, EXIT, HALL, POS_DESKS, SCO_PAY, SCO_RECT,
                       FRIDGES)
 from .network import price_for
 
+#: заголовки ролей теперь переведены в i18n.py (ключи "mgame.role.*") —
+#: здесь остаётся русский текст как ключ для team.award() (лента команды
+#: в roblox.py хранит уже готовую строку без языка запроса, см. HANDOFF)
+#: и как запасное значение для внешних API-потребителей, не читающих
+#: каталог сообщений.
+
 STOREROOM = (6.6, -0.15)
 REGISTER = POS_DESKS[0]           # штатная касса, требует кассира
 SHIFT_SECONDS = 180.0
@@ -101,14 +107,30 @@ class MultiGame:
         self.fridge_alarm: Optional[str] = None
         self.next_fridge = 30.0
 
-    def _emit(self, text: str, kind: str = "log", **extra):
-        self.events.append({"id": self._event_id, "kind": kind,
-                            "text": text, **extra})
+    def _emit(self, key: str, kind: str = "log", count=None,
+              x=None, y=None, color=None, **params):
+        """Запись ленты: ключ каталога + параметры, а не готовый текст.
+
+        Роут ``/api/mgame/.../state`` не входит в эту задачу (см. i18n.py,
+        комментарий у ключей ``mgame.*``), поэтому язык здесь неизвестен —
+        клиент сам собирает текст через ``tt()``/``ttn()`` по каталогу,
+        загруженному при открытии страницы (тот же итог, что у
+        ``render_event`` в i18n.py, только рендер не в Python, а в JS).
+        """
+        ev = {"id": self._event_id, "kind": kind, "key": key,
+              "params": params, "count": count}
+        if x is not None:
+            ev["x"] = x
+        if y is not None:
+            ev["y"] = y
+        if color is not None:
+            ev["color"] = color
+        self.events.append(ev)
         self._event_id += 1
         del self.events[:-160]
 
-    def _fx(self, x, y, text, color="#ffd54f"):
-        self._emit("", kind="fx", x=x, y=y, fx=text, color=color)
+    def _fx(self, x, y, key, color="#ffd54f", **params):
+        self._emit(key, kind="fx", x=x, y=y, color=color, **params)
 
     # ----- игроки -------------------------------------------------------
     def join(self, name: str, role: str, kind: str,
@@ -133,16 +155,16 @@ class MultiGame:
                 "stats": {"points": 0, "serve": 0, "restock": 0,
                           "clean": 0, "fridge": 0, "paper": 0},
             }
-            self._emit(f"👋 {self.players[pid]['name']} вошёл в смену — "
-                       f"{ROLES[role]['icon']} {ROLES[role]['title']}"
-                       + (" (ИИ)" if kind != "human" else ""))
+            self._emit("mgame.event.joined", name=self.players[pid]["name"],
+                       icon=ROLES[role]["icon"], role=role,
+                       ai=(kind != "human"))
             return {"player_id": pid, "role": role}
 
     def leave(self, pid: str):
         with self.lock:
             p = self.players.pop(pid, None)
             if p:
-                self._emit(f"🚪 {p['name']} покинул смену")
+                self._emit("mgame.event.left", name=p["name"])
 
     def start(self):
         with self.lock:
@@ -156,8 +178,8 @@ class MultiGame:
                 p["busy"] = 0
                 p["carry"] = 0
             self.phase = "play"
-            self._emit(f"▶ Смена началась! Команда: "
-                       f"{len(self.players)} чел., цель {self.goal} L")
+            self._emit("mgame.event.started", count=len(self.players),
+                       goal=self.goal)
 
     # ----- действия (люди и внешние ИИ по API) --------------------------
     def action(self, pid: str, act: str, x: Optional[float] = None,
@@ -223,7 +245,7 @@ class MultiGame:
         elif t["type"] == "shelf":
             sh = self.shelves[t["shelf"]]
             if p["carry"] <= 0:
-                self._fx(p["x"], p["y"], "нужен товар со склада!",
+                self._fx(p["x"], p["y"], "mgame.fx.need_stock",
                          "#ff8a80")
                 return
             def done():
@@ -231,7 +253,7 @@ class MultiGame:
                 sh["stock"] = min(sh["max"], sh["stock"] + 5)
                 p["stats"]["restock"] += 1
                 p["stats"]["points"] += POINTS["restock"]
-                self._fx(t["x"], t["y"], "+товар", "#8bc34a")
+                self._fx(t["x"], t["y"], "game.popup.item_added", "#8bc34a")
             busy(0.9, "restock", "выкладка…", done)
         elif t["type"] == "mess":
             m = self.messes.get(t["mess"])
@@ -242,7 +264,7 @@ class MultiGame:
                     p["stats"]["clean"] += 1
                     p["stats"]["points"] += POINTS["clean"]
                     self.rep = min(100, self.rep + 2)
-                    self._fx(t["x"], t["y"], "чисто ✓", "#8bc34a")
+                    self._fx(t["x"], t["y"], "game.popup.clean", "#8bc34a")
             busy(1.4, "clean", "уборка 🧹", done)
         elif t["type"] == "fridge":
             def done():
@@ -251,7 +273,8 @@ class MultiGame:
                     p["stats"]["fridge"] += 1
                     p["stats"]["points"] += POINTS["fridge"]
                     self.rep = min(100, self.rep + 2)
-                    self._fx(t["x"], t["y"], "холод ✓", "#90caf9")
+                    self._fx(t["x"], t["y"], "game.popup.fridge_fixed",
+                             "#90caf9")
             busy(1.8, "tech", "ремонт ХВ 🧊", done)
         elif t["type"] == "paper":
             if self.paper > 15:
@@ -260,7 +283,8 @@ class MultiGame:
                 self.paper = 100.0
                 p["stats"]["paper"] += 1
                 p["stats"]["points"] += POINTS["paper"]
-                self._fx(t["x"], t["y"], "лента ✓", "#90caf9")
+                self._fx(t["x"], t["y"], "game.popup.paper_replaced",
+                         "#90caf9")
             busy(1.6, "tech", "замена ленты 🧻", done)
         # register: обслуживание идёт, пока игрок стоит у кассы (в tick)
 
@@ -294,7 +318,8 @@ class MultiGame:
         for pid in [pid for pid, p in self.players.items()
                     if p["kind"] != "bot"
                     and now - p["last_seen"] > 40]:
-            self._emit(f"🚪 {self.players[pid]['name']} отключился")
+            self._emit("mgame.event.disconnected",
+                       name=self.players[pid]["name"])
             del self.players[pid]
 
         if self.phase != "play":
@@ -428,13 +453,13 @@ class MultiGame:
                                 "x": self.rng.uniform(2, 6.6),
                                 "y": self.rng.uniform(0.8, 4.4)}
             self._fx(self.messes[mid]["x"], self.messes[mid]["y"],
-                     "разлив! 🫗", "#ff8a80")
+                     "game.popup.mess", "#ff8a80")
         self.rep = max(0, self.rep - len(self.messes) * 0.2 * dt)
         self.next_fridge -= dt
         if self.next_fridge <= 0 and not self.fridge_alarm:
             self.next_fridge = self.rng.uniform(25, 45)
             self.fridge_alarm = self.rng.choice(FRIDGES)[0]
-            self._emit(f"🧊 {self.fridge_alarm}: тревога температуры!")
+            self._emit("mgame.event.fridge_alarm", id=self.fridge_alarm)
         if self.fridge_alarm:
             self.rep = max(0, self.rep - 0.4 * dt)
 
@@ -443,9 +468,9 @@ class MultiGame:
     def _finish(self):
         self.phase = "ended"
         ok = self.money >= self.goal
-        self._emit(("✅ Смена пройдена!" if ok else
-                    "❌ План не выполнен") +
-                   f" Выручка {self.money} L из {self.goal} L")
+        self._emit("mgame.event.finished_ok" if ok else
+                   "mgame.event.finished_fail",
+                   money=self.money, goal=self.goal)
         # поощрения в Roblox-команду
         try:
             from .server import team
