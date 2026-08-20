@@ -1608,6 +1608,1323 @@ MESSAGES: Dict[str, Dict[str, _Entry]] = {
         "ro": "e nevoie de marfă din depozit!",
         "en": "need stock from the storeroom!",
     },
+
+    # ---- новая презентация /presentation2: Кишинёв + топливный контур,
+    # ИИ-табло, bon fiscal, трёхъязычность (старая /presentation не
+    # трогается, см. docs/HANDOFF.md) ----
+    "p2.page_title": {
+        "ru": "planogram3d — презентация",
+        "ro": "planogram3d — prezentare",
+        "en": "planogram3d — presentation",
+    },
+    "p2.nav.demo": {"ru": "демо-система", "ro": "sistem demo", "en": "demo system"},
+    "p2.nav.docs": {"ru": "документация", "ro": "documentație", "en": "documentation"},
+    "p2.lbl.demo": {
+        "ru": "🔗 Живое демо:", "ro": "🔗 Demo live:", "en": "🔗 Live demo:",
+    },
+    "p2.lbl.more": {
+        "ru": "🔗 Подробнее:", "ro": "🔗 Detalii:", "en": "🔗 More:",
+    },
+    "p2.lbl.all": {
+        "ru": "🔗 Всё сразу:", "ro": "🔗 Totul deodată:", "en": "🔗 Everything at once:",
+    },
+    "p2.lbl.process": {
+        "ru": "🔗 Весь процесс вживую:", "ro": "🔗 Tot procesul, live:",
+        "en": "🔗 The whole process, live:",
+    },
+    "p2.lbl.materials": {
+        "ru": "🔗 Материалы:", "ro": "🔗 Materiale:", "en": "🔗 Materials:",
+    },
+
+    "p2.link.map": {
+        "ru": "Карта сети 2D/3D", "ro": "Harta rețelei 2D/3D",
+        "en": "Network map 2D/3D",
+    },
+    "p2.link.delivery": {"ru": "Доставка", "ro": "Livrare", "en": "Delivery"},
+    "p2.link.fuel": {
+        "ru": "Топливная сеть", "ro": "Rețeaua de combustibil",
+        "en": "Fuel network",
+    },
+    "p2.link.trainer": {"ru": "Тренажёр", "ro": "Simulator", "en": "Trainer"},
+    "p2.link.docs": {
+        "ru": "Документация", "ro": "Documentație", "en": "Documentation",
+    },
+
+    # -- слайд 1: титул --
+    "p2.s1.tag": {
+        "ru": "Цифровой двойник розничной сети «Гурман» в Кишинёве и "
+              "топливной сети АЗС по всей Молдове",
+        "ro": "Geamănul digital al rețelei de retail «Gurman» din Chișinău "
+              "și al rețelei de stații de alimentare din toată Moldova",
+        "en": "Digital twin of the «Gurman» retail network in Chisinau and "
+              "a nationwide Moldova fuel-station network",
+    },
+    "p2.s1.desc": {
+        "ru": "3D-планограммы и контроль соответствия · живая карта сети "
+              "Кишинёва · датчики торгового зала · игровой тренажёр "
+              "персонала и Roblox · доставка с ИИ-табло прибытия · "
+              "топливная сеть АЗС Молдовы · молдавский фискальный чек "
+              "(bon fiscal) · три языка интерфейса. Все ссылки в этой "
+              "презентации ведут в работающую демо-систему.",
+        "ro": "Planograme 3D și control de conformitate · harta live a "
+              "rețelei din Chișinău · senzori ai sălii de vânzare · "
+              "simulator de instruire a personalului și Roblox · livrare "
+              "cu tablou de sosire bazat pe IA · rețea de stații de "
+              "alimentare din toată Moldova · bon fiscal moldovenesc · "
+              "interfață în trei limbi. Toate linkurile din această "
+              "prezentare duc la sistemul demo funcțional.",
+        "en": "3D planograms and compliance checks · live Chisinau network "
+              "map · store-floor sensors · a gamified staff trainer and "
+              "Roblox · delivery with an AI arrival board · a "
+              "Moldova-wide fuel-station network · a Moldovan fiscal "
+              "receipt (bon fiscal) · a three-language interface. Every "
+              "link in this presentation opens the working demo system.",
+    },
+
+    # -- слайд 2: возможности --
+    "p2.s2.title": {
+        "ru": "Шесть работающих блоков платформы",
+        "ro": "Șase blocuri funcționale ale platformei",
+        "en": "Six working platform building blocks",
+    },
+    "p2.s2.c1.title": {"ru": "🧊 3D-планограммы", "ro": "🧊 Planograme 3D",
+                        "en": "🧊 3D planograms"},
+    "p2.s2.c1.desc": {
+        "ru": "Текущие продажи с теплокартой остатков и утверждённая "
+              "выкладка по поставщикам; карточки SKU при наведении.",
+        "ro": "Vânzări curente cu hartă termică a stocurilor și "
+              "planograma aprobată pe furnizori; carduri SKU la hover.",
+        "en": "Current sales with a stock heat-map and the approved "
+              "layout by supplier; SKU cards on hover.",
+    },
+    "p2.s2.c1.link": {
+        "ru": "Открыть 3D-планограмму →", "ro": "Deschide planograma 3D →",
+        "en": "Open the 3D planogram →",
+    },
+    "p2.s2.c2.title": {"ru": "✅ Контроль соответствия",
+                        "ro": "✅ Control de conformitate",
+                        "en": "✅ Compliance control"},
+    "p2.s2.c2.desc": {
+        "ru": "Регламент, контракты, факт против плана, OOS — отчёт под "
+              "3D-сценой, 16 нарушений в демо.",
+        "ro": "Regulament, contracte, fapt vs. plan, OOS — raport sub "
+              "scena 3D, 16 abateri în demo.",
+        "en": "In-house rules, contracts, plan-vs-actual, OOS — a report "
+              "beneath the 3D scene, 16 violations in the demo.",
+    },
+    "p2.s2.c2.link": {
+        "ru": "Отчёт о нарушениях →", "ro": "Raportul abaterilor →",
+        "en": "Violation report →",
+    },
+    "p2.s2.c3.title": {"ru": "🗺 Живая карта Кишинёва",
+                        "ro": "🗺 Harta live a Chișinăului",
+                        "en": "🗺 Live Chisinau map"},
+    "p2.s2.c3.desc": {
+        "ru": "Реальный город (OSM) в 2D/3D, эмуляция торгового дня, "
+              "Zabbix, логистический центр с рейсами.",
+        "ro": "Orașul real (OSM) în 2D/3D, emularea zilei comerciale, "
+              "Zabbix, centrul logistic cu curse.",
+        "en": "The real city (OSM) in 2D/3D, a simulated trading day, "
+              "Zabbix, a distribution centre with runs.",
+    },
+    "p2.s2.c3.link": {
+        "ru": "Карта сети →", "ro": "Harta rețelei →", "en": "Network map →",
+    },
+    "p2.s2.c4.title": {"ru": "📡 Датчики зала", "ro": "📡 Senzorii sălii",
+                        "en": "📡 Store-floor sensors"},
+    "p2.s2.c4.desc": {
+        "ru": "Очереди, ТСД по BLE/LoRa, холодильники, расходники, оценка "
+              "трафика по датчикам входа/выхода.",
+        "ro": "Cozi, terminale mobile pe BLE/LoRa, frigidere, "
+              "consumabile, estimarea traficului din senzorii de "
+              "intrare/ieșire.",
+        "en": "Queues, BLE/LoRa handheld terminals, fridges, "
+              "consumables, footfall estimated from entry/exit sensors.",
+    },
+    "p2.s2.c4.link": {
+        "ru": "Симуляция зала →", "ro": "Simularea sălii →",
+        "en": "Store-floor simulation →",
+    },
+    "p2.s2.c5.title": {"ru": "🎓 Тренажёр + Roblox",
+                        "ro": "🎓 Simulator + Roblox",
+                        "en": "🎓 Trainer + Roblox"},
+    "p2.s2.c5.desc": {
+        "ru": "Игра-обучение кассиров; баллы, бейджи и лидерборд команды "
+              "через Open Cloud.",
+        "ro": "Joc de instruire a casierilor; puncte, insigne și "
+              "clasament al echipei prin Open Cloud.",
+        "en": "A training game for cashiers; points, badges and a team "
+              "leaderboard via Open Cloud.",
+    },
+    "p2.s2.c5.link": {
+        "ru": "Играть смену →", "ro": "Joacă un schimb →",
+        "en": "Play a shift →",
+    },
+    "p2.s2.c6.title": {"ru": "🛵 Доставка", "ro": "🛵 Livrare",
+                        "en": "🛵 Delivery"},
+    "p2.s2.c6.desc": {
+        "ru": "Сборка, маршруты, диаграмма Ганта, ИИ-табло прибытия и "
+              "bon fiscal при вручении.",
+        "ro": "Asamblare, rute, diagramă Gantt, tablou de sosire cu IA "
+              "și bon fiscal la predare.",
+        "en": "Picking, routes, a Gantt chart, an AI arrival board and a "
+              "fiscal receipt on hand-over.",
+    },
+    "p2.s2.c6.link": {
+        "ru": "Дашборд доставки →", "ro": "Panoul de livrare →",
+        "en": "Delivery dashboard →",
+    },
+
+    # -- слайд 3: архитектура --
+    "p2.s3.title": {
+        "ru": "Архитектура: встраиваемое ядро и надстройки",
+        "ro": "Arhitectură: nucleu integrabil și extensii",
+        "en": "Architecture: an embeddable core plus extensions",
+    },
+    "p2.s3.box1.title": {"ru": "planogram3d.core", "ro": "planogram3d.core",
+                          "en": "planogram3d.core"},
+    "p2.s3.box1.desc": {
+        "ru": "модель данных Store · проверки соответствия · 3D-сцены "
+              "(Plotly) · отчёты HTML",
+        "ro": "modelul de date Store · verificări de conformitate · "
+              "scene 3D (Plotly) · rapoarte HTML",
+        "en": "the Store data model · compliance checks · 3D scenes "
+              "(Plotly) · HTML reports",
+    },
+    "p2.s3.box1.note": {
+        "ru": "зависимость — только plotly", "ro": "singura dependință — plotly",
+        "en": "only dependency — plotly",
+    },
+    "p2.s3.box2.title": {"ru": "planogram3d.webapp", "ro": "planogram3d.webapp",
+                          "en": "planogram3d.webapp"},
+    "p2.s3.box2.desc": {
+        "ru": "карта сети · симуляция зала · тренажёр · доставка · "
+              "топливный контур · Zabbix · Roblox-команда (Flask)",
+        "ro": "harta rețelei · simularea sălii · simulator · livrare · "
+              "contur de combustibil · Zabbix · echipa Roblox (Flask)",
+        "en": "network map · store-floor simulation · trainer · "
+              "delivery · fuel loop · Zabbix · the Roblox team (Flask)",
+    },
+    "p2.s3.box2.note": {
+        "ru": "REST API для интеграций", "ro": "API REST pentru integrări",
+        "en": "REST API for integrations",
+    },
+    "p2.s3.box3.title": {"ru": "planogram3d.robloxkit",
+                          "ro": "planogram3d.robloxkit",
+                          "en": "planogram3d.robloxkit"},
+    "p2.s3.box3.desc": {
+        "ru": "конвертер сцен в .rbxlx · Luau-скрипты тренажёра · "
+              "place-файлы для Roblox Studio",
+        "ro": "convertor de scene în .rbxlx · scripturi Luau ale "
+              "simulatorului · fișiere place pentru Roblox Studio",
+        "en": "a scene-to-.rbxlx converter · trainer Luau scripts · "
+              "place files for Roblox Studio",
+    },
+    "p2.s3.box3.note": {
+        "ru": "без зависимостей", "ro": "fără dependințe", "en": "no dependencies",
+    },
+    "p2.s3.card.title": {
+        "ru": "Один объект Store — все данные системы",
+        "ro": "Un singur obiect Store — toate datele sistemului",
+        "en": "One Store object — all the system's data",
+    },
+    "p2.s3.card.desc": {
+        "ru": "Магазины, стеллажи, товары, поставщики, контракты, "
+              "планограммы, продажи, а также топливные станции и рейсы "
+              "бензовозов. Наполняется из учётной системы (в том числе "
+              "Artgranit), БД или CSV; свои правила — через extra_checks.",
+        "ro": "Magazine, rafturi, produse, furnizori, contracte, "
+              "planograme, vânzări, precum și stații de combustibil și "
+              "curse de cisterne. Se alimentează din sistemul de "
+              "evidență (inclusiv Artgranit), BD sau CSV; reguli proprii "
+              "— prin extra_checks.",
+        "en": "Stores, shelving, products, suppliers, contracts, "
+              "planograms, sales, plus fuel stations and tanker runs. "
+              "Populated from an accounting system (including "
+              "Artgranit), a database or CSV; custom rules via "
+              "extra_checks.",
+    },
+    "p2.s3.link.library": {
+        "ru": "Справочник API", "ro": "Referință API", "en": "API reference",
+    },
+    "p2.s3.link.integration": {
+        "ru": "Руководство по интеграции", "ro": "Ghid de integrare",
+        "en": "Integration guide",
+    },
+    "p2.s3.link.core": {
+        "ru": "Пример работы ядра", "ro": "Exemplu de funcționare a nucleului",
+        "en": "Core in action",
+    },
+
+    # -- слайд 3b: 3D для ERP --
+    "p2.s3b.title": {
+        "ru": "3D-инновация для ERP — самодельным модулем",
+        "ro": "Inovație 3D pentru ERP — printr-un modul propriu",
+        "en": "3D innovation for ERP — a home-grown module",
+    },
+    "p2.s3b.sub": {
+        "ru": "ERP знает всё, но показывает таблицами. Половина данных "
+              "ритейла и топливной логистики пространственна — полка, "
+              "зал, город, трасса.",
+        "ro": "ERP știe totul, dar afișează în tabele. Jumătate din "
+              "datele retailului și logisticii de combustibil sunt "
+              "spațiale — raft, sală, oraș, șosea.",
+        "en": "ERP knows everything but shows it as tables. Half of "
+              "retail and fuel-logistics data is spatial — a shelf, a "
+              "floor, a city, a road.",
+    },
+    "p2.s3b.li1": {
+        "ru": "3D переносит интерпретацию с человека на систему: пустая "
+              "полка краснеет, бензовоз едет по трассе, очередь видна "
+              "как очередь",
+        "ro": "3D mută interpretarea de la om la sistem: raftul gol se "
+              "colorează roșu, cisterna se deplasează pe șosea, coada "
+              "se vede ca o coadă",
+        "en": "3D shifts interpretation from the person to the system: "
+              "an empty shelf turns red, a tanker drives along the "
+              "road, a queue looks like a queue",
+    },
+    "p2.s3b.li2": {
+        "ru": "Шесть контуров ERP одним модулем: мерчандайзинг, "
+              "запасы/РЦ, IoT-мониторинг, доставка с ИИ-табло, обучение "
+              "персонала, топливная логистика — на одних данных",
+        "ro": "Șase contururi ERP într-un singur modul: merchandising, "
+              "stocuri/DC, monitorizare IoT, livrare cu tablou IA, "
+              "instruirea personalului, logistica de combustibil — pe "
+              "aceleași date",
+        "en": "Six ERP domains in one module: merchandising, "
+              "stock/DC, IoT monitoring, delivery with an AI board, "
+              "staff training, fuel logistics — on the same data",
+    },
+    "p2.s3b.li3": {
+        "ru": "Самодельный — это стратегия: ядро ~850 строк Python, "
+              "одна зависимость, без лицензий и чужих облаков",
+        "ro": "Propriu — este o strategie: nucleu de ~850 de linii "
+              "Python, o singură dependință, fără licențe și cloud-uri "
+              "străine",
+        "en": "Home-grown is a strategy: a ~850-line Python core, one "
+              "dependency, no licences and no third-party clouds",
+    },
+    "p2.s3b.li4": {
+        "ru": "Интеграция с любой ERP (1С, SAP, Odoo, Artgranit, "
+              "самописной) через один объект Store: адаптер CSV/REST в "
+              "десятки строк",
+        "ro": "Integrare cu orice ERP (1С, SAP, Odoo, Artgranit, "
+              "sistem propriu) printr-un singur obiect Store: adaptor "
+              "CSV/REST în câteva zeci de linii",
+        "en": "Integration with any ERP (1C, SAP, Odoo, Artgranit, an "
+              "in-house one) through one Store object: a CSV/REST "
+              "adapter in a few dozen lines",
+    },
+    "p2.s3b.li5": {
+        "ru": "Эмуляторы всех внешних контуров: демо работает в первый "
+              "день, интеграции подключаются по готовности — как уже "
+              "сделано с Artgranit",
+        "ro": "Emulatoare pentru toate contururile externe: demo-ul "
+              "funcționează din prima zi, integrările se conectează pe "
+              "măsură ce sunt gata — cum s-a făcut deja cu Artgranit",
+        "en": "Emulators for every external loop: the demo works from "
+              "day one, integrations plug in when ready — as already "
+              "done with Artgranit",
+    },
+    "p2.s3b.li6": {
+        "ru": "Дорожка: PoC на своих данных за 2 недели → пилотный "
+              "магазин за месяц → сеть за квартал",
+        "ro": "Traseu: PoC pe datele proprii în 2 săptămâni → magazin "
+              "pilot într-o lună → rețea într-un trimestru",
+        "en": "Roadmap: a PoC on your own data in 2 weeks → a pilot "
+              "store in a month → the whole network in a quarter",
+    },
+    "p2.s3b.stat1": {
+        "ru": "строк — ядро<br>3D и проверок",
+        "ro": "linii — nucleul<br>3D și verificărilor",
+        "en": "lines — the 3D<br>and checks core",
+    },
+    "p2.s3b.stat2": {
+        "ru": "объект Store —<br>вся интеграция",
+        "ro": "obiect Store —<br>toată integrarea",
+        "en": "Store object —<br>the whole integration",
+    },
+    "p2.s3b.stat3": {
+        "ru": "лицензий и<br>внешних облаков",
+        "ro": "licențe și<br>cloud-uri externe",
+        "en": "licences and<br>external clouds",
+    },
+    "p2.s3b.link.article": {
+        "ru": "Статья «3D для ERP»", "ro": "Articolul «3D pentru ERP»",
+        "en": "Article «3D for ERP»",
+    },
+    "p2.s3b.link.example": {
+        "ru": "Живой пример: планограмма из данных учёта",
+        "ro": "Exemplu live: planograma din datele de evidență",
+        "en": "Live example: a planogram built from accounting data",
+    },
+    "p2.s3b.link.integration": {
+        "ru": "Как подключить свою ERP", "ro": "Cum conectezi propriul ERP",
+        "en": "How to connect your own ERP",
+    },
+
+    # -- слайд 4: 3D-планограмма --
+    "p2.s4.title": {
+        "ru": "3D-планограмма: продажи и утверждённая выкладка",
+        "ro": "Planograma 3D: vânzări și planograma aprobată",
+        "en": "3D planogram: sales and the approved layout",
+    },
+    "p2.s4.li1": {
+        "ru": "Два режима одной сцены — «Текущее состояние продаж» и "
+              "«Утверждённая планограмма», переключение кнопками",
+        "ro": "Două regimuri ale aceleiași scene — „Starea curentă a "
+              "vânzărilor” și „Planograma aprobată”, comutare prin "
+              "butoane",
+        "en": "Two modes of one scene — “Current sales state” and "
+              "“Approved planogram”, switched with buttons",
+    },
+    "p2.s4.li2": {
+        "ru": "Теплокарта остатков: зелёный — полная полка, красный "
+              "полупрозрачный — out-of-stock",
+        "ro": "Hartă termică a stocurilor: verde — raft plin, roșu "
+              "semitransparent — out-of-stock",
+        "en": "A stock heat-map: green — a full shelf, translucent red "
+              "— out of stock",
+    },
+    "p2.s4.li3": {
+        "ru": "Глубина стопки товара пропорциональна остатку",
+        "ro": "Adâncimea stivei de produs este proporțională cu stocul",
+        "en": "The stack depth of goods is proportional to the stock "
+              "level",
+    },
+    "p2.s4.li4": {
+        "ru": "Утверждённая выкладка раскрашена по поставщикам — видны "
+              "доли полки по контрактам",
+        "ro": "Planograma aprobată este colorată pe furnizori — se văd "
+              "cotele de raft din contracte",
+        "en": "The approved layout is colour-coded by supplier — "
+              "contract shelf-shares are visible",
+    },
+    "p2.s4.li5": {
+        "ru": "Карточка при наведении: SKU, поставщик, фейсинги, "
+              "остаток, скорость продаж, запас в днях",
+        "ro": "Card la hover: SKU, furnizor, facinguri, stoc, viteza de "
+              "vânzare, rezervă în zile",
+        "en": "A hover card: SKU, supplier, facings, stock, sales "
+              "velocity, days of cover",
+    },
+    "p2.s4.li6": {
+        "ru": "Отчёт — автономный HTML-файл: можно отправить письмом",
+        "ro": "Raportul — un fișier HTML autonom: poate fi trimis prin "
+              "e-mail",
+        "en": "The report is a self-contained HTML file — it can be "
+              "emailed",
+    },
+    "p2.s4.stat": {
+        "ru": "режима сцены<br>в одном отчёте",
+        "ro": "regimuri ale scenei<br>într-un singur raport",
+        "en": "scene modes<br>in one report",
+    },
+    "p2.s4.link1": {"ru": "Магазин №17 · Штефан чел Маре",
+                     "ro": "Magazinul nr. 17 · Ștefan cel Mare",
+                     "en": "Store 17 · Ștefan cel Mare"},
+    "p2.s4.link2": {"ru": "Магазин №3 · Измаил", "ro": "Magazinul nr. 3 · Ismail",
+                     "en": "Store 3 · Ismail"},
+    "p2.s4.link3": {"ru": "Магазин №8 · Рышкановка",
+                     "ro": "Magazinul nr. 8 · Râșcani", "en": "Store 8 · Rîșcani"},
+
+    # -- слайд 5: соответствие --
+    "p2.s5.title": {
+        "ru": "Контроль соответствия: регламент и контракты",
+        "ro": "Control de conformitate: regulament și contracte",
+        "en": "Compliance control: rules and contracts",
+    },
+    "p2.s5.li1": {
+        "ru": "Внутренний регламент — вес на верхних полках, габариты в "
+              "просвете, переполнение и пересечения выкладок",
+        "ro": "Regulament intern — greutate pe rafturile de sus, "
+              "gabarite în lumina raftului, supraîncărcare și "
+              "suprapuneri de expunere",
+        "en": "In-house rules — weight on top shelves, clearance "
+              "dimensions, overfilled or overlapping layouts",
+    },
+    "p2.s5.li2": {
+        "ru": "Контракты с поставщиками — минимальная доля полки, "
+              "обязательные SKU, уровень глаз",
+        "ro": "Contracte cu furnizorii — cotă minimă de raft, SKU "
+              "obligatorii, nivelul ochilor",
+        "en": "Supplier contracts — minimum shelf-share, mandatory "
+              "SKUs, eye level",
+    },
+    "p2.s5.li3": {
+        "ru": "Факт против планограммы — отсутствующие и лишние "
+              "позиции, расхождение фейсингов",
+        "ro": "Fapt vs. planogramă — poziții lipsă sau în plus, "
+              "discrepanțe de facinguri",
+        "en": "Actual vs. planned — missing or extra items, facing "
+              "mismatches",
+    },
+    "p2.s5.li4": {
+        "ru": "Продажи — out-of-stock, низкая заполненность, запас "
+              "меньше дневных продаж",
+        "ro": "Vânzări — out-of-stock, umplere scăzută, stoc sub "
+              "vânzările zilnice",
+        "en": "Sales — out-of-stock, low fill rate, stock below daily "
+              "sales",
+    },
+    "p2.s5.li5": {
+        "ru": "Каждое нарушение с адресом: стеллаж, полка, SKU, причина",
+        "ro": "Fiecare abatere are o „adresă”: raft, poliță, SKU, motiv",
+        "en": "Every violation has an address: rack, shelf, SKU, "
+              "reason",
+    },
+    "p2.s5.stat": {
+        "ru": "нарушений находит<br>демо-магазин (6 критичных)",
+        "ro": "abateri găsește<br>magazinul demo (6 critice)",
+        "en": "violations found<br>in the demo store (6 critical)",
+    },
+    "p2.s5.link.report": {
+        "ru": "Отчёт под 3D-сценой", "ro": "Raportul sub scena 3D",
+        "en": "The report beneath the 3D scene",
+    },
+    "p2.s5.link.rules": {
+        "ru": "Свои правила (extra_checks)", "ro": "Reguli proprii (extra_checks)",
+        "en": "Custom rules (extra_checks)",
+    },
+
+    # -- слайд 6: карта сети --
+    "p2.s6.title": {
+        "ru": "Живая карта Кишинёва, Zabbix и логистический центр",
+        "ro": "Harta live a Chișinăului, Zabbix și centrul logistic",
+        "en": "Live Chisinau map, Zabbix and the distribution centre",
+    },
+    "p2.s6.li1": {
+        "ru": "Карта из OpenStreetMap: улицы, здания Кишинёва — "
+              "автономна, интернет не нужен; 2D/3D с выдавливанием по "
+              "этажности",
+        "ro": "Hartă din OpenStreetMap: străzi, clădiri din Chișinău — "
+              "autonomă, nu necesită internet; 2D/3D cu extrudare pe "
+              "număr de etaje",
+        "en": "A map from OpenStreetMap: Chisinau streets and "
+              "buildings — self-contained, no internet needed; 2D/3D "
+              "extruded by floor count",
+    },
+    "p2.s6.li2": {
+        "ru": "Эмуляция торгового дня (1 с = 10 мин): продажи и выручка "
+              "в молдавских леях (L), пустые полки, лента событий",
+        "ro": "Emularea zilei comerciale (1 s = 10 min): vânzări și "
+              "venituri în lei moldovenești (L), rafturi goale, flux de "
+              "evenimente",
+        "en": "A simulated trading day (1 s = 10 min): sales and "
+              "revenue in Moldovan lei (L), empty shelves, an event "
+              "feed",
+    },
+    "p2.s6.li3": {
+        "ru": "Zabbix: бейдж активных проблем на каждом магазине, "
+              "список в карточке (реальный API или эмуляция)",
+        "ro": "Zabbix: insignă cu probleme active pe fiecare magazin, "
+              "listă în card (API real sau emulare)",
+        "en": "Zabbix: an active-problems badge on every store, listed "
+              "in its card (a real API or an emulation)",
+    },
+    "p2.s6.li4": {
+        "ru": "РЦ-буфер: пустая полка → заказ → грузовик по улицам "
+              "Кишинёва → пополнение; перезаказ у поставщиков",
+        "ro": "Buffer DC: raft gol → comandă → camion pe străzile "
+              "Chișinăului → reaprovizionare; recomandă la furnizori",
+        "en": "A DC buffer: empty shelf → order → a truck through "
+              "Chisinau streets → restock; supplier re-ordering",
+    },
+    "p2.s6.li5": {
+        "ru": "Игровой вход в магазин: подлёт камеры, «дверь», "
+              "интерьер с тремя вкладками",
+        "ro": "Intrare în magazin, în stil de joc: zbor de cameră, "
+              "„ușă”, interior cu trei file",
+        "en": "A gamified store entry: a camera fly-in, a “door”, an "
+              "interior with three tabs",
+    },
+    "p2.s6.stat1": {
+        "ru": "магазинов сети<br>в Кишинёве",
+        "ro": "magazine ale rețelei<br>din Chișinău",
+        "en": "network stores<br>in Chisinau",
+    },
+    "p2.s6.stat2": {
+        "ru": "рейсы РЦ по улицам<br>города, в реальном времени",
+        "ro": "curse DC pe străzile<br>orașului, în timp real",
+        "en": "DC runs on city<br>streets, in real time",
+    },
+    "p2.s6.link.map": {
+        "ru": "Карта сети (3D + Zabbix + РЦ)",
+        "ro": "Harta rețelei (3D + Zabbix + DC)",
+        "en": "Network map (3D + Zabbix + DC)",
+    },
+    "p2.s6.link.api": {
+        "ru": "API состояния сети (JSON)", "ro": "API stare rețea (JSON)",
+        "en": "Network state API (JSON)",
+    },
+
+    # -- слайд 7: симуляция зала --
+    "p2.s7.title": {
+        "ru": "Симуляция зала: датчики магазина на одной схеме",
+        "ro": "Simularea sălii: senzorii magazinului pe o singură schemă",
+        "en": "Store-floor simulation: every sensor on one screen",
+    },
+    "p2.s7.li1": {
+        "ru": "Покупатели ходят к реальным стеллажам планограммы, "
+              "весам, кассам и СКО",
+        "ro": "Clienții merg la rafturile reale ale planogramei, la "
+              "cântare, case și punctul de control",
+        "en": "Shoppers walk to the planogram's real racks, scales, "
+              "tills and the checkpoint",
+    },
+    "p2.s7.li2": {
+        "ru": "Очереди у касс в реальном времени; оценка трафика: "
+              "датчики входа/выхода − очереди = равномерно по залу",
+        "ro": "Cozi la case în timp real; estimarea traficului: "
+              "senzori intrare/ieșire − cozi = distribuit uniform în "
+              "sală",
+        "en": "Real-time checkout queues; footfall estimate: "
+              "entry/exit sensors minus queues = spread evenly over the "
+              "floor",
+    },
+    "p2.s7.li3": {
+        "ru": "ТСД: BLE-маяки (±0.5–1 м) в торговой зоне, LoRa (±2–3.5 "
+              "м) на остальной площади, круги точности",
+        "ro": "Terminale mobile: beacon-uri BLE (±0.5–1 m) în zona de "
+              "vânzare, LoRa (±2–3.5 m) pe restul suprafeței, cercuri de "
+              "precizie",
+        "en": "Handhelds: BLE beacons (±0.5–1 m) on the sales floor, "
+              "LoRa (±2–3.5 m) elsewhere, accuracy circles",
+    },
+    "p2.s7.li4": {
+        "ru": "Холодильники: температура, дверца, компрессор, тревоги; "
+              "зоны скоропорта выделены",
+        "ro": "Frigidere: temperatură, ușă, compresor, alarme; zonele "
+              "de produse perisabile sunt evidențiate",
+        "en": "Fridges: temperature, door, compressor, alarms; "
+              "perishable zones are highlighted",
+    },
+    "p2.s7.li5": {
+        "ru": "Расходники: лента касс/весов, кульки — заявки на замену",
+        "ro": "Consumabile: bandă case/cântare, pungi — cereri de "
+              "înlocuire",
+        "en": "Consumables: till/scale rolls, bags — replacement "
+              "requests",
+    },
+    "p2.s7.li6": {
+        "ru": "Единая шина событий: эмулятор или реальные кассы/CCTV "
+              "(POST /api/instore/&lt;id&gt;/ingest)",
+        "ro": "O singură magistrală de evenimente: emulator sau case "
+              "reale/CCTV (POST /api/instore/&lt;id&gt;/ingest)",
+        "en": "One event bus: an emulator or real tills/CCTV (POST "
+              "/api/instore/&lt;id&gt;/ingest)",
+    },
+    "p2.s7.stat": {
+        "ru": "типов событий<br>от реальных систем",
+        "ro": "tipuri de evenimente<br>din sisteme reale",
+        "en": "event types<br>from real systems",
+    },
+    "p2.s7.link.hall": {
+        "ru": "Зал магазина №17", "ro": "Sala magazinului nr. 17",
+        "en": "Store 17 floor",
+    },
+    "p2.s7.link.api": {
+        "ru": "Поток состояния (JSON)", "ro": "Flux de stare (JSON)",
+        "en": "State stream (JSON)",
+    },
+
+    # -- слайд 8: тренажёр + Roblox --
+    "p2.s8.title": {
+        "ru": "Тренажёр персонала и мотивация в Roblox",
+        "ro": "Simulator pentru personal și motivare în Roblox",
+        "en": "Staff trainer and Roblox motivation",
+    },
+    "p2.s8.li1": {
+        "ru": "Игра в жанре тайм-менеджмента: склад → полки → касса, "
+              "уборка, лента, холодильники",
+        "ro": "Joc de tip time-management: depozit → rafturi → casă, "
+              "curățenie, bandă, frigidere",
+        "en": "A time-management game: storeroom → shelves → till, "
+              "cleaning, the belt, fridges",
+    },
+    "p2.s8.li2": {
+        "ru": "Покупатели с терпением ❤ — уходят злыми, если ждать",
+        "ro": "Clienți cu răbdare ❤ — pleacă supărați dacă așteaptă",
+        "en": "Shoppers have patience ❤ — they leave angry if kept "
+              "waiting",
+    },
+    "p2.s8.li3": {
+        "ru": "3 смены-уровня, звёзды, разбор ошибок и советы в конце",
+        "ro": "3 schimburi-nivel, stele, analiza greșelilor și sfaturi "
+              "la final",
+        "en": "3 shift levels, stars, an end-of-shift error review and "
+              "tips",
+    },
+    "p2.s8.li4": {
+        "ru": "Регистрация: имя + ник Roblox; баллы и бейджи за кейсы",
+        "ro": "Înregistrare: nume + nick Roblox; puncte și insigne "
+              "pentru cazuri",
+        "en": "Sign-up: a name plus a Roblox nickname; points and "
+              "badges per scenario",
+    },
+    "p2.s8.li5": {
+        "ru": "Open Cloud: DataStore + MessagingService — поощрение "
+              "видно прямо в Roblox-опыте",
+        "ro": "Open Cloud: DataStore + MessagingService — recompensele "
+              "se văd direct în experiența Roblox",
+        "en": "Open Cloud: DataStore + MessagingService — rewards show "
+              "up right inside the Roblox experience",
+    },
+    "p2.s8.li6": {
+        "ru": "Конвертер robloxkit: зал с реальной планограммой → "
+              ".rbxlx для Roblox Studio",
+        "ro": "Convertorul robloxkit: sala cu planograma reală → "
+              ".rbxlx pentru Roblox Studio",
+        "en": "The robloxkit converter: the floor with a real "
+              "planogram → .rbxlx for Roblox Studio",
+    },
+    "p2.s8.stat1": {
+        "ru": "смены-уровня<br>обучения", "ro": "schimburi-nivel<br>de instruire",
+        "en": "training<br>shift levels",
+    },
+    "p2.s8.stat2": {
+        "ru": "бейджа<br>команды", "ro": "insigne<br>de echipă",
+        "en": "team<br>badges",
+    },
+    "p2.s8.link.play": {"ru": "Сыграть смену", "ro": "Joacă un schimb",
+                         "en": "Play a shift"},
+    "p2.s8.link.team": {"ru": "Лидерборд команды", "ro": "Clasamentul echipei",
+                         "en": "Team leaderboard"},
+    "p2.s8.link.api": {"ru": "API команды (JSON)", "ro": "API echipă (JSON)",
+                        "en": "Team API (JSON)"},
+
+    # -- слайд 9: доставка --
+    "p2.s9.title": {
+        "ru": "Интернет-заказы: сборка → маршруты → Гант → GPS → чек",
+        "ro": "Comenzi online: asamblare → rute → Gantt → GPS → bon",
+        "en": "Online orders: picking → routes → Gantt → GPS → receipt",
+    },
+    "p2.s9.li1": {
+        "ru": "Заказы привязываются к ближайшему магазину, сборка по "
+              "планограмме",
+        "ro": "Comenzile se leagă de cel mai apropiat magazin, "
+              "asamblare după planogramă",
+        "en": "Orders attach to the nearest store, picking follows the "
+              "planogram",
+    },
+    "p2.s9.li2": {
+        "ru": "Группировка в маршруты по 2–4 адреса («ближайший "
+              "сосед»)",
+        "ro": "Gruparea în rute de 2–4 adrese („cel mai apropiat "
+              "vecin”)",
+        "en": "Grouping into routes of 2–4 addresses (“nearest "
+              "neighbour”)",
+    },
+    "p2.s9.li3": {
+        "ru": "Диаграмма Ганта: план/факт каждого плеча, линия «сейчас», "
+              "опоздания красным",
+        "ro": "Diagramă Gantt: plan/fapt pentru fiecare etapă, linia "
+              "„acum”, întârzierile în roșu",
+        "en": "A Gantt chart: plan vs. actual per leg, a “now” line, "
+              "delays in red",
+    },
+    "p2.s9.li4": {
+        "ru": "Курьеры на карте по GPS из приложения "
+              "(POST /api/delivery/gps); без телеметрии — эмуляция",
+        "ro": "Curieri pe hartă după GPS din aplicație "
+              "(POST /api/delivery/gps); fără telemetrie — emulare",
+        "en": "Couriers on the map by GPS from the app "
+              "(POST /api/delivery/gps); an emulation without telemetry",
+    },
+    "p2.s9.li5": {
+        "ru": "Чек в момент вручения — bon fiscal по молдавскому "
+              "законодательству (HG 141/2019); печатная форма 80 мм",
+        "ro": "Bonul la predare — bon fiscal conform legislației "
+              "moldovenești (HG 141/2019); format tipărit de 80 mm",
+        "en": "A receipt on hand-over — a Moldovan bon fiscal (HG "
+              "141/2019); an 80 mm printed slip",
+    },
+    "p2.s9.stat": {
+        "ru": "варианта курьерского<br>приложения",
+        "ro": "variante de aplicație<br>pentru curier",
+        "en": "courier app<br>variants",
+    },
+    "p2.s9.link.dash": {"ru": "Дашборд доставки", "ro": "Panoul de livrare",
+                         "en": "Delivery dashboard"},
+    "p2.s9.link.receipt": {
+        "ru": "Последний bon fiscal", "ro": "Ultimul bon fiscal",
+        "en": "Latest fiscal receipt",
+    },
+    "p2.s9.link.api": {"ru": "API доставки (JSON)", "ro": "API livrare (JSON)",
+                        "en": "Delivery API (JSON)"},
+
+    # -- слайд 10: ИИ-табло --
+    "p2.s10.title": {
+        "ru": "ИИ-табло прибытия: каждый пункт видит свой транспорт",
+        "ro": "Tablou de sosire cu IA: fiecare punct își vede "
+              "transportul",
+        "en": "AI arrival board: every point sees its own transport",
+    },
+    "p2.s10.sub": {
+        "ru": "по аналогии с «умными остановками» городского транспорта "
+              "(Urban Way, Бельцы · EIT Urban Mobility): GPS-телеметрия "
+              "машин → ИИ-модель → онлайн-табло на пункте",
+        "ro": "prin analogie cu „stațiile inteligente” de transport "
+              "public (Urban Way, Bălți · EIT Urban Mobility): "
+              "telemetrie GPS a mașinilor → model IA → tablou online la "
+              "punct",
+        "en": "by analogy with “smart stops” for city transit (Urban "
+              "Way, Bălți · EIT Urban Mobility): vehicle GPS telemetry "
+              "→ an AI model → an online board at the point",
+    },
+    "p2.s10.li1": {
+        "ru": "Магазин: табло машин поставщиков и РЦ прямо в карточке "
+              "на карте — время прибытия, ±σ, прогресс рейса",
+        "ro": "Magazin: tabloul mașinilor furnizorilor și DC direct în "
+              "cardul de pe hartă — ora de sosire, ±σ, progresul cursei",
+        "en": "Store: a board of supplier and DC vehicles right in the "
+              "map card — ETA, ±σ, run progress",
+    },
+    "p2.s10.li2": {
+        "ru": "Адрес покупателя: клик по точке на дашборде доставки — "
+              "курьер, позиция в очереди, ИИ-время против плана, живое "
+              "обновление",
+        "ro": "Adresa clientului: clic pe punctul de pe panoul de "
+              "livrare — curier, poziția în coadă, ora IA vs. plan, "
+              "actualizare live",
+        "en": "Customer address: click a point on the delivery "
+              "dashboard — courier, queue position, AI time vs. plan, "
+              "live updates",
+    },
+    "p2.s10.li3": {
+        "ru": "Модель обучается онлайн на телеметрии каждого "
+              "завершённого плеча: EWMA-скорости с дисперсией, "
+              "коэффициенты трафика по часу суток, длительность "
+              "вручения",
+        "ro": "Modelul învață online din telemetria fiecărei etape "
+              "finalizate: viteze EWMA cu dispersie, coeficienți de "
+              "trafic pe ora zilei, durata predării",
+        "en": "The model trains online on every completed leg's "
+              "telemetry: EWMA speeds with variance, hourly traffic "
+              "coefficients, hand-over duration",
+    },
+    "p2.s10.li4": {
+        "ru": "Неопределённость честная: ±1σ накапливается по плечам "
+              "маршрута",
+        "ro": "Incertitudinea este onestă: ±1σ se acumulează pe "
+              "etapele rutei",
+        "en": "Honest uncertainty: ±1σ accumulates leg by leg along "
+              "the route",
+    },
+    "p2.s10.li5": {
+        "ru": "Тот же прогнозист обслуживает и топливный контур: табло "
+              "прибытия бензовозов на АЗС",
+        "ro": "Același predictor deservește și conturul de combustibil: "
+              "tabloul de sosire al cisternelor la stații",
+        "en": "The same forecaster also serves the fuel loop: a "
+              "tanker arrival board at fuel stations",
+    },
+    "p2.s10.stat1": {
+        "ru": "доверительный<br>интервал прогноза",
+        "ro": "interval de<br>încredere al prognozei",
+        "en": "forecast<br>confidence interval",
+    },
+    "p2.s10.stat2": {
+        "ru": "обучаемых часовых<br>коэффициента трафика",
+        "ro": "coeficienți orari<br>de trafic, antrenabili",
+        "en": "trainable hourly<br>traffic coefficients",
+    },
+    "p2.s10.link.points": {
+        "ru": "Табло на точках доставки", "ro": "Tabloul la punctele de livrare",
+        "en": "Board at delivery points",
+    },
+    "p2.s10.link.store": {
+        "ru": "Табло магазина на карте", "ro": "Tabloul magazinului pe hartă",
+        "en": "Store board on the map",
+    },
+    "p2.s10.link.api": {
+        "ru": "API табло (JSON)", "ro": "API tablou (JSON)",
+        "en": "Board API (JSON)",
+    },
+
+    # -- слайд 11: топливный контур (новое) --
+    "p2.s11.title": {
+        "ru": "Топливный контур: цифровой двойник сети АЗС Молдовы",
+        "ro": "Contur de combustibil: geamănul digital al rețelei de "
+              "stații din Moldova",
+        "en": "Fuel loop: a digital twin of Moldova's fuel-station "
+              "network",
+    },
+    "p2.s11.sub": {
+        "ru": "тот же архитектурный приём, что и у розничной сети — "
+              "автономная карта, движение по реальным дорогам, "
+              "ИИ-табло прибытия — применён к другому домену",
+        "ro": "aceeași soluție arhitecturală ca la rețeaua de retail — "
+              "hartă autonomă, deplasare pe drumuri reale, tablou de "
+              "sosire cu IA — aplicată unui alt domeniu",
+        "en": "the same architectural trick as retail — a "
+              "self-contained map, movement on real roads, an AI "
+              "arrival board — applied to a different domain",
+    },
+    "p2.s11.li1": {
+        "ru": "46 реальных АЗС по всей Молдове плюс нефтебаза Сынжера "
+              "— автономная карта страны (OSM), интернет не нужен",
+        "ro": "46 de stații reale din toată Moldova, plus baza de "
+              "combustibil Sîngera — hartă autonomă a țării (OSM), fără "
+              "internet",
+        "en": "46 real fuel stations across Moldova plus the Sîngera "
+              "fuel depot — a self-contained country map (OSM), no "
+              "internet needed",
+    },
+    "p2.s11.li2": {
+        "ru": "Бензовозы едут по настоящим трассам Молдовы (граф "
+              "дорог, A*), а не по прямой",
+        "ro": "Cisternele circulă pe șoselele reale ale Moldovei (graf "
+              "rutier, A*), nu în linie dreaptă",
+        "en": "Tankers drive on Moldova's real roads (a road graph, "
+              "A*), not straight lines",
+    },
+    "p2.s11.li3": {
+        "ru": "Автозаказ: остаток на станции падает ниже порога → "
+              "рейс бензовоза формируется автоматически",
+        "ro": "Comandă automată: stocul stației scade sub prag → cursa "
+              "cisternei se generează automat",
+        "en": "Auto-ordering: a station's stock drops below a "
+              "threshold → a tanker run is generated automatically",
+    },
+    "p2.s11.li4": {
+        "ru": "Живая интеграция с ERP Artgranit: система опрашивает "
+              "реальный источник, при недоступности откатывается в "
+              "эмуляцию по таймауту — без единого сбоя демо",
+        "ro": "Integrare live cu ERP Artgranit: sistemul interoghează "
+              "sursa reală, iar la indisponibilitate revine la emulare "
+              "după un timeout — fără nicio întrerupere a demo-ului",
+        "en": "A live integration with the Artgranit ERP: the system "
+              "polls the real source and falls back to emulation on a "
+              "timeout when it's unreachable — with no demo downtime",
+    },
+    "p2.s11.li5": {
+        "ru": "ИИ-табло прибытия на каждой станции — тот же "
+              "прогнозист eta_ai.py, что и в розничной доставке",
+        "ro": "Tablou de sosire cu IA la fiecare stație — același "
+              "predictor eta_ai.py ca la livrarea de retail",
+        "en": "An AI arrival board at every station — the same "
+              "eta_ai.py forecaster as retail delivery",
+    },
+    "p2.s11.li6": {
+        "ru": "Лента событий: заказ, отгрузка с нефтебазы, прибытие, "
+              "отказ/восстановление связи с ERP",
+        "ro": "Flux de evenimente: comandă, expediere de la baza de "
+              "combustibil, sosire, pierderea/restabilirea legăturii cu "
+              "ERP",
+        "en": "An event feed: order, dispatch from the depot, "
+              "arrival, ERP link loss/recovery",
+    },
+    "p2.s11.stat1": {
+        "ru": "АЗС по<br>всей Молдове", "ro": "stații în<br>toată Moldova",
+        "en": "stations across<br>Moldova",
+    },
+    "p2.s11.stat2": {
+        "ru": "источник данных:<br>эмуляция или Artgranit",
+        "ro": "sursa datelor:<br>emulare sau Artgranit",
+        "en": "data source:<br>emulation or Artgranit",
+    },
+    "p2.s11.link.map": {
+        "ru": "Карта топливной сети", "ro": "Harta rețelei de combustibil",
+        "en": "Fuel network map",
+    },
+    "p2.s11.link.api": {
+        "ru": "API состояния (JSON)", "ro": "API stare (JSON)",
+        "en": "State API (JSON)",
+    },
+    "p2.s11.link.integration": {
+        "ru": "Как подключена ERP Artgranit", "ro": "Cum e conectat ERP-ul Artgranit",
+        "en": "How the Artgranit ERP is connected",
+    },
+
+    # -- слайд 12: bon fiscal (новое) --
+    "p2.s12.title": {
+        "ru": "Чек по молдавскому законодательству: bon fiscal",
+        "ro": "Bonul conform legislației moldovenești: bon fiscal",
+        "en": "A receipt under Moldovan law: bon fiscal",
+    },
+    "p2.s12.sub": {
+        "ru": "HG 141/2019, Serviciul Fiscal de Stat — формат чека "
+              "переработан под требования Молдовы",
+        "ro": "HG 141/2019, Serviciul Fiscal de Stat — formatul bonului "
+              "a fost adaptat cerințelor Moldovei",
+        "en": "HG 141/2019, Serviciul Fiscal de Stat — the receipt "
+              "format was rebuilt for Moldova's requirements",
+    },
+    "p2.s12.li1": {
+        "ru": "Реквизиты компании: наименование, IDNO (фискальный "
+              "код), адрес подразделения",
+        "ro": "Datele companiei: denumire, IDNO (cod fiscal), adresa "
+              "subdiviziunii",
+        "en": "Company details: name, IDNO (tax code), subdivision "
+              "address",
+    },
+    "p2.s12.li2": {
+        "ru": "Заводской и регистрационный номера ECC (аппарата "
+              "контроля кассового), а не российские ФН/ФД/ФП",
+        "ro": "Numărul de fabricație și de înregistrare ECC, nu FN/FD/FP "
+              "din legislația rusă",
+        "en": "ECC factory and registration numbers, not the Russian "
+              "FN/FD/FP fields",
+    },
+    "p2.s12.li3": {
+        "ru": "TVA считается по ставкам отдельно для каждой позиции: "
+              "20% стандартная, 8% льготная (хлеб, молоко и другие "
+              "товары первой необходимости)",
+        "ro": "TVA se calculează pe cote, separat pentru fiecare "
+              "poziție: 20% standard, 8% redusă (pâine, lapte și alte "
+              "produse de primă necesitate)",
+        "en": "VAT (TVA) is computed per rate for each line item: 20% "
+              "standard, 8% reduced (bread, milk and other essentials)",
+    },
+    "p2.s12.li4": {
+        "ru": "Печатная форма 80 мм — тот же чек, что уходит на "
+              "Android с облачной кассой или на терминал SmartOne",
+        "ro": "Format tipărit de 80 mm — același bon care merge pe "
+              "Android cu casă de marcat în cloud sau pe terminalul "
+              "SmartOne",
+        "en": "An 80 mm printed slip — the same receipt sent to an "
+              "Android device with a cloud till or a SmartOne terminal",
+    },
+    "p2.s12.li5": {
+        "ru": "Формируется в момент вручения заказа курьером, привязан "
+              "к конкретному маршруту и получателю",
+        "ro": "Se generează în momentul predării comenzii de către "
+              "curier, legat de o rută și un destinatar anume",
+        "en": "Generated the moment a courier hands over the order, "
+              "tied to a specific route and recipient",
+    },
+    "p2.s12.stat": {
+        "ru": "ставки TVA<br>по видам товаров",
+        "ro": "cote TVA<br>pe categorii de produse",
+        "en": "TVA rates<br>by product category",
+    },
+    "p2.s12.link.receipt": {
+        "ru": "Последний bon fiscal (демо)",
+        "ro": "Ultimul bon fiscal (demo)", "en": "Latest bon fiscal (demo)",
+    },
+    "p2.s12.link.dash": {
+        "ru": "Дашборд доставки", "ro": "Panoul de livrare",
+        "en": "Delivery dashboard",
+    },
+
+    # -- слайд 13: трёхъязычность (новое) --
+    "p2.s13.title": {
+        "ru": "Три языка интерфейса: ru / ro / en",
+        "ro": "Trei limbi ale interfeței: ru / ro / en",
+        "en": "Three interface languages: ru / ro / en",
+    },
+    "p2.s13.sub": {
+        "ru": "румынский — государственный язык страны, русский и "
+              "английский — рабочие языки текущей аудитории",
+        "ro": "româna — limba de stat, rusa și engleza — limbile de "
+              "lucru ale audienței curente",
+        "en": "Romanian is the state language, Russian and English "
+              "are the current audience's working languages",
+    },
+    "p2.s13.li1": {
+        "ru": "Каталог из 422 переводимых ключей: интерфейс, лента "
+              "событий, чек, подсказки тренажёра",
+        "ro": "Catalog cu 422 de chei traduse: interfață, flux de "
+              "evenimente, bon, indicii ale simulatorului",
+        "en": "A catalogue of 422 translatable keys: interface, event "
+              "feed, receipt, trainer hints",
+    },
+    "p2.s13.li2": {
+        "ru": "Переключатель языка на каждом экране — карта, "
+              "доставка, топливная сеть, планограмма, тренажёр, "
+              "документация, презентации",
+        "ro": "Comutator de limbă pe fiecare ecran — hartă, livrare, "
+              "rețea de combustibil, planogramă, simulator, "
+              "documentație, prezentări",
+        "en": "A language switcher on every screen — map, delivery, "
+              "fuel network, planogram, trainer, documentation, "
+              "presentations",
+    },
+    "p2.s13.li3": {
+        "ru": "Множественное число считается по правилам каждого "
+              "языка отдельно (русский — 3 формы, румынский — 2, "
+              "английский — 2)",
+        "ro": "Pluralul se calculează după regulile fiecărei limbi în "
+              "parte (rusa — 3 forme, română — 2, engleză — 2)",
+        "en": "Plural forms follow each language's own rules "
+              "(Russian — 3 forms, Romanian — 2, English — 2)",
+    },
+    "p2.s13.li4": {
+        "ru": "Выбор языка запоминается (localStorage) и переживает "
+              "переходы между разделами по ссылке",
+        "ro": "Alegerea limbii este reținută (localStorage) și "
+              "supraviețuiește navigării între secțiuni prin linkuri",
+        "en": "The language choice is remembered (localStorage) and "
+              "survives navigation between sections via links",
+    },
+    "p2.s13.li5": {
+        "ru": "Событийная лента и bon fiscal собираются на языке "
+              "запроса на сервере — не только статические подписи",
+        "ro": "Fluxul de evenimente și bonul fiscal se compun pe "
+              "server, în limba cererii — nu doar etichetele statice",
+        "en": "The event feed and the fiscal receipt are assembled on "
+              "the server in the request's language — not just static "
+              "labels",
+    },
+    "p2.s13.stat1": {"ru": "языка", "ro": "limbi", "en": "languages"},
+    "p2.s13.stat2": {
+        "ru": "ключа каталога", "ro": "chei de catalog", "en": "catalogue keys",
+    },
+    "p2.s13.link.ro": {
+        "ru": "Эта презентация по-румынски", "ro": "Această prezentare în română",
+        "en": "This presentation in Romanian",
+    },
+    "p2.s13.link.en": {
+        "ru": "Эта презентация по-английски", "ro": "Această prezentare în engleză",
+        "en": "This presentation in English",
+    },
+    "p2.s13.link.docs": {
+        "ru": "Документация (тоже на 3 языках)",
+        "ro": "Documentație (tot în 3 limbi)", "en": "Docs (also 3 languages)",
+    },
+
+    # -- BPMN: пополнение полки --
+    "p2.bpmn1.title": {
+        "ru": "Бизнес-процесс: пополнение полки через РЦ",
+        "ro": "Proces de business: reaprovizionarea raftului prin DC",
+        "en": "Business process: shelf replenishment via the DC",
+    },
+    "p2.bpmn.sub": {
+        "ru": "Нотация BPMN (стиль ELMA) · каждая фигура кликабельна и "
+              "открывает соответствующий экран демо-системы",
+        "ro": "Notație BPMN (stil ELMA) · fiecare figură este "
+              "clickabilă și deschide ecranul corespunzător din demo",
+        "en": "BPMN notation (ELMA style) · every shape is clickable "
+              "and opens the matching demo screen",
+    },
+    "p2.bpmn1.lane1": {"ru": "Магазин (торговый зал)", "ro": "Magazin (sala de vânzare)",
+                        "en": "Store (sales floor)"},
+    "p2.bpmn1.lane2": {"ru": "Логистический центр", "ro": "Centrul logistic",
+                        "en": "Distribution centre"},
+    "p2.bpmn1.lane3": {"ru": "Поставщик", "ro": "Furnizor", "en": "Supplier"},
+    "p2.bpmn1.start": {"ru": "продажи идут", "ro": "vânzările continuă",
+                        "en": "sales in progress"},
+    "p2.bpmn1.t1": {"ru": "Контроль остатков", "ro": "Control stocuri",
+                     "en": "Stock monitoring"},
+    "p2.bpmn1.t1.sub": {"ru": "3D-планограмма ↗", "ro": "planogramă 3D ↗",
+                         "en": "3D planogram ↗"},
+    "p2.bpmn1.d1": {"ru": "полка", "ro": "raftul", "en": "shelf"},
+    "p2.bpmn1.d1.sub": {"ru": "пуста? ↗", "ro": "gol? ↗", "en": "empty? ↗"},
+    "p2.bpmn1.t2": {"ru": "Заказ пополнения", "ro": "Comandă de reaprovizionare",
+                     "en": "Replenishment order"},
+    "p2.bpmn1.t2.sub": {"ru": "в РЦ (карта) ↗", "ro": "la DC (hartă) ↗",
+                         "en": "to the DC (map) ↗"},
+    "p2.bpmn1.d2": {"ru": "есть на", "ro": "există în", "en": "in"},
+    "p2.bpmn1.d2b": {"ru": "складе? ↗", "ro": "depozit? ↗", "en": "stock? ↗"},
+    "p2.bpmn1.t3": {"ru": "Отгрузка: рейс 🚚", "ro": "Expediere: cursă 🚚",
+                     "en": "Dispatch: a run 🚚"},
+    "p2.bpmn1.t3.sub": {"ru": "грузовик на карте ↗", "ro": "camion pe hartă ↗",
+                         "en": "truck on the map ↗"},
+    "p2.bpmn1.t4": {"ru": "Приёмка и пополнение", "ro": "Recepție și reaprovizionare",
+                     "en": "Receiving and restocking"},
+    "p2.bpmn1.t4.sub": {"ru": "полки (зал) ↗", "ro": "raft (sală) ↗",
+                         "en": "the shelf (floor) ↗"},
+    "p2.bpmn1.t5": {"ru": "Заказ поставщику", "ro": "Comandă la furnizor",
+                     "en": "Order to supplier"},
+    "p2.bpmn1.t5.sub": {"ru": "(лента событий) ↗", "ro": "(flux evenimente) ↗",
+                         "en": "(event feed) ↗"},
+    "p2.bpmn1.t6": {"ru": "Поставка в РЦ", "ro": "Livrare la DC",
+                     "en": "Delivery to the DC"},
+    "p2.bpmn1.t6.sub": {"ru": "приход на склад ↗", "ro": "recepție la depozit ↗",
+                         "en": "warehouse receipt ↗"},
+    "p2.bpmn1.no": {"ru": "нет", "ro": "nu", "en": "no"},
+    "p2.bpmn1.yes": {"ru": "да", "ro": "da", "en": "yes"},
+    "p2.bpmn.legend1": {
+        "ru": "🟩 старт · 🔷 задача (клик — экран системы) · 🔶 "
+              "шлюз-решение · 🟥 завершение",
+        "ro": "🟩 start · 🔷 sarcină (clic — ecran de sistem) · 🔶 "
+              "poartă de decizie · 🟥 final",
+        "en": "🟩 start · 🔷 task (click — a system screen) · 🔶 "
+              "decision gateway · 🟥 end",
+    },
+    "p2.bpmn1.link": {
+        "ru": "Карта: OOS → рейс РЦ → пополнение",
+        "ro": "Harta: OOS → cursă DC → reaprovizionare",
+        "en": "Map: OOS → DC run → restocking",
+    },
+
+    # -- BPMN: интернет-заказ --
+    "p2.bpmn2.title": {
+        "ru": "Бизнес-процесс: интернет-заказ и доставка",
+        "ro": "Proces de business: comandă online și livrare",
+        "en": "Business process: an online order and delivery",
+    },
+    "p2.bpmn2.lane1": {"ru": "Клиент", "ro": "Client", "en": "Customer"},
+    "p2.bpmn2.lane2": {"ru": "Магазин: сборка и диспетчеризация",
+                        "ro": "Magazin: asamblare și dispecerizare",
+                        "en": "Store: picking and dispatch"},
+    "p2.bpmn2.lane3": {"ru": "Курьер (приложение с GPS)",
+                        "ro": "Curier (aplicație cu GPS)",
+                        "en": "Courier (GPS app)"},
+    "p2.bpmn2.t1": {"ru": "Заказ на сайте", "ro": "Comandă pe site",
+                     "en": "Order on the site"},
+    "p2.bpmn2.t1.sub": {"ru": "панель заказов ↗", "ro": "panoul comenzilor ↗",
+                         "en": "orders panel ↗"},
+    "p2.bpmn2.t2": {"ru": "Сборка по планограмме", "ro": "Asamblare după planogramă",
+                     "en": "Picking by planogram"},
+    "p2.bpmn2.t2.sub": {"ru": "new→picking→packed ↗",
+                         "ro": "new→picking→packed ↗", "en": "new→picking→packed ↗"},
+    "p2.bpmn2.d1": {"ru": "набралась", "ro": "s-a strâns", "en": "a batch"},
+    "p2.bpmn2.d1b": {"ru": "партия? ↗", "ro": "un lot? ↗", "en": "is ready? ↗"},
+    "p2.bpmn2.t3": {"ru": "Маршрут 2–4 адреса", "ro": "Rută de 2–4 adrese",
+                     "en": "Route of 2–4 addresses"},
+    "p2.bpmn2.t3.sub": {"ru": "план на Ганте ↗", "ro": "plan pe Gantt ↗",
+                         "en": "plan on Gantt ↗"},
+    "p2.bpmn2.t4": {"ru": "Доставка: GPS-трекинг", "ro": "Livrare: urmărire GPS",
+                     "en": "Delivery: GPS tracking"},
+    "p2.bpmn2.t4.sub": {"ru": "курьер на карте ↗", "ro": "curier pe hartă ↗",
+                         "en": "courier on the map ↗"},
+    "p2.bpmn2.d2": {"ru": "вручено", "ro": "predat", "en": "handed"},
+    "p2.bpmn2.d2b": {"ru": "клиенту? ↗", "ro": "clientului? ↗", "en": "to customer? ↗"},
+    "p2.bpmn2.t5": {"ru": "Bon fiscal", "ro": "Bon fiscal", "en": "Bon fiscal"},
+    "p2.bpmn2.t5.sub": {"ru": "печатная форма ↗", "ro": "format tipărit ↗",
+                         "en": "printed slip ↗"},
+    "p2.bpmn2.end_label": {"ru": "заказ у клиента", "ro": "comanda ajunge la client",
+                            "en": "order at the customer"},
+    "p2.bpmn2.no_wait": {"ru": "нет, ждём", "ro": "nu, așteptăm",
+                          "en": "no, waiting"},
+    "p2.bpmn2.legend": {
+        "ru": "Фигура «Bon fiscal» ведёт на последний живой чек "
+              "демо-системы (обновляется автоматически)",
+        "ro": "Figura „Bon fiscal” duce la ultimul bon live al "
+              "sistemului demo (se actualizează automat)",
+        "en": "The “Bon fiscal” shape opens the demo system's latest "
+              "live receipt (updates automatically)",
+    },
+    "p2.bpmn2.link": {
+        "ru": "Дашборд доставки с Гантом", "ro": "Panoul de livrare cu Gantt",
+        "en": "Delivery dashboard with Gantt",
+    },
+
+    # -- BPMN: автозаказ топлива (новое) --
+    "p2.bpmn3.title": {
+        "ru": "Бизнес-процесс: автозаказ бензовоза на АЗС",
+        "ro": "Proces de business: comanda automată a cisternei la "
+              "stație",
+        "en": "Business process: automatic tanker order for a fuel "
+              "station",
+    },
+    "p2.bpmn3.lane1": {"ru": "АЗС", "ro": "Stația de alimentare",
+                        "en": "Fuel station"},
+    "p2.bpmn3.lane2": {"ru": "Нефтебаза Сынжера", "ro": "Baza de combustibil Sîngera",
+                        "en": "Sîngera fuel depot"},
+    "p2.bpmn3.lane3": {"ru": "ERP Artgranit", "ro": "ERP Artgranit",
+                        "en": "Artgranit ERP"},
+    "p2.bpmn3.start": {"ru": "заправки идут", "ro": "alimentările continuă",
+                        "en": "refuelling in progress"},
+    "p2.bpmn3.t1": {"ru": "Контроль остатка", "ro": "Control stoc",
+                     "en": "Stock monitoring"},
+    "p2.bpmn3.t1.sub": {"ru": "карта топлива ↗", "ro": "harta combustibilului ↗",
+                         "en": "fuel map ↗"},
+    "p2.bpmn3.d1": {"ru": "ниже", "ro": "sub", "en": "below"},
+    "p2.bpmn3.d1b": {"ru": "порога? ↗", "ro": "prag? ↗", "en": "threshold? ↗"},
+    "p2.bpmn3.t2": {"ru": "Автозаказ рейса", "ro": "Comandă automată a cursei",
+                     "en": "Auto-order a run"},
+    "p2.bpmn3.t2.sub": {"ru": "без участия человека ↗",
+                         "ro": "fără intervenție umană ↗",
+                         "en": "no human in the loop ↗"},
+    "p2.bpmn3.t3": {"ru": "Опрос ERP Artgranit", "ro": "Interogarea ERP Artgranit",
+                     "en": "Polling the Artgranit ERP"},
+    "p2.bpmn3.t3.sub": {"ru": "реальные остатки ↗", "ro": "stocuri reale ↗",
+                         "en": "real stock levels ↗"},
+    "p2.bpmn3.d2": {"ru": "ERP", "ro": "ERP", "en": "ERP"},
+    "p2.bpmn3.d2b": {"ru": "доступна? ↗", "ro": "disponibil? ↗",
+                      "en": "reachable? ↗"},
+    "p2.bpmn3.t4": {"ru": "Откат в эмуляцию", "ro": "Revenire la emulare",
+                     "en": "Fall back to emulation"},
+    "p2.bpmn3.t4.sub": {"ru": "по таймауту ↗", "ro": "după timeout ↗",
+                         "en": "on timeout ↗"},
+    "p2.bpmn3.t5": {"ru": "Наливка бензовоза", "ro": "Încărcarea cisternei",
+                     "en": "Loading the tanker"},
+    "p2.bpmn3.t5.sub": {"ru": "выезд с нефтебазы ↗", "ro": "plecare de la bază ↗",
+                         "en": "leaving the depot ↗"},
+    "p2.bpmn3.t6": {"ru": "Рейс по трассе", "ro": "Cursă pe șosea",
+                     "en": "Run along the highway"},
+    "p2.bpmn3.t6.sub": {"ru": "ИИ-табло прибытия ↗", "ro": "tablou de sosire IA ↗",
+                         "en": "AI arrival board ↗"},
+    "p2.bpmn3.end_label": {"ru": "остаток пополнен", "ro": "stocul a fost refăcut",
+                            "en": "stock replenished"},
+    "p2.bpmn3.legend": {
+        "ru": "Тот же приём, что и у розничного пополнения полки: "
+              "мониторинг → авторешение → рейс по реальным дорогам; "
+              "разница — реальный источник остатков (Artgranit) вместо "
+              "эмуляции продаж",
+        "ro": "Aceeași abordare ca la reaprovizionarea raftului: "
+              "monitorizare → decizie automată → cursă pe drumuri "
+              "reale; diferența — sursa reală de stocuri (Artgranit) în "
+              "loc de emularea vânzărilor",
+        "en": "The same trick as retail shelf replenishment: "
+              "monitoring → an automatic decision → a run on real "
+              "roads; the difference is a real stock source (Artgranit) "
+              "instead of a sales emulation",
+    },
+    "p2.bpmn3.link": {
+        "ru": "Карта: остаток → рейс → табло",
+        "ro": "Harta: stoc → cursă → tablou", "en": "Map: stock → run → board",
+    },
+
+    # -- слайд итогов --
+    "p2.sf.title": {
+        "ru": "Итоги и развитие", "ro": "Concluzii și dezvoltare",
+        "en": "Summary and roadmap",
+    },
+    "p2.sf.stat1": {
+        "ru": "магазинов сети<br>в Кишинёве", "ro": "magazine ale rețelei<br>din Chișinău",
+        "en": "network stores<br>in Chisinau",
+    },
+    "p2.sf.stat2": {
+        "ru": "АЗС в<br>топливном контуре", "ro": "stații în<br>conturul de combustibil",
+        "en": "stations in<br>the fuel loop",
+    },
+    "p2.sf.stat3": {
+        "ru": "языка<br>интерфейса", "ro": "limbi ale<br>interfeței",
+        "en": "interface<br>languages",
+    },
+    "p2.sf.stat4": {
+        "ru": "объект Store<br>для всех данных",
+        "ro": "obiect Store<br>pentru toate datele",
+        "en": "Store object<br>for all data",
+    },
+    "p2.sf.desc": {
+        "ru": "Одна платформа — от полки Кишинёва до топливной трассы "
+              "по всей Молдове — на одном ядре, с живой интеграцией "
+              "первого внешнего источника (Artgranit) и молдавским "
+              "фискальным чеком.",
+        "ro": "O singură platformă — de la raftul din Chișinău până la "
+              "șoseaua de combustibil din toată Moldova — pe un singur "
+              "nucleu, cu prima integrare live (Artgranit) și bonul "
+              "fiscal moldovenesc.",
+        "en": "One platform — from a Chisinau shelf to a fuel highway "
+              "across all of Moldova — on one core, with the first "
+              "live external integration (Artgranit) and a Moldovan "
+              "fiscal receipt.",
+    },
+    "p2.sf.next": {
+        "ru": "Следующий шаг: пилот на одном реальном магазине или на "
+              "топливном сегменте, интеграция через один объект Store.",
+        "ro": "Următorul pas: un pilot pe un magazin real sau pe "
+              "segmentul de combustibil, integrare printr-un singur "
+              "obiect Store.",
+        "en": "Next step: a pilot on one real store or the fuel "
+              "segment, integrated through a single Store object.",
+    },
+    "p2.sf.link.home": {"ru": "Карта сети", "ro": "Harta rețelei",
+                         "en": "Network map"},
+    "p2.sf.link.fuel": {"ru": "Топливная сеть", "ro": "Rețeaua de combustibil",
+                         "en": "Fuel network"},
+    "p2.sf.link.docs": {"ru": "Документация", "ro": "Documentație",
+                         "en": "Documentation"},
+    "p2.sf.link.pptx": {
+        "ru": "Скачать PPTX (RO)", "ro": "Descarcă PPTX (RO)",
+        "en": "Download PPTX (RO)",
+    },
 }
 
 

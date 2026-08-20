@@ -270,6 +270,14 @@ def presentation():
     return render_template("presentation.html")
 
 
+@app.get("/presentation2")
+def presentation2():
+    """Новая трёхъязычная презентация (Кишинёв + топливный контур,
+    ИИ-табло, bon fiscal) — рядом со старой /presentation, которая не
+    трогается (см. docs/HANDOFF.md и задачу владельца)."""
+    return render_template("presentation2.html", lang=_lang())
+
+
 @app.get("/docs/")
 def docs_index():
     return redirect("/docs/readme")
@@ -280,6 +288,15 @@ def docs_pptx():
     return send_file(_PKG_ROOT / "docs" / "presentation.pptx",
                      as_attachment=True,
                      download_name="planogram3d_presentation.pptx")
+
+
+@app.get("/docs/presentation_md.pptx")
+def docs_pptx_md():
+    """Новая презентация (RO, Кишинёв + топливный контур) — отдельный
+    файл, старый presentation.pptx не затрагивается."""
+    return send_file(_PKG_ROOT / "docs" / "presentation_md.pptx",
+                     as_attachment=True,
+                     download_name="planogram3d_presentation_md.pptx")
 
 
 @app.get("/docs/article.html")
