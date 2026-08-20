@@ -239,8 +239,13 @@ class MultiGame:
             p["busy_label"] = label
             p["_done"] = done
 
+        # busy_label хранит не готовый текст, а ключ каталога
+        # ("game.busy.*") — рендерится в браузере через tt(), тем же
+        # приёмом, что и лента событий (см. `_emit`): язык здесь ещё
+        # не известен, а эти же ключи уже используются одиночным
+        # тренажёром (game.html), поэтому просто переиспользуются.
         if t["type"] == "storeroom":
-            busy(1.0, "restock", "берём товар 📦",
+            busy(1.0, "restock", "game.busy.storeroom",
                  lambda: p.update(carry=3))
         elif t["type"] == "shelf":
             sh = self.shelves[t["shelf"]]
@@ -254,7 +259,7 @@ class MultiGame:
                 p["stats"]["restock"] += 1
                 p["stats"]["points"] += POINTS["restock"]
                 self._fx(t["x"], t["y"], "game.popup.item_added", "#8bc34a")
-            busy(0.9, "restock", "выкладка…", done)
+            busy(0.9, "restock", "game.busy.shelf", done)
         elif t["type"] == "mess":
             m = self.messes.get(t["mess"])
             if not m:
@@ -265,7 +270,7 @@ class MultiGame:
                     p["stats"]["points"] += POINTS["clean"]
                     self.rep = min(100, self.rep + 2)
                     self._fx(t["x"], t["y"], "game.popup.clean", "#8bc34a")
-            busy(1.4, "clean", "уборка 🧹", done)
+            busy(1.4, "clean", "game.busy.mess", done)
         elif t["type"] == "fridge":
             def done():
                 if self.fridge_alarm:
@@ -275,7 +280,7 @@ class MultiGame:
                     self.rep = min(100, self.rep + 2)
                     self._fx(t["x"], t["y"], "game.popup.fridge_fixed",
                              "#90caf9")
-            busy(1.8, "tech", "ремонт ХВ 🧊", done)
+            busy(1.8, "tech", "game.busy.fridge", done)
         elif t["type"] == "paper":
             if self.paper > 15:
                 return
@@ -285,7 +290,7 @@ class MultiGame:
                 p["stats"]["points"] += POINTS["paper"]
                 self._fx(t["x"], t["y"], "game.popup.paper_replaced",
                          "#90caf9")
-            busy(1.6, "tech", "замена ленты 🧻", done)
+            busy(1.6, "tech", "game.busy.paper", done)
         # register: обслуживание идёт, пока игрок стоит у кассы (в tick)
 
     def _spawn_customer(self):

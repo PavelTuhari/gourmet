@@ -2,7 +2,7 @@
 <html lang="{{ lang }}">
 <head>
 <meta charset="utf-8">
-<title>{{ store_name }} — командная смена</title>
+<title>{{ store_name }} {{ t(lang, "mgame.page_title_suffix") }}</title>
 <style>
   html, body { margin:0; height:100%; font-family:'Segoe UI',system-ui,sans-serif;
                background:#141d28; color:#23303f; overflow:hidden;
@@ -79,24 +79,23 @@
     <canvas id="cv"></canvas>
     <div class="overlay" id="lobby">
       <div class="panel">
-        <h1>👥 Командная смена — до 10 игроков</h1>
+        <h1>{{ t(lang, "mgame.lobby.title") }}</h1>
         <div class="sub" id="lobby-store"></div>
-        <input id="j-name" placeholder="Имя студента" maxlength="30">
-        <input id="j-roblox" placeholder="Ник в Roblox (необязательно —
-для баллов команды)" maxlength="30">
+        <input id="j-name" placeholder="{{ t(lang, 'mgame.lobby.name_placeholder') }}" maxlength="30">
+        <input id="j-roblox" placeholder="{{ t(lang, 'mgame.lobby.roblox_placeholder') }}" maxlength="30">
         <div class="roles" id="roles"></div>
         <div class="btnrow">
-          <button id="join-btn">Войти в смену</button>
-          <button id="start-btn">▶ Начать смену</button>
+          <button id="join-btn">{{ t(lang, "mgame.lobby.join_btn") }}</button>
+          <button id="start-btn">{{ t(lang, "game.brief.start_btn") }}</button>
         </div>
         <div class="bots">
           <span style="align-self:center;font-size:12px;color:#5b6672">
-            Добавить ИИ:</span>
-          <button data-bot="cashier">🧑‍💼 кассир</button>
-          <button data-bot="merch">📦 мерч</button>
-          <button data-bot="cleaner">🧹 клинер</button>
-          <button data-bot="tech">🛠 техник</button>
-          <button data-bot="supervisor">🧑‍💻 супервайзер</button>
+            {{ t(lang, "mgame.lobby.add_ai_label") }}</span>
+          <button data-bot="cashier">🧑‍💼 {{ t(lang, "mgame.role.cashier") }}</button>
+          <button data-bot="merch">📦 {{ t(lang, "mgame.role.merch") }}</button>
+          <button data-bot="cleaner">🧹 {{ t(lang, "mgame.role.cleaner") }}</button>
+          <button data-bot="tech">🛠 {{ t(lang, "mgame.role.tech") }}</button>
+          <button data-bot="supervisor">🧑‍💻 {{ t(lang, "mgame.role.supervisor") }}</button>
         </div>
         <div id="lobby-roster"></div>
         <div class="apihint" id="api-hint"></div>
@@ -107,36 +106,43 @@
         <h1 id="r-title"></h1>
         <table class="stat-table" id="r-table"></table>
         <div class="btnrow"><button id="r-again"
-          style="background:#2f6fed;color:#fff">↻ Ещё смена</button></div>
+          style="background:#2f6fed;color:#fff">{{ t(lang, "mgame.result.retry_btn") }}</button></div>
       </div>
     </div>
   </div>
   <div id="side">
-    <div class="head"><div class="t">👥 Командная смена</div>
-      <div class="k" id="h-sub">лобби</div></div>
+    <div class="head"><div class="t">{{ t(lang, "mgame.side.title") }}</div>
+      <div class="k" id="h-sub">{{ t(lang, "mgame.side.lobby_status") }}</div></div>
     <div class="hkpis">
-      <div class="hk"><b id="h-money">0 L</b><span>выручка / цель</span></div>
-      <div class="hk"><b id="h-time">—</b><span>время</span></div>
-      <div class="hk"><b id="h-rep">—</b><span>репутация</span></div>
-      <div class="hk"><b id="h-queue">0</b><span>очередь кассы</span></div>
+      <div class="hk"><b id="h-money">0 L</b><span>{{ t(lang, "mgame.side.revenue_goal") }}</span></div>
+      <div class="hk"><b id="h-time">—</b><span>{{ t(lang, "mgame.side.time") }}</span></div>
+      <div class="hk"><b id="h-rep">—</b><span>{{ t(lang, "mgame.side.reputation") }}</span></div>
+      <div class="hk"><b id="h-queue">0</b><span>{{ t(lang, "mgame.side.queue") }}</span></div>
     </div>
-    <div id="roster"><h3>Команда</h3><div id="pl-list"></div></div>
-    <div id="evh" style="padding:0 11px"><h3>События</h3></div>
+    <div id="roster"><h3>{{ t(lang, "mgame.side.team") }}</h3><div id="pl-list"></div></div>
+    <div id="evh" style="padding:0 11px"><h3>{{ t(lang, "delivery.side.events") }}</h3></div>
     <div id="evlist"></div>
   </div>
 </div>
 
+<script src="/static/js/i18n.js"></script>
+<script>
+var LANG = {{ lang|tojson }};
+var I18N = {{ i18n_json|tojson }};
+var I18NP = {{ i18n_plural_json|tojson }};
+</script>
 <script>
 const STORE_ID = {{ store_id | tojson }};
 const CODE = new URLSearchParams(location.search).get("room") || "main";
 const API = `/api/mgame/${STORE_ID}/${CODE}`;
+const ROLE_COUNTS = [[2, "cashier"], [3, "merch"], [2, "cleaner"],
+                     [2, "tech"], [1, "supervisor"]];
 document.getElementById("lobby-store").textContent =
-  {{ store_name | tojson }} + " · комната «" + CODE + "» · роли: 2 кассира," +
-  " 3 мерчандайзера, 2 клинера, 2 техника, 1 супервайзер";
+  tt("mgame.lobby.room_line", {store: {{ store_name | tojson }}, code: CODE}) +
+  ROLE_COUNTS.map(([n, key]) =>
+    n + " " + ttn("mgame.role." + key + "_word", n)).join(", ");
 document.getElementById("api-hint").textContent =
-  `API для внешних ИИ-агентов: POST ${API}/join {"name","role","kind":"api"}` +
-  ` → цикл GET ${API}/state и POST ${API}/action` +
-  ` {"player","action":"serve|storeroom|restock|clean|fix_fridge|paper|move"}`;
+  tt("mgame.api_hint", {api: API});
 
 /* ---------- канвас (изометрия как в одиночном тренажёре) ---------- */
 const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
@@ -197,13 +203,22 @@ let ST = null, me = null, lastEv = 0, myRole = null;
 let popups = [];
 const REG = {x: 6.15, y: 1.0}, SCO = [4.2, 0.2, 1.3, 1.6],
       SCALES = [4.6, 4.6], STOREROOM = {x: 6.6, y: -0.15},
+      // f[0] — канонический id холодильника (как шлёт сервер/instore.py,
+      // см. ST.fridge_alarm), используется только для сравнения; на
+      // экране показываем переведённую подпись через fridgeLabel()
       FRIDGES = [["ХВ-1",0.25,5.05,1.15,0.55],["ХВ-2",1.65,5.05,1.15,0.55]];
+function fridgeLabel(fid) {
+  return tt("instore.label.fridge_n", {n: fid.split("-")[1]});
+}
 
 /* ---------- лобби ---------- */
 const ROLE_META = [
-  ["cashier","🧑‍💼","Кассир"], ["merch","📦","Мерч"],
-  ["cleaner","🧹","Клинер"], ["tech","🛠","Техник"],
-  ["supervisor","🧑‍💻","Суперв."]];
+  ["cashier","🧑‍💼", tt("mgame.role.cashier")],
+  ["merch","📦", tt("mgame.role.merch")],
+  ["cleaner","🧹", tt("mgame.role.cleaner")],
+  ["tech","🛠", tt("mgame.role.tech")],
+  ["supervisor","🧑‍💻", tt("mgame.role.supervisor")]];
+const ROLE_TITLE = Object.fromEntries(ROLE_META.map(r => [r[0], r[2]]));
 let selRole = "cashier";
 function renderRoles() {
   const rf = (ST && ST.roles_free) || {};
@@ -211,7 +226,8 @@ function renderRoles() {
     `<div class="role ${selRole === r[0] ? "sel" : ""} ${
         rf[r[0]] === 0 ? "full" : ""}" data-r="${r[0]}">
       <div class="ic">${r[1]}</div><div class="tt">${r[2]}</div>
-      <div class="free">своб.: ${rf[r[0]] ?? "?"}</div></div>`).join("");
+      <div class="free">${tt("mgame.lobby.free_label")}${
+        rf[r[0]] ?? "?"}</div></div>`).join("");
   document.querySelectorAll(".role").forEach(el =>
     el.onclick = () => { if (!el.classList.contains("full")) {
       selRole = el.dataset.r; renderRoles(); } });
@@ -223,16 +239,17 @@ document.getElementById("j-roblox").value =
   localStorage.getItem("pl3d_roblox") || "";
 
 document.getElementById("join-btn").onclick = async () => {
-  const name = document.getElementById("j-name").value || "Студент";
+  const name = document.getElementById("j-name").value
+    || tt("game.default_name");
   localStorage.setItem("pl3d_name", name);
-  const d = await (await fetch(API + "/join", {method: "POST",
+  const d = await (await fetch(`${API}/join?lang=${LANG}`, {method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({name, role: selRole, kind: "human",
       roblox_user: document.getElementById("j-roblox").value})})).json();
-  if (d.error) { alert("Не удалось войти: " + d.error); return; }
+  if (d.error) { alert(tt("mgame.join_error_prefix") + d.error); return; }
   me = d.player_id; myRole = d.role;
   document.getElementById("join-btn").textContent =
-    "✓ Вы в смене (" + name + ")";
+    tt("mgame.joined_label", {name});
 };
 document.getElementById("start-btn").onclick = () =>
   fetch(API + "/start", {method: "POST"});
@@ -241,7 +258,9 @@ document.getElementById("r-again").onclick = () => {
   fetch(API + "/start", {method: "POST"});
 };
 document.querySelectorAll("[data-bot]").forEach(b =>
-  b.onclick = () => fetch(API + "/bot", {method: "POST",
+  // ?lang= обязателен: /bot сервером генерирует имя бота через t(lang, ...)
+  // (см. server.py mgame_bot) — без параметра он всегда падает на 'ru'
+  b.onclick = () => fetch(`${API}/bot?lang=${LANG}`, {method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({role: b.dataset.bot})}));
 
@@ -274,6 +293,26 @@ cv.addEventListener("click", e => {
     body: JSON.stringify({player: me, ...act})});
 });
 
+/* ---------- перевод событий ленты (ключ+параметры → текст) ----------
+   Сервер (multigame.py) шлёт события как {key, params, count}, без
+   готового текста — /api/mgame/.../state не входит в эту задачу и не
+   знает языка запроса (см. i18n.py, ключи "mgame.*"), поэтому текст
+   собирается здесь же, в браузере, тем же принципом, что render_event
+   в i18n.py, только на JS: роль и суффикс "(ИИ)" резолвятся отдельно,
+   т.к. это вложенные переводимые куски, а не плоские параметры. */
+function eventText(e) {
+  const p = e.params || {};
+  if (e.key === "mgame.event.joined")
+    return tt(e.key, {name: p.name, icon: p.icon,
+      role: ROLE_TITLE[p.role] || p.role,
+      ai: p.ai ? tt("mgame.ai_suffix") : ""});
+  if (e.key === "mgame.event.started")
+    return tt(e.key, {n: e.count, goal: p.goal,
+      team_word: ttn("mgame.event.started.team_word", e.count)});
+  if (e.count != null) return ttn(e.key, e.count, p);
+  return tt(e.key, p);
+}
+
 /* ---------- опрос ---------- */
 async function poll() {
   try {
@@ -282,11 +321,12 @@ async function poll() {
     ST = st;
     for (const e of st.events) {
       lastEv = e.id;
-      if (e.kind === "fx") popups.push({x: e.x, y: e.y, text: e.fx,
+      if (e.kind === "fx") popups.push({x: e.x, y: e.y,
+        text: eventText(e),
         color: e.color || "#ffd54f", t: performance.now()});
       else {
         const el = document.createElement("div");
-        el.textContent = e.text;
+        el.textContent = eventText(e);
         const list = document.getElementById("evlist");
         list.prepend(el);
         while (list.children.length > 30) list.lastChild.remove();
@@ -297,9 +337,9 @@ async function poll() {
       document.getElementById("lobby").style.display = "flex";
       renderRoles();
       document.getElementById("lobby-roster").innerHTML =
-        "<b>В лобби:</b> " + (st.players.map(p =>
-          `${p.icon} ${p.name}${p.kind !== "human" ? " (ИИ)" : ""}`)
-          .join(" · ") || "пока никого");
+        `<b>${tt("mgame.lobby.roster_label")}</b> ` + (st.players.map(p =>
+          `${p.icon} ${p.name}${p.kind !== "human" ? tt("mgame.ai_suffix") : ""}`)
+          .join(" · ") || tt("mgame.lobby.empty"));
     } else {
       document.getElementById("lobby").style.display = "none";
     }
@@ -310,8 +350,9 @@ setInterval(poll, 600); poll();
 
 function renderSide(st) {
   document.getElementById("h-sub").textContent =
-    st.phase === "play" ? "смена идёт" :
-    st.phase === "ended" ? "смена завершена" : "лобби — ждём игроков";
+    st.phase === "play" ? tt("mgame.status.play") :
+    st.phase === "ended" ? tt("mgame.status.ended")
+                          : tt("mgame.status.lobby");
   document.getElementById("h-money").textContent =
     `${st.money} / ${st.goal} L`;
   const m = Math.floor(st.time_left / 60),
@@ -323,22 +364,25 @@ function renderSide(st) {
     st.queue_len + (st.paper <= 0 ? " 🧻!" : "");
   document.getElementById("pl-list").innerHTML = st.players.map(p =>
     `<div class="pl"><span>${p.icon}</span><span>${p.name}${
-      p.id === me ? " (вы)" : ""}</span>${
-      p.kind !== "human" ? '<span class="ai">ИИ</span>' : ""}
+      p.id === me ? tt("mgame.you_suffix") : ""}</span>${
+      p.kind !== "human" ? `<span class="ai">${tt("delivery.eta.ai_badge")}</span>` : ""}
       <span class="pts">${p.stats.points}</span></div>`).join("");
 }
 
 function showResult(st) {
   const ok = st.money >= st.goal;
   document.getElementById("r-title").textContent = ok
-    ? "✅ Командная смена пройдена!" : "❌ План не выполнен";
+    ? tt("mgame.result.title_ok") : tt("game.result.title_fail");
   const rows = [...st.players].sort((a, b) =>
     b.stats.points - a.stats.points);
   document.getElementById("r-table").innerHTML =
-    "<tr><th>Игрок</th><th>Роль</th><th>Касса</th><th>Полки</th>" +
-    "<th>Уборка</th><th>Техника</th><th>Баллы</th></tr>" +
+    `<tr><th>${tt("mgame.table.player")}</th><th>${tt("mgame.table.role")}</th>` +
+    `<th>${tt("receipt.register")}</th><th>${tt("mgame.table.shelves")}</th>` +
+    `<th>${tt("mgame.table.cleaning")}</th><th>${tt("mgame.table.tech")}</th>` +
+    `<th>${tt("mgame.table.points")}</th></tr>` +
     rows.map(p => `<tr><td>${p.icon} ${p.name}${
-      p.kind !== "human" ? " (ИИ)" : ""}</td><td>${p.role_title}</td>
+      p.kind !== "human" ? tt("mgame.ai_suffix") : ""}</td><td>${
+      ROLE_TITLE[p.role] || p.role_title}</td>
       <td>${p.stats.serve}</td><td>${p.stats.restock}</td>
       <td>${p.stats.clean}</td><td>${p.stats.fridge + p.stats.paper}</td>
       <td><b>${p.stats.points}</b></td></tr>`).join("");
@@ -364,11 +408,11 @@ function draw() {
   poly([iso(STOREROOM.x-0.55,-0.58,1.2), iso(STOREROOM.x+0.55,-0.58,1.2),
         iso(STOREROOM.x+0.55,-0.58,0), iso(STOREROOM.x-0.55,-0.58,0)],
        "#8d6e63");
-  label(STOREROOM.x, -0.15, 0.62, "📦 СКЛАД", 12, "#5d4037");
+  label(STOREROOM.x, -0.15, 0.62, tt("game.label.storeroom"), 12, "#5d4037");
   const [zx, zy, zw, zd] = SCO;
   poly([iso(zx,zy), iso(zx+zw,zy), iso(zx+zw,zy+zd), iso(zx,zy+zd)],
        "rgba(47,111,237,.15)");
-  label(zx + zw/2, zy + zd/2, 0, "СКО (само)", 11, "#2f6fed");
+  label(zx + zw/2, zy + zd/2, 0, tt("mgame.label.sco_self"), 11, "#2f6fed");
 
   const drawables = [];
   for (const s of ST.shelves)
@@ -384,16 +428,16 @@ function draw() {
       box(f[1], f[2], f[3], f[4], 0.8, alarm ? "#f3b0ab" : "#ddeef7",
           "#9fb4c4", "#8aa2b5");
       label(f[1] + f[3]/2, f[2] + f[4]/2, 1.1,
-            (alarm ? "⚠ " : "") + f[0], 10.5,
+            (alarm ? "⚠ " : "") + fridgeLabel(f[0]), 10.5,
             alarm ? "#c62828" : "#1e6fa8");
     }});
   }
   drawables.push({d: REG.x + REG.y, fn: () => {
     box(REG.x - 0.4, REG.y - 0.3, 0.8, 0.6, 0.5, "#b8c4d2", "#93a2b4",
         "#7e8ca0");
-    label(REG.x, REG.y - 0.35, 0.9, "Касса 1", 11);
+    label(REG.x, REG.y - 0.35, 0.9, tt("receipt.register") + " 1", 11);
     if (ST.paper <= 0)
-      label(REG.x, REG.y - 0.35, 1.15, "🧻 НЕТ ЛЕНТЫ", 11, "#c62828");
+      label(REG.x, REG.y - 0.35, 1.15, tt("game.label.no_paper"), 11, "#c62828");
     if (ST.serving > 0) {
       const [bx, by] = iso(REG.x, REG.y, 1.05);
       ctx.fillStyle = "#dfe5ec"; ctx.fillRect(bx-22, by-5, 44, 7);
@@ -404,7 +448,7 @@ function draw() {
   drawables.push({d: SCALES[0] + SCALES[1], fn: () => {
     box(SCALES[0]-0.25, SCALES[1]-0.2, 0.5, 0.4, 0.55, "#c9d3dd",
         "#a3aebc", "#8d99a9");
-    label(SCALES[0], SCALES[1]-0.28, 0.95, "⚖ Весы", 11);
+    label(SCALES[0], SCALES[1]-0.28, 0.95, "⚖ " + tt("instore.label.scales"), 11);
   }});
 
   for (const m of ST.messes)

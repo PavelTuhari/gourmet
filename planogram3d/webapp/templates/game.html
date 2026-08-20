@@ -136,6 +136,12 @@ function unIso(px, py) {           // экран → пол зала (z=0)
   const a = (px - OX) / SX, b = (py - OY) / SY;
   return [(a + b) / 2, (b - a) / 2];
 }
+// f.id приходит с сервера (/api/game/.../config, данные instore.py) как
+// канонический id вида "ХВ-1" — используется только для сравнения
+// (G.fridgeAlarm.id === f.id); на экране показываем переведённую подпись
+function fridgeLabel(fid) {
+  return tt("instore.label.fridge_n", {n: fid.split("-")[1]});
+}
 function poly(pts, fill, stroke) {
   ctx.beginPath();
   pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
@@ -617,7 +623,7 @@ function draw() {
   const st = CFG.storeroom;
   poly([iso(st.x-0.55,-0.58,1.2), iso(st.x+0.55,-0.58,1.2),
         iso(st.x+0.55,-0.58,0), iso(st.x-0.55,-0.58,0)], "#8d6e63");
-  label(st.x, -0.15, 0.62, "📦 СКЛАД", 12, "#5d4037");
+  label(st.x, -0.15, 0.62, tt("game.label.storeroom"), 12, "#5d4037");
 
   const drawables = [];
 
@@ -635,7 +641,7 @@ function draw() {
       box(f.x, f.y, f.w, f.d, 0.8, alarm ? "#f3b0ab" : "#ddeef7",
           "#9fb4c4", "#8aa2b5");
       label(f.x + f.w/2, f.y + f.d/2, 1.1,
-            alarm ? "⚠ " + f.id : f.id, 10.5,
+            (alarm ? "⚠ " : "") + fridgeLabel(f.id), 10.5,
             alarm ? "#c62828" : "#1e6fa8");
     }});
   }
@@ -645,9 +651,12 @@ function draw() {
         "#7e8ca0");
     box(R.x + 0.15, R.y - 0.25, 0.12, 0.12, 0.85, "#4a5a6e", "#3c4b5e",
         "#33404f");
-    label(R.x, R.y - 0.35, 0.9, R.name, 11);
+    // R.name — «Касса 1» с сервера (/api/game/.../config, POS_DESKS из
+    // instore.py, канонический id); номер сохраняем, подпись переводим
+    label(R.x, R.y - 0.35, 0.9,
+          tt("receipt.register") + " " + (R.name.split(" ")[1] || ""), 11);
     if (R.paper <= 0)
-      label(R.x, R.y - 0.35, 1.15, "🧻 НЕТ ЛЕНТЫ", 11, "#c62828");
+      label(R.x, R.y - 0.35, 1.15, tt("game.label.no_paper"), 11, "#c62828");
     if (R.servingT > 0) {
       const [bx, by] = iso(R.x, R.y, 1.05);
       ctx.fillStyle = "#dfe5ec"; ctx.fillRect(bx - 22, by - 5, 44, 7);
@@ -660,11 +669,11 @@ function draw() {
   drawables.push({ depth: en[0] + en[1], fn: () => {
     poly([iso(en[0]-.5,en[1]-.25), iso(en[0]+.5,en[1]-.25),
           iso(en[0]+.5,en[1]+.25), iso(en[0]-.5,en[1]+.25)], "#bfe3c4");
-    label(en[0], en[1], .5, "ВХОД", 10.5, "#1d7a3d"); }});
+    label(en[0], en[1], .5, tt("instore.label.entrance"), 10.5, "#1d7a3d"); }});
   drawables.push({ depth: ex[0] + ex[1], fn: () => {
     poly([iso(ex[0]-.5,ex[1]-.2), iso(ex[0]+.5,ex[1]-.2),
           iso(ex[0]+.5,ex[1]+.25), iso(ex[0]-.5,ex[1]+.25)], "#f2cdc9");
-    label(ex[0], ex[1], .5, "ВЫХОД", 10.5, "#b03a30"); }});
+    label(ex[0], ex[1], .5, tt("instore.label.exit"), 10.5, "#b03a30"); }});
 
   for (const m of G.messes)
     drawables.push({ depth: m.x + m.y - 0.4, fn: () => {

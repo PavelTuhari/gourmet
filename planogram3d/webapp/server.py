@@ -407,6 +407,8 @@ _GAME_JS_KEYS = (
     "game.popup.fridge_fixed", "game.popup.paper_replaced",
     "game.popup.mess", "game.popup.fridge_alarm", "game.label.storeroom",
     "game.label.no_paper", "game.default_name",
+    "instore.label.entrance", "instore.label.exit", "instore.label.fridge_n",
+    "receipt.register",
 )
 _GAME_JS_PLURAL_KEYS = ("game.rbx.points_word",)
 
@@ -481,7 +483,7 @@ _GAME_MULTI_JS_KEYS = (
     "game.busy.paper", "game.busy.mess", "game.busy.fridge",
     "game.popup.item_added", "game.popup.clean", "game.popup.fridge_fixed",
     "game.popup.paper_replaced", "game.popup.mess", "game.label.storeroom",
-    "game.label.no_paper", "instore.label.scales",
+    "game.label.no_paper", "instore.label.scales", "instore.label.fridge_n",
     "delivery.eta.ai_badge", "delivery.side.events",
 )
 _GAME_MULTI_JS_PLURAL_KEYS = (
@@ -513,7 +515,11 @@ def mgame_join(store_id, code):
         game = mgames.get(store_id, code)
     except KeyError:
         abort(404)
-    return jsonify(game.join(d.get("name", ""), d.get("role", ""),
+    # имя по умолчанию — на языке запроса; браузер сам подставляет
+    # tt("game.default_name") до отправки, так что сюда попадают только
+    # внешние ИИ-агенты, не указавшие имя явно
+    name = d.get("name") or t(_lang(), "game.default_name")
+    return jsonify(game.join(name, d.get("role", ""),
                              d.get("kind", "human"),
                              d.get("roblox_user", "")))
 

@@ -1478,18 +1478,24 @@ MESSAGES: Dict[str, Dict[str, _Entry]] = {
         "en": "{store} · room «{code}» · roles: ",
     },
     "mgame.api_hint": {
+        # {api} — единственный настоящий плейсхолдер (подставляется в
+        # браузере через tt(), см. game_multi.html); JSON-примеры в
+        # фигурных скобках — буквальный текст, не форматируется: этот
+        # ключ отдаётся клиенту сырым (`client_catalog` → t(lang, key)
+        # без params), .format() здесь не вызывается вовсе, поэтому
+        # скобки не нужно экранировать удвоением.
         "ru": 'API для внешних ИИ-агентов: POST {api}/join '
-              '{{"name","role","kind":"api"}} → цикл GET {api}/state и '
-              'POST {api}/action {{"player","action":"serve|storeroom|'
-              'restock|clean|fix_fridge|paper|move"}}',
+              '{"name","role","kind":"api"} → цикл GET {api}/state и '
+              'POST {api}/action {"player","action":"serve|storeroom|'
+              'restock|clean|fix_fridge|paper|move"}',
         "ro": 'API pentru agenți AI externi: POST {api}/join '
-              '{{"name","role","kind":"api"}} → ciclu GET {api}/state și '
-              'POST {api}/action {{"player","action":"serve|storeroom|'
-              'restock|clean|fix_fridge|paper|move"}}',
+              '{"name","role","kind":"api"} → ciclu GET {api}/state și '
+              'POST {api}/action {"player","action":"serve|storeroom|'
+              'restock|clean|fix_fridge|paper|move"}',
         "en": 'API for external AI agents: POST {api}/join '
-              '{{"name","role","kind":"api"}} → loop GET {api}/state and '
-              'POST {api}/action {{"player","action":"serve|storeroom|'
-              'restock|clean|fix_fridge|paper|move"}}',
+              '{"name","role","kind":"api"} → loop GET {api}/state and '
+              'POST {api}/action {"player","action":"serve|storeroom|'
+              'restock|clean|fix_fridge|paper|move"}',
     },
     "mgame.lobby.roster_label": {
         "ru": "В лобби:", "ro": "În lobby:", "en": "In lobby:",
