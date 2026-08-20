@@ -201,7 +201,10 @@ async function showEtaBoard(stationId, lon, lat) {
     <table>${rows}</table>
     <div class="src">${b.rows.length ? b.rows[0].source
       : tt("fuel.eta.source_prefix") + (b.source === "artgranit"
-          ? "Artgranit" : tt("gps.emulated"))}</div></div>`;
+          ? "Artgranit" : tt("gps.emulated"))}</div>
+    <div style="margin-top:6px">
+      <a href="/fuel/station/${stationId}?lang=${LANG}">${tt("fuel.open_3d")}</a>
+    </div></div>`;
   if (etaPopup && etaPopupStation === stationId) {   // живое обновление
     etaPopup.setHTML(html);
     return;

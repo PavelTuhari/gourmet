@@ -25,6 +25,7 @@ from .i18n import client_catalog, client_plural_forms, normalize_lang, t
 from .instore import InstoreHub
 from .multigame import MultiHub
 from .network import StoreNetwork
+from .fuelviz import build_station_page
 from .peco_fuel import ARTGRANIT_BASE_URL, FuelNetwork
 from .roblox import TeamHub
 from .zabbix import create_provider
@@ -119,7 +120,7 @@ _FUEL_JS_KEYS = (
     "fuel.eta.none", "fuel.eta.source_prefix", "eta.plan_short",
     "unit.sec_short", "unit.liters_short", "fuel.trip.done",
     "fuel.trip.enroute", "fuel.trips.empty", "fuel.runs.empty",
-    "fuel.station.tooltip", "fuel.tanker.tooltip",
+    "fuel.station.tooltip", "fuel.tanker.tooltip", "fuel.open_3d",
 )
 
 
@@ -135,6 +136,40 @@ def fuel_page():
 @app.get("/api/fuel/state")
 def api_fuel_state():
     return jsonify(fuel.state(_lang()))
+
+
+@app.get("/fuel/station/<station_id>")
+def fuel_station_page(station_id):
+    """3D-планограмма заправки: колонки, подземные цистерны с уровнем
+    топлива по маркам, бензовоз у горловины во время слива.
+
+    ``?demo_unload=1`` — тестовый хук: форсирует сцену «идёт разгрузка»,
+    не дожидаясь совпадения по времени с реальным рейсом эмулятора
+    (нужен демонстрации, см. `.superpowers/sdd/fuelviz-report.md`)."""
+    lang = _lang()
+    try:
+        sid = int(station_id)
+    except (TypeError, ValueError):
+        abort(404)
+    st = fuel.state(lang)
+    station = next((s for s in st["stations"] if s["id"] == sid), None)
+    if station is None:
+        abort(404)
+    unload = None
+    for trip in st["trips"]:
+        if trip["status"] != "en_route":
+            continue
+        stop = next((sp for sp in trip["stops"]
+                    if sp["station_id"] == sid
+                    and sp["status"] == "unloading"), None)
+        if stop is not None:
+            unload = {"driver": trip["driver"], "liters": stop["liters"],
+                     "frac": stop.get("unload_frac", 0.0)}
+            break
+    if unload is None and request.args.get("demo_unload"):
+        unload = {"driver": t(lang, "fuelviz.demo_driver"),
+                 "liters": 6000, "frac": 0.45}
+    return build_station_page(station, unload, f"/fuel?lang={lang}", lang)
 
 
 @app.get("/api/eta/fuel/<station_id>")

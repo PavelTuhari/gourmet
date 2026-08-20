@@ -181,6 +181,53 @@ STATIONS: List[Tuple[int, str, str, float, float, str, int, int,
      "Ниспорень", 101000, 51460, 3858.7, 4),
 ]
 
+#: марки топлива и их цвета — отраслевое соглашение цвета пистолета на
+#: колонках Молдовы/Румынии (95 — зелёный, 98 — синий, ДТ — жёлтый,
+#: 92 — красный/оранжевый), а не произвольный выбор; используется и
+#: 3D-планограммой станции (fuelviz.py), и легендой сцены.
+#: Доля (3-е значение) — типовая структура продаж АЗС по маркам,
+#: нужна только чтобы разложить ЕДИНЫЙ агрегированный остаток станции
+#: (Artgranit отдаёт только суммарные capacity_l/current_l, без разбивки
+#: по цистернам) на правдоподобные отдельные цистерны для сцены — см.
+#: `station_tanks()`.
+FUEL_GRADES: List[Tuple[str, str, float]] = [
+    ("A95", "#2e7d32", 0.34),
+    ("A92", "#c62828", 0.20),
+    ("DT", "#f9a825", 0.36),
+    ("A98", "#1565c0", 0.10),
+]
+FUEL_GRADE_COLOR: Dict[str, str] = {g: c for g, c, _ in FUEL_GRADES}
+
+
+def station_tanks(station: dict) -> List[dict]:
+    """Раскладка агрегированного остатка станции по 4 цистернам/маркам.
+
+    ERP Artgranit (и наш эмулятор вслед за ней) отдаёт по станции только
+    суммарные ``capacity_l``/``current_l`` — без разбивки по маркам, хотя
+    физически на станции 4 отдельные подземные цистерны с разным
+    топливом. Для 3D-планограммы (где ключевая деталь — «в какой
+    цистерне сколько») эта разбивка обязана быть, поэтому раскладываем
+    сами: ёмкость делится по типовой структуре продаж (`FUEL_GRADES`),
+    заполненность каждой цистерны — среднее по станции ± небольшой
+    детерминированный (seed = id станции) разброс, иначе все 4 цистерны
+    выглядели бы залитыми ровно на одинаковый процент — нечитаемо на
+    сцене. Это визуальная реконструкция, а не факт ERP: суммарные литры
+    станции остаются те, что пришли от Artgranit/эмулятора, разбивка по
+    цистернам — наше допущение, явно описанное в отчёте задачи."""
+    cap_total = float(station.get("capacity_l") or 0.0)
+    cur_total = float(station.get("current_l") or 0.0)
+    base_fill = (cur_total / cap_total) if cap_total else 0.0
+    tanks = []
+    for i, (grade, color, weight) in enumerate(FUEL_GRADES):
+        cap = cap_total * weight
+        rnd = random.Random(int(station.get("id", 0)) * 97 + i)
+        fill = max(0.03, min(0.98, base_fill + rnd.uniform(-0.12, 0.12)))
+        tanks.append({"grade": grade, "color": color,
+                      "capacity_l": round(cap), "current_l": round(cap * fill),
+                      "fill_ratio": round(fill, 3)})
+    return tanks
+
+
 Node = Tuple[float, float]                      # (lon, lat)
 
 
@@ -435,28 +482,51 @@ class FuelNetwork:
 
     # ----- движение бензовозов ----------------------------------------------
     def _evolve_trips(self, now: float, dt: float) -> None:
+        """Движение бензовоза + видимый слив на остановке.
+
+        Раньше остановка мгновенно переключалась pending → done в момент
+        проезда точки — «разгрузка» была нулевой длительности и её
+        нечем было бы показать на 3D-планограмме станции (владелец
+        прямо просил: слив должен быть виден как процесс). Теперь между
+        ними есть стадия ``unloading`` длиной ``UNLOAD_S``: грузовик
+        стоит у горловины (leg_pos не растёт, пока активна разгрузка),
+        а уровень в цистерне станции растёт линейно от базового значения
+        к базовому+liters — 3D-сцена станции читает именно эту стадию.
+        """
         predictor = get_predictor()
         for trip in list(self.trips.values()):
             if trip["status"] != "en_route" or now < trip["depart"]:
                 continue
             total_len = trip["_cum"][-1]
-            trip["leg_pos"] = min(total_len, trip["leg_pos"]
-                                  + TANKER_SPEED * dt)
+            active = next((s for s in trip["stops"]
+                          if s["status"] == "unloading"), None)
+            if active is None:
+                trip["leg_pos"] = min(total_len, trip["leg_pos"]
+                                      + TANKER_SPEED * dt)
             for stop in trip["stops"]:
                 if (stop["status"] == "pending"
                         and trip["leg_pos"] >= stop["cum_dist"] - 1.0):
-                    stop["status"] = "done"
+                    stop["status"] = "unloading"
+                    stop["_unload_start"] = now
+                    stop["_unload_base_l"] = \
+                        self.stations[stop["station_id"]]["current_l"]
+                    trip["leg_pos"] = stop["cum_dist"]   # стоим у горловины
+                elif stop["status"] == "unloading":
+                    frac = min(1.0, (now - stop["_unload_start"]) / UNLOAD_S)
                     station = self.stations[stop["station_id"]]
                     station["current_l"] = min(
                         station["capacity_l"],
-                        station["current_l"] + stop["liters"])
-                    leg_m = stop["cum_dist"] - trip["_prev_cum"]
-                    elapsed = max(1.0, now - trip["_leg_start_ts"])
-                    predictor.observe("tanker", leg_m, elapsed)
-                    trip["_prev_cum"] = stop["cum_dist"]
-                    trip["_leg_start_ts"] = now
-                    self._log("⛽", "fuel.log.tanker_fill", trip=trip["id"],
-                              name=stop["name"], qty=stop["liters"])
+                        stop["_unload_base_l"] + stop["liters"] * frac)
+                    if frac >= 1.0:
+                        stop["status"] = "done"
+                        leg_m = stop["cum_dist"] - trip["_prev_cum"]
+                        elapsed = max(1.0, now - trip["_leg_start_ts"])
+                        predictor.observe("tanker", leg_m, elapsed)
+                        trip["_prev_cum"] = stop["cum_dist"]
+                        trip["_leg_start_ts"] = now
+                        self._log("⛽", "fuel.log.tanker_fill",
+                                  trip=trip["id"], name=stop["name"],
+                                  qty=stop["liters"])
             if (trip["leg_pos"] >= total_len - 1.0
                     and all(s["status"] == "done" for s in trip["stops"])):
                 trip["status"] = "done"
@@ -738,10 +808,14 @@ class FuelNetwork:
                 "progress": round(progress, 3),
                 "lat": round(lat, 5), "lon": round(lon, 5),
                 "status": trip["status"], "path": trip["path"],
-                "stops": [{"station_id": s["station_id"],
-                          "name": s["name"], "liters": s["liters"],
-                          "eta_ts": s["eta_ts"], "status": s["status"]}
-                         for s in trip["stops"]],
+                "stops": [{
+                    "station_id": s["station_id"], "name": s["name"],
+                    "liters": s["liters"], "eta_ts": s["eta_ts"],
+                    "status": s["status"],
+                    **({"unload_frac": round(
+                            min(1.0, (now - s["_unload_start"]) / UNLOAD_S), 3)}
+                       if s["status"] == "unloading" else {}),
+                } for s in trip["stops"]],
             })
 
         return {

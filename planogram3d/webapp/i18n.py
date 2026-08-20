@@ -720,6 +720,78 @@ MESSAGES: Dict[str, Dict[str, _Entry]] = {
     "unit.meters_short": {"ru": "м", "ro": "m", "en": "m"},
     "unit.days_short": {"ru": "дн.", "ro": "zile", "en": "days"},
 
+    # ---- 3D-планограмма заправки (fuelviz.py, station_page) -------------
+    "fuel.open_3d": {
+        "ru": "🧊 3D-планограмма станции", "ro": "🧊 Planogramă 3D a stației",
+        "en": "🧊 3D station layout",
+    },
+    "fuelviz.title": {
+        "ru": "⛽ {name} — 3D-планограмма",
+        "ro": "⛽ {name} — planogramă 3D",
+        "en": "⛽ {name} — 3D layout",
+    },
+    "fuelviz.back_to_map": {
+        "ru": "← карта топливной сети", "ro": "← harta rețelei de combustibil",
+        "en": "← fuel network map",
+    },
+    "fuelviz.axis.height": {
+        "ru": "высота, м (0 = земля)", "ro": "înălțime, m (0 = sol)",
+        "en": "height, m (0 = ground)",
+    },
+    "fuelviz.legend_title": {
+        "ru": "марка топлива", "ro": "tip de combustibil", "en": "fuel grade",
+    },
+    "fuelviz.ground_hover": {
+        "ru": "<b>{name}</b><br>площадка АЗС, уровень земли",
+        "ro": "<b>{name}</b><br>platforma stației, nivelul solului",
+        "en": "<b>{name}</b><br>station forecourt, ground level",
+    },
+    "fuelviz.underground_hover": {
+        "ru": "подземный контур — цистерны хранения ниже уровня земли",
+        "ro": "contur subteran — rezervoare de stocare sub nivelul solului",
+        "en": "underground contour — storage tanks below ground level",
+    },
+    "fuelviz.canopy_hover": {
+        "ru": "навес топливораздаточных колонок",
+        "ro": "copertină a pompelor de combustibil",
+        "en": "fuel dispenser canopy",
+    },
+    "fuelviz.dispenser_hover": {
+        "ru": "колонка ТРК · отпускает: {grades}",
+        "ro": "pompă de combustibil · distribuie: {grades}",
+        "en": "fuel dispenser · dispenses: {grades}",
+    },
+    "fuelviz.dispenser_grade_hover": {
+        "ru": "марка {grade}", "ro": "tip {grade}", "en": "grade {grade}",
+    },
+    "fuelviz.tank_hover": {
+        "ru": "<b>Цистерна {grade}</b><br>{cur} / {cap} л ({pct}%)",
+        "ro": "<b>Rezervor {grade}</b><br>{cur} / {cap} l ({pct}%)",
+        "en": "<b>Tank {grade}</b><br>{cur} / {cap} L ({pct}%)",
+    },
+    "fuelviz.hatch_hover": {
+        "ru": "горловина цистерны {grade} — люк до уровня земли",
+        "ro": "gura rezervorului {grade} — gură până la nivelul solului",
+        "en": "tank {grade} hatch — manhole up to ground level",
+    },
+    "fuelviz.truck_hover": {
+        "ru": "🚛 бензовоз ({driver}) сливает {liters} л · разгрузка {pct}%",
+        "ro": "🚛 autocisternă ({driver}) descarcă {liters} l · descărcare {pct}%",
+        "en": "🚛 tanker ({driver}) unloading {liters} L · progress {pct}%",
+    },
+    "fuelviz.truck_label": {
+        "ru": "слив {pct}%", "ro": "descărcare {pct}%",
+        "en": "unloading {pct}%",
+    },
+    "fuelviz.demo_driver": {
+        "ru": "демо-водитель", "ro": "șofer demo", "en": "demo driver",
+    },
+    "fuelviz.panel.unloading": {
+        "ru": "Идёт разгрузка: {driver}, {liters} л, {pct}% слито",
+        "ro": "Descărcare în curs: {driver}, {liters} l, {pct}% descărcat",
+        "en": "Unloading in progress: {driver}, {liters} L, {pct}% done",
+    },
+
     # ---- лента событий и прогоны топливного контура (peco_fuel.py) ------
     "fuel.log.autoorder_dispatch": {
         "ru": "Автозаказ → рейс {trip} ({driver}): {names}",
