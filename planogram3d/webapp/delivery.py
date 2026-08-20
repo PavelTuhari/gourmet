@@ -123,7 +123,7 @@ class DeliveryHub:
             "route": None, "receipt": None,
         }
         self._log(f"🛒 Новый интернет-заказ {oid} → {store.title} "
-                  f"({len(items)} поз., {round(total)} ₽)")
+                  f"({len(items)} поз., {round(total)} L)")
 
     def _evolve_picking(self, now: float) -> None:
         for o in self.orders.values():
@@ -243,7 +243,7 @@ class DeliveryHub:
         }
         self.receipts.appendleft(receipt)
         order["receipt"] = rid
-        self._log(f"🧾 Чек {rid} ({order['id']}, {order['total']} ₽) — "
+        self._log(f"🧾 Чек {rid} ({order['id']}, {order['total']} L) — "
                   f"{receipt['print_way']}")
         return rid
 

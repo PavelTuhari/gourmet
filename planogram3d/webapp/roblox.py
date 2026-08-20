@@ -177,7 +177,7 @@ class TeamHub:
 
             reason = (f"смена {level} " +
                       ("пройдена, " + "★" * stars if stars else
-                       "не пройдена") + f", выручка {revenue} ₽")
+                       "не пройдена") + f", выручка {revenue} L")
             self.feed.insert(0, {
                 "t": time.time(),
                 "text": f"💎 {member['name']}: +{bonus} баллов — {reason}"

@@ -71,7 +71,7 @@
 <body>
 <div id="wrap">
   <div id="hud">
-    <div class="cell money"><b id="h-money">0 ₽</b><span>выручка</span>
+    <div class="cell money"><b id="h-money">0 L</b><span>выручка</span>
       <div class="goalbar"><i id="h-goal" style="width:0%"></i></div></div>
     <div class="cell" id="timer"><b id="h-time">0:00</b><span>время смены</span></div>
     <div class="cell" id="rep"><b id="h-rep">❤❤❤❤</b><span>репутация</span></div>
@@ -225,7 +225,7 @@ function showBrief() {
     CFG.store_name + " · " + L.title;
   document.getElementById("b-body").innerHTML =
     "<ul>" + L.brief.map(t => `<li>${t}</li>`).join("") + "</ul>" +
-    `<div class="goal">🎯 Цель смены: выручка ${L.goal} ₽ за ` +
+    `<div class="goal">🎯 Цель смены: выручка ${L.goal} L за ` +
     `${Math.round(G.time / 60 * 10) / 10} мин</div>`;
   document.getElementById("brief").style.display = "flex";
   document.getElementById("result").style.display = "none";
@@ -259,7 +259,7 @@ function endLevel() {
     "★".repeat(stars) + "☆".repeat(3 - stars);
   const s = G.stats;
   document.getElementById("r-stats").innerHTML = [
-    ["Выручка", `${G.money} ₽ из ${L.goal} ₽`],
+    ["Выручка", `${G.money} L из ${L.goal} L`],
     ["Обслужено покупателей", s.served],
     ["Ушли недовольными", s.lost],
     ["Пополнений полок", s.restocks],
@@ -463,7 +463,7 @@ function updRegister(dt) {
     G.money += head.bill; G.stats.served++;
     G.rep = Math.min(100, G.rep + 1.5);
     R.paper -= G.L.events.paper ? 9 : 0;
-    popup(R.x, R.y, `+${head.bill} ₽`, "#ffd54f");
+    popup(R.x, R.y, `+${head.bill} L`, "#ffd54f");
     if (G.tutor === 2) G.tutor = 3;
   }
 }
@@ -570,7 +570,7 @@ function update(dt) {
   G.popups = G.popups.filter(pp => (pp.t += dt) < 1.4);
 
   // HUD
-  document.getElementById("h-money").textContent = G.money + " ₽";
+  document.getElementById("h-money").textContent = G.money + " L";
   document.getElementById("h-goal").style.width =
     Math.min(100, 100 * G.money / L.goal) + "%";
   const m = Math.floor(G.time / 60), s = Math.floor(G.time % 60);

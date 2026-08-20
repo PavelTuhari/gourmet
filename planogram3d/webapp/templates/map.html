@@ -203,7 +203,7 @@
   <div class="sub">Эмуляция торгового дня · <b id="clock">—</b>
     (1 с = 10 мин)</div>
   <div class="totals">
-    <div class="tot"><b id="t-rev">0 ₽</b><span>выручка сети</span></div>
+    <div class="tot"><b id="t-rev">0 L</b><span>выручка сети</span></div>
     <div class="tot"><b id="t-trx">0</b><span>продаж</span></div>
     <div class="tot"><b id="t-stores">0</b><span>магазинов</span></div>
     <div class="tot"><b id="t-oos">0</b><span>пустых полок</span></div>
@@ -276,7 +276,7 @@
 
 <script src="/static/vendor/maplibre-gl.js"></script>
 <script>
-const CENTER = [28.8450, 47.0200];
+const CENTER = [28.8450, 47.0210];
 
 const roadW = (z12, z16) =>
   ["interpolate", ["linear"], ["zoom"], 12, z12, 16, z16];
@@ -334,7 +334,7 @@ const style = {
 };
 
 const map = new maplibregl.Map({
-  container: "map", style, center: CENTER, zoom: 14.2,
+  container: "map", style, center: CENTER, zoom: 12.4,
   pitch: 0, bearing: 0, antialias: true, attributionControl: false });
 map.addControl(new maplibregl.NavigationControl({visualizePitch: true}),
                "bottom-right");
@@ -346,7 +346,7 @@ function setMode(mode3d) {
   map.setLayoutProperty("bld3d", "visibility", mode3d ? "visible" : "none");
   map.setLayoutProperty("bld2d", "visibility", mode3d ? "none" : "visible");
   map.easeTo({ pitch: mode3d ? 62 : 0, bearing: mode3d ? -18 : 0,
-               zoom: mode3d ? 15.1 : 14.2, duration: 1300 });
+               zoom: mode3d ? 13.4 : 12.4, duration: 1300 });
 }
 document.getElementById("btn2d").onclick = () => setMode(false);
 document.getElementById("btn3d").onclick = () => setMode(true);
@@ -387,7 +387,7 @@ function updateMarker(s) {
   } else zbx.style.display = "none";
   if (s.revenue_delta > 0) {                       // монетки как в игре
     const c = document.createElement("div");
-    c.className = "coin"; c.textContent = `+${s.revenue_delta} ₽`;
+    c.className = "coin"; c.textContent = `+${s.revenue_delta} L`;
     m.el.appendChild(c); setTimeout(() => c.remove(), 1400);
   }
   m.data = s;
@@ -402,7 +402,7 @@ function showCard() {
   document.getElementById("c-level").textContent =
     "★".repeat(s.level) + "☆".repeat(5 - s.level);
   document.getElementById("c-rev").textContent =
-    s.revenue.toLocaleString("ru-RU") + " ₽";
+    s.revenue.toLocaleString("ru-RU") + " L";
   document.getElementById("c-trx").textContent = s.transactions;
   document.getElementById("c-vis").textContent = s.visitors;
   document.getElementById("c-fill").textContent =
@@ -501,7 +501,7 @@ function enterStore(s) {
     const z = s.zabbix || { active: 0 };
     document.getElementById("i-name").textContent = s.name;
     document.getElementById("i-zbx").textContent =
-      `выручка ${s.revenue.toLocaleString("ru-RU")} ₽ · ` +
+      `выручка ${s.revenue.toLocaleString("ru-RU")} L · ` +
       `полки ${Math.round(s.fill_avg * 100)}% · ` +
       (z.active ? `Zabbix: ${z.active} актив. проблем ⚠`
                 : "Zabbix: проблем нет ✓");
@@ -637,7 +637,7 @@ async function poll() {
     const st = await (await fetch("/api/state")).json();
     document.getElementById("clock").textContent = st.sim_clock;
     document.getElementById("t-rev").textContent =
-      st.totals.revenue.toLocaleString("ru-RU") + " ₽";
+      st.totals.revenue.toLocaleString("ru-RU") + " L";
     document.getElementById("t-trx").textContent = st.totals.transactions;
     document.getElementById("t-stores").textContent =
       st.totals.stores + (st.totals.critical

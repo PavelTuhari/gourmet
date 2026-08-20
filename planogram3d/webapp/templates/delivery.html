@@ -304,7 +304,7 @@ async function poll() {
     if (s.ai_arrive && s.status !== "done") orderAi[s.order] = s; }));
   document.getElementById("orders").innerHTML = st.orders.slice(0, 12)
     .map(o => `<div class="ord"><span class="st ${o.status}">
-      ${ST_TITLES[o.status]}</span><b>${o.id}</b> · ${o.total} ₽<br>
+      ${ST_TITLES[o.status]}</span><b>${o.id}</b> · ${o.total} L<br>
       ${o.customer} · ${o.address}<br>
       <span style="color:#8a94a1">${o.store_name}${
         o.route ? " · " + o.route : ""}</span>${orderAi[o.id]
@@ -367,7 +367,7 @@ async function poll() {
   /* --- чеки --- */
   document.getElementById("rc-rows").innerHTML = st.receipts.map(r =>
     `<div class="rc"><a href="/receipt/${r.id}" target="_blank">
-      🧾 ${r.id}</a> · ${r.order} · ${r.total} ₽ · ${fmtT(r.printed_at)}
+      🧾 ${r.id}</a> · ${r.order} · ${r.total} L · ${fmtT(r.printed_at)}
       <br><span class="w">${r.print_way}</span></div>`).join("")
     || "<div class='ev'>чеки появятся при вручении заказов</div>";
 }

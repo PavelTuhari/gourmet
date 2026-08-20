@@ -157,7 +157,7 @@ class MultiGame:
                 p["carry"] = 0
             self.phase = "play"
             self._emit(f"▶ Смена началась! Команда: "
-                       f"{len(self.players)} чел., цель {self.goal} ₽")
+                       f"{len(self.players)} чел., цель {self.goal} L")
 
     # ----- действия (люди и внешние ИИ по API) --------------------------
     def action(self, pid: str, act: str, x: Optional[float] = None,
@@ -399,7 +399,7 @@ class MultiGame:
                     cashier["stats"]["points"] += POINTS["serve"]
                     self.rep = min(100, self.rep + 1.2)
                     self._fx(REGISTER[1], REGISTER[2],
-                             f"+{head['bill']} ₽")
+                             f"+{head['bill']} L")
         else:
             self.serving_progress = 0
         if self.paper <= 0 and self.queue:
@@ -416,7 +416,7 @@ class MultiGame:
                     head["state"] = "exit"
                     self.money += head["bill"]
                     self._fx(SCO_PAY[0], SCO_PAY[1],
-                             f"+{head['bill']} ₽", "#90caf9")
+                             f"+{head['bill']} L", "#90caf9")
 
         # события: разливы и холодильники
         self.next_mess -= dt
@@ -445,7 +445,7 @@ class MultiGame:
         ok = self.money >= self.goal
         self._emit(("✅ Смена пройдена!" if ok else
                     "❌ План не выполнен") +
-                   f" Выручка {self.money} ₽ из {self.goal} ₽")
+                   f" Выручка {self.money} L из {self.goal} L")
         # поощрения в Roblox-команду
         try:
             from .server import team

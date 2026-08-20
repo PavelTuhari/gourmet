@@ -114,7 +114,7 @@
     <div class="head"><div class="t">👥 Командная смена</div>
       <div class="k" id="h-sub">лобби</div></div>
     <div class="hkpis">
-      <div class="hk"><b id="h-money">0 ₽</b><span>выручка / цель</span></div>
+      <div class="hk"><b id="h-money">0 L</b><span>выручка / цель</span></div>
       <div class="hk"><b id="h-time">—</b><span>время</span></div>
       <div class="hk"><b id="h-rep">—</b><span>репутация</span></div>
       <div class="hk"><b id="h-queue">0</b><span>очередь кассы</span></div>
@@ -312,7 +312,7 @@ function renderSide(st) {
     st.phase === "play" ? "смена идёт" :
     st.phase === "ended" ? "смена завершена" : "лобби — ждём игроков";
   document.getElementById("h-money").textContent =
-    `${st.money} / ${st.goal} ₽`;
+    `${st.money} / ${st.goal} L`;
   const m = Math.floor(st.time_left / 60),
         s2 = Math.floor(st.time_left % 60);
   document.getElementById("h-time").textContent =

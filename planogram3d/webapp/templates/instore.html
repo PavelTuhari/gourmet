@@ -59,7 +59,7 @@
       <div class="kpi"><b id="k-in">0</b><span>в зале сейчас</span></div>
       <div class="kpi"><b id="k-vis">0</b><span>посетителей</span></div>
       <div class="kpi"><b id="k-rc">0</b><span>чеков</span></div>
-      <div class="kpi"><b id="k-rev">0 ₽</b><span>выручка касс</span></div>
+      <div class="kpi"><b id="k-rev">0 L</b><span>выручка касс</span></div>
       <div class="kpi"><b id="k-sco">0%</b><span>доля СКО</span></div>
       <div class="kpi"><b id="k-wg">0</b><span>взвешиваний</span></div>
     </div>
@@ -225,7 +225,7 @@ const EVENT_FMT = {
   scale:   e => ["⚖️", `Весы: ${e.data.name} — ${e.data.weight_kg} кг`],
   sco_in:  e => ["🚧", "Вход в зону касс самообслуживания"],
   sco_out: e => ["🚧", "Выход из зоны СКО"],
-  pos:     e => ["🧾", `${e.data.register}: чек ${e.data.total} ₽ ` +
+  pos:     e => ["🧾", `${e.data.register}: чек ${e.data.total} L ` +
                        `(${e.data.items} поз.)`],
   fridge_alarm: e => ["🧊", `${e.data.id}: ТРЕВОГА — температура ` +
                             `${e.data.temp_c}°C`],
@@ -248,7 +248,7 @@ function onEvent(e) {
 
   if (e.x == null) return;
   if (e.type === "pos")
-    popups.push({x: e.x, y: e.y, text: `+${e.data.total} ₽`,
+    popups.push({x: e.x, y: e.y, text: `+${e.data.total} L`,
                  color: "#ffd54f", t0: performance.now()});
   else if (e.type === "scale")
     popups.push({x: e.x, y: e.y, text: `${e.data.weight_kg} кг`,
@@ -266,7 +266,7 @@ function renderKpis() {
   document.getElementById("k-vis").textContent = c.visitors_today ?? 0;
   document.getElementById("k-rc").textContent = c.receipts ?? 0;
   document.getElementById("k-rev").textContent =
-    (c.revenue ?? 0).toLocaleString("ru-RU") + " ₽";
+    (c.revenue ?? 0).toLocaleString("ru-RU") + " L";
   document.getElementById("k-sco").textContent = c.receipts
     ? Math.round(100 * c.sco_receipts / c.receipts) + "%" : "0%";
   document.getElementById("k-wg").textContent = c.weighings ?? 0;
@@ -449,7 +449,7 @@ function draw() {
 
   drawables.sort((a, b) => a.depth - b.depth).forEach(d => d.fn());
 
-  // всплывающие «+N ₽» / «кг»
+  // всплывающие «+N L» / «кг»
   const now = performance.now();
   popups = popups.filter(p => now - p.t0 < 1500);
   for (const p of popups) {
