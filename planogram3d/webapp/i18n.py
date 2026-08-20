@@ -104,6 +104,52 @@ MESSAGES: Dict[str, Dict[str, _Entry]] = {
         "ro": "Echipa «Gurman» — puncte și recompense",
         "en": "Gurman team — points and rewards",
     },
+    # ---- журнал задач автозаказа топлива ----
+    # Зритель должен видеть не «мало топлива», а заведённую задачу с
+    # ответственными и стадией — формулировки деловые, как в наряде.
+    "fuel.task.stage.placed": {
+        "ru": "заказ размещён, ждёт машину",
+        "ro": "comandă plasată, așteaptă cisterna",
+        "en": "order placed, awaiting a truck",
+    },
+    "fuel.task.stage.assigned": {
+        "ru": "назначен рейс, выезд",
+        "ro": "cursă atribuită, pornește",
+        "en": "trip assigned, departing",
+    },
+    "fuel.task.stage.en_route": {
+        "ru": "машина в пути",
+        "ro": "cisterna este pe drum",
+        "en": "truck en route",
+    },
+    "fuel.task.stage.unloading": {
+        "ru": "идёт разгрузка",
+        "ro": "se descarcă",
+        "en": "unloading",
+    },
+    "fuel.task.stage.done": {
+        "ru": "выполнена",
+        "ro": "finalizată",
+        "en": "completed",
+    },
+    "fuel.task.placed_by_auto": {
+        "ru": "автозаказ (порог остатка)",
+        "ro": "comandă automată (prag de stoc)",
+        "en": "auto-order (stock threshold)",
+    },
+    "fuel.tasks.title": {
+        "ru": "Задачи автозаказа",
+        "ro": "Sarcini de comandă automată",
+        "en": "Auto-order tasks",
+    },
+    "fuel.tasks.empty": {
+        "ru": "активных задач нет",
+        "ro": "nicio sarcină activă",
+        "en": "no active tasks",
+    },
+    "fuel.task.assignee": {
+        "ru": "назначено", "ro": "atribuit", "en": "assigned to",
+    },
     "city.chisinau": {
         "ru": "Кишинёв", "ro": "Chișinău", "en": "Chisinau",
     },

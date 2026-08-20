@@ -762,6 +762,77 @@ class FuelNetwork:
                 "model": predictor.summary()}
 
     # ----- снимок состояния (evolve-on-poll) --------------------------------
+    def order_tasks(self, lang: str = DEFAULT_LANG) -> List[dict]:
+        """Журнал задач автозаказа: стадия, ответственные, объём.
+
+        Зрителю мало знать, что «на станции мало топлива» — он должен
+        видеть, что по этой нехватке уже заведена задача: кем размещена,
+        на кого назначена и в какой она стадии. Стадия не хранится
+        отдельным полем, а выводится из фактического состояния станции и
+        рейса: иначе появился бы второй источник правды, который рано
+        или поздно разойдётся с реальным положением бензовоза.
+
+        Стадии: ``placed`` — заказ размещён автоматикой, машина ещё не
+        назначена; ``assigned`` — рейс сформирован, водитель назначен,
+        но ещё не выехал; ``en_route`` — машина в пути к этой станции;
+        ``unloading`` — идёт слив в резервуар; ``done`` — выполнена.
+        """
+        now = time.time()
+        # остановка активного рейса по станции — источник стадий
+        # assigned/en_route/unloading/done
+        by_station: Dict[int, tuple] = {}
+        for trip in self.trips.values():
+            for stop in trip["stops"]:
+                prev = by_station.get(stop["station_id"])
+                # если станция попала в несколько рейсов, показываем
+                # незавершённую задачу: она и есть актуальная
+                if prev is None or prev[1]["status"] != "done":
+                    if prev is None or stop["status"] != "done":
+                        by_station[stop["station_id"]] = (trip, stop)
+
+        tasks = []
+        for st in self.stations.values():
+            pair = by_station.get(st["id"])
+            fill = st["current_l"] / st["capacity_l"]
+            if pair is None:
+                if fill >= REORDER_FRACTION:
+                    continue                      # задачи нет — станция сыта
+                stage, trip, stop = "placed", None, None
+            else:
+                trip, stop = pair
+                if stop["status"] == "done":
+                    stage = "done"
+                elif stop["status"] == "unloading":
+                    stage = "unloading"
+                elif now < trip["depart"]:
+                    stage = "assigned"
+                else:
+                    stage = "en_route"
+            tasks.append({
+                "station_id": st["id"], "station": st["name"],
+                "stage": stage,
+                "stage_label": t(lang, f"fuel.task.stage.{stage}"),
+                "liters": (stop["liters"] if stop else
+                          round(max(0.0, st["capacity_l"] * FULL_FRACTION
+                                    - st["current_l"]))),
+                "fill_pct": round(100 * fill, 1),
+                # «кем размещена» — автоматика контура: заказ рождается
+                # порогом остатка, без участия человека, и это стоит
+                # показать прямо, а не прятать за безличным «создано»
+                "placed_by": t(lang, "fuel.task.placed_by_auto"),
+                "assignee": trip["driver"] if trip else None,
+                "trip_id": trip["id"] if trip else None,
+                "unload_frac": (stop.get("unload_frac") or 0.0
+                               if stop else 0.0),
+                "eta_ts": stop.get("eta_ts") if stop else None,
+            })
+        # сначала то, что происходит прямо сейчас, потом ожидающее
+        order = {"unloading": 0, "en_route": 1, "assigned": 2,
+                 "placed": 3, "done": 4}
+        tasks.sort(key=lambda x: (order.get(x["stage"], 9),
+                                  x.get("eta_ts") or 0))
+        return tasks
+
     def state(self, lang: str = DEFAULT_LANG) -> dict:
         now = time.time()
         dt = min(MAX_DT, now - self._last)
@@ -796,6 +867,7 @@ class FuelNetwork:
                 "trips": self._real_cache["trips"],
                 "runs": runs_out,
                 "events": events_out,
+                "tasks": self.order_tasks(lang),
             }
 
         stations_out = []
@@ -847,4 +919,5 @@ class FuelNetwork:
             "trips": trips_out,
             "runs": runs_out,
             "events": events_out,
+            "tasks": self.order_tasks(lang),
         }
