@@ -36,6 +36,7 @@ from collections import deque
 from typing import Dict, List, Optional
 
 from .eta_ai import get_predictor
+from .i18n import DEFAULT_LANG, PluralRef, render_event
 from .i18n import t as i18n_t
 from .network import DistributionCenter, StoreNetwork, price_for
 from .roadnet import cumulative, get_roadnet, point_along
@@ -87,8 +88,13 @@ COURIERS = [
     ("c3", "Курьер Тимур", "android"),
     ("c4", "Курьер Ольга", "smartpos"),
 ]
-APP_TITLES = {"android": "📱 Android (облачная касса)",
-              "smartpos": "🖨 SmartOne (ECC на борту)"}
+#: эмодзи типа кассы курьера — подпись в приложении, а не переводимый текст;
+#: сам текст берётся из каталога (receipt.app.*), общего с чеком
+_APP_ICONS = {"android": "📱", "smartpos": "🖨"}
+
+
+def app_title(lang: str, app: str) -> str:
+    return f"{_APP_ICONS.get(app, '')} {i18n_t(lang, f'receipt.app.{app}')}"
 
 #: скорость курьера в эмуляции, м/с (ускорено для наглядности)
 COURIER_SPEED = 22.0
@@ -123,8 +129,11 @@ class DeliveryHub:
                          for cid, name, app in COURIERS}
 
     # ----- события ------------------------------------------------------
-    def _log(self, text: str) -> None:
-        self.events.appendleft({"t": time.time(), "text": text})
+    def _log(self, icon: str, key: str, count=None, **params) -> None:
+        """Запись ленты: ключ+параметры, а не готовый текст — язык
+        выбирается при отдаче (`state(lang)`), см. `i18n.render_event`."""
+        self.events.appendleft({"t": time.time(), "icon": icon, "key": key,
+                                "params": params, "count": count})
 
     # ----- заказы -------------------------------------------------------
     def _spawn_order(self, now: float) -> None:
@@ -156,19 +165,20 @@ class DeliveryHub:
             "status": "new", "created": now, "pick_done": 0.0,
             "route": None, "receipt": None,
         }
-        self._log(f"🛒 Новый интернет-заказ {oid} → {store.title} "
-                  f"({len(items)} поз., {round(total)} L)")
+        self._log("🛒", "log.new_order", count=len(items),
+                  oid=oid, store=store.title, total=round(total),
+                  items_word=PluralRef("log.new_order.items_word"))
 
     def _evolve_picking(self, now: float) -> None:
         for o in self.orders.values():
             if o["status"] == "new":
                 o["status"] = "picking"
                 o["pick_done"] = now + self.rng.uniform(12, 26)
-                self._log(f"🧺 {o['id']}: сборщик приступил "
-                          f"({o['store_name']})")
+                self._log("🧺", "log.picking_started",
+                          oid=o["id"], store=o["store_name"])
             elif o["status"] == "picking" and now >= o["pick_done"]:
                 o["status"] = "packed"
-                self._log(f"📦 {o['id']}: собран и упакован")
+                self._log("📦", "log.packed", oid=o["id"])
 
     # ----- маршруты -----------------------------------------------------
     def _free_courier(self) -> Optional[dict]:
@@ -244,16 +254,16 @@ class DeliveryHub:
             }
             courier["route"] = rid
             courier["lat"], courier["lon"] = emu.lat, emu.lon
-            # лента событий остаётся русской на этом этапе (см. отчёт), но
-            # берём фразу из каталога переводов, а не пишем "заказ(а)" руками —
-            # правильная форма множественного числа через механизм i18n
+            # событие хранит ключ+параметры — форма "заказ(а)" и язык
+            # подписи кассы выбираются при отдаче ленты (`state(lang)`),
+            # а не здесь, поэтому переключение языка перерисовывает и
+            # уже накопленные записи, а не только новые
             self._log(
-                "🗺 " + i18n_t("ru", "log.route_built", count=len(stops),
-                         route=rid,
-                         orders_word=i18n_t("ru", "log.route_built.orders_word",
-                                       count=len(stops)),
-                         store=emu.title, courier=courier["name"],
-                         app_title=APP_TITLES[courier["app"]]))
+                "🗺", "log.route_built", count=len(stops),
+                route=rid,
+                orders_word=PluralRef("log.route_built.orders_word"),
+                store=emu.title, courier=courier["name"],
+                app_title=PluralRef(f"receipt.app.{courier['app']}"))
 
     # ----- чек в момент вручения ---------------------------------------
     def _fiscal_receipt(self, route: dict, stop: dict, now: float) -> str:
@@ -287,19 +297,19 @@ class DeliveryHub:
             "store_name": order["store_name"], "items": order["items"],
             "total": order["total"], "vat_breakdown": vat_breakdown,
             "courier": courier["name"], "app": courier["app"],
-            "app_title": APP_TITLES[courier["app"]],
             "company_name": COMPANY_NAME, "idno": COMPANY_IDNO,
             "ecc_serial": ecc_serial, "ecc_reg": ecc_reg,
             "printed_at": now,
-            # печатается фразой по print_way.<app> из webapp/i18n.py — тот же
-            # ключ используют и /receipt (нужный язык), и лента событий ниже
-            # (всегда по-русски), чтобы формулировка не расходилась
-            "print_way": i18n_t("ru", f"receipt.print_way.{courier['app']}"),
+            # готового текста print_way здесь больше нет: ключ
+            # receipt.print_way.<app> резолвится на языке запроса — и на
+            # /receipt/<id> (server.py), и в панели чеков /delivery, и в
+            # ленте событий ниже (см. `_render_receipt` / `render_event`)
         }
         self.receipts.appendleft(receipt)
         order["receipt"] = rid
-        self._log(f"🧾 Чек {rid} ({order['id']}, {order['total']} L) — "
-                  f"{receipt['print_way']}")
+        self._log("🧾", "log.receipt_issued", rid=rid, oid=order["id"],
+                  total=order["total"],
+                  print_way=PluralRef(f"receipt.print_way.{courier['app']}"))
         return rid
 
     # ----- движение курьеров -------------------------------------------
@@ -313,8 +323,8 @@ class DeliveryHub:
             if idx >= len(route["stops"]):
                 route["status"] = "done"
                 courier["route"] = None
-                self._log(f"✅ Маршрут {route['id']} завершён "
-                          f"({courier['name']})")
+                self._log("✅", "log.route_done",
+                          route=route["id"], courier=courier["name"])
                 continue
             stop = route["stops"][idx]
 
@@ -349,8 +359,9 @@ class DeliveryHub:
                         "courier", stop.get("road_m", 0.0),
                         now - stop["actual_start"],
                         hour=self.network.sim_hour(stop["actual_start"]))
-                    self._log(f"🏠 {route['id']}: прибытие к "
-                              f"{stop['customer']} ({stop['address']})")
+                    self._log("🏠", "log.arrived", route=route["id"],
+                              customer=stop["customer"],
+                              address=stop["address"])
             elif route["phase"] == "handover" and now >= route["phase_t"]:
                 stop["actual_done"] = now
                 stop["status"] = "done"
@@ -365,8 +376,8 @@ class DeliveryHub:
             courier["battery"] = max(3, courier["battery"] - 0.006 * dt)
 
     # ----- ИИ-прогноз прибытия (онлайн-табло пунктов доставки) ----------
-    def _ai_stop_predictions(self, route: dict, now: float) -> Dict[str,
-                                                                    dict]:
+    def _ai_stop_predictions(self, route: dict, now: float,
+                             lang: str = DEFAULT_LANG) -> Dict[str, dict]:
         """Прогноз прибытия курьера на каждую оставшуюся остановку.
 
         Модель — общий :mod:`eta_ai`-прогнозист (скорости учатся на
@@ -387,7 +398,7 @@ class DeliveryHub:
             if current and stop["status"] == "handover":
                 out[stop["order"]] = {
                     "ai_arrive": stop["actual_arrive"], "ai_sigma": 0,
-                    "ai_note": "курьер на точке, идёт вручение"}
+                    "ai_note": i18n_t(lang, "ai.handover_in_progress")}
                 t = max(now, route["phase_t"])
                 var += hand_sig * hand_sig
                 continue
@@ -412,13 +423,17 @@ class DeliveryHub:
             out[stop["order"]] = {
                 "ai_arrive": arrive,
                 "ai_sigma": round(max(2.0, math.sqrt(var))),
-                "ai_note": (f"модель обучена ({n_obs} плеч.)"
-                            if n_obs else "априорная модель")}
+                "ai_note": (i18n_t(lang, "ai.model_trained", n=n_obs,
+                                   legs_word=i18n_t(
+                                       lang, "ai.model_trained.legs_word",
+                                       count=n_obs))
+                            if n_obs else i18n_t(lang, "ai.model_prior"))}
             t = arrive + hand_s
             var += hand_sig * hand_sig
         return out
 
-    def arrival_board(self, order_id: str) -> Optional[dict]:
+    def arrival_board(self, order_id: str,
+                      lang: str = DEFAULT_LANG) -> Optional[dict]:
         """Онлайн-табло пункта доставки (адреса покупателя)."""
         now = time.time()
         with self._lock:
@@ -428,7 +443,7 @@ class DeliveryHub:
             rows = []
             route = self.routes.get(order["route"] or "")
             if route is not None and route["status"] == "active":
-                ai = self._ai_stop_predictions(route, now)
+                ai = self._ai_stop_predictions(route, now, lang)
                 courier = self.couriers[route["courier"]]
                 queue = [s["order"] for s in
                          route["stops"][route["stop_idx"]:]]
@@ -442,7 +457,7 @@ class DeliveryHub:
                         "order": s["order"],
                         "this_point": s["order"] == order_id,
                         "label": (f"{courier['name']} · "
-                                  f"{APP_TITLES[courier['app']]}"),
+                                  f"{app_title(lang, courier['app'])}"),
                         "queue_pos": (queue.index(s["order"]) + 1
                                       if s["order"] in queue else None),
                         "eta_ts": p["ai_arrive"],
@@ -450,11 +465,12 @@ class DeliveryHub:
                         "sigma_sec": p["ai_sigma"],
                         "plan_ts": s["plan_arrive"],
                         "status": s["status"],
-                        "source": "ИИ-прогноз · " + p["ai_note"],
-                        "gps_source": ("приложение (реальный GPS)"
+                        "source": i18n_t(lang, "ai.forecast_prefix",
+                                         note=p["ai_note"]),
+                        "gps_source": (i18n_t(lang, "gps.real")
                                        if now - courier["last_real"]
                                        < REAL_GPS_TIMEOUT else
-                                       "эмуляция"),
+                                       i18n_t(lang, "gps.emulated")),
                     })
             return {"now": now, "order": order_id,
                     "point": f"{order['customer']} · {order['address']}",
@@ -474,7 +490,7 @@ class DeliveryHub:
                 c["battery"] = float(battery)
             return True
 
-    def state(self) -> dict:
+    def state(self, lang: str = DEFAULT_LANG) -> dict:
         now = time.time()
         with self._lock:
             dt = min(5.0, now - self._last)
@@ -488,15 +504,17 @@ class DeliveryHub:
             self._build_routes(now)
             self._evolve_routes(now, dt)
 
-            orders = sorted(self.orders.values(),
-                            key=lambda o: -o["created"])[:30]
+            orders = [{**o, "status_label": i18n_t(lang,
+                                                    f"status.{o['status']}")}
+                     for o in sorted(self.orders.values(),
+                                    key=lambda o: -o["created"])[:30]]
             routes = []
             for r in self.routes.values():
                 if (r["status"] == "done"
                         and now - r["stops"][-1]["plan_done"] > 120):
                     continue
                 courier = self.couriers[r["courier"]]
-                ai = self._ai_stop_predictions(r, now)
+                ai = self._ai_stop_predictions(r, now, lang)
                 stops_out = [{**{k: v for k, v in s.items()
                                  if not k.startswith("_")},
                               **ai.get(s["order"], {})}
@@ -509,20 +527,25 @@ class DeliveryHub:
                     "courier": {
                         "id": courier["id"], "name": courier["name"],
                         "app": courier["app"],
-                        "app_title": APP_TITLES[courier["app"]],
+                        "app_title": app_title(lang, courier["app"]),
                         "lat": courier["lat"], "lon": courier["lon"],
                         "battery": round(courier["battery"]),
-                        "gps_source": ("приложение (реальный GPS)"
+                        "gps_source": (i18n_t(lang, "gps.real")
                                        if now - courier["last_real"]
                                        < REAL_GPS_TIMEOUT
-                                       else "эмуляция"),
+                                       else i18n_t(lang, "gps.emulated")),
                     }})
+            receipts = [{**r, "print_way": i18n_t(
+                            lang, f"receipt.print_way.{r['app']}")}
+                       for r in list(self.receipts)[:12]]
+            events = [{"t": ev["t"], "text": render_event(lang, ev)}
+                     for ev in list(self.events)[:18]]
             return {
                 "now": now,
                 "orders": orders,
                 "routes": routes,
-                "receipts": list(self.receipts)[:12],
-                "events": list(self.events)[:18],
+                "receipts": receipts,
+                "events": events,
                 "counters": {
                     "new": sum(1 for o in self.orders.values()
                                if o["status"] in ("new", "picking")),

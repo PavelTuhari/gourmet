@@ -17,6 +17,7 @@ from typing import Deque, Dict, List, Optional, Tuple
 
 from ..core import Store, check_compliance
 from ..sample_data import build_demo_store
+from .i18n import DEFAULT_LANG, render_event, t
 
 #: 1 секунда реального времени = TIME_SCALE секунд «магазинного» времени.
 TIME_SCALE = 600  # 1 с = 10 мин: торговый день пролетает за ~2.5 минуты
@@ -43,6 +44,20 @@ NETWORK_LAYOUT: List[Tuple[str, str, float, float, int]] = [
 def price_for(category: str, sku: str) -> float:
     base = CATEGORY_PRICES.get(category, 150.0)
     return round(base * (0.8 + (hash(sku) % 41) / 100.0), 2)
+
+
+def _ev(now: float, store_label: str, icon: str, key: str, count=None,
+        **params) -> dict:
+    """Запись ленты событий: ключ+параметры вместо готовой строки — язык
+    выбирается при отдаче (см. `i18n.render_event`), а не в момент записи.
+
+    ``store_label`` — источник события для колонки «магазин» в ленте
+    (см. `state()`); имя параметра отличается от возможного params["store"]
+    (у log.dc_shipment есть свой параметр {store} — магазин-получатель),
+    чтобы вызовы с обоими не сталкивались по имени аргумента.
+    """
+    return {"t": now, "store": store_label, "icon": icon, "key": key,
+           "params": params, "count": count}
 
 
 class DistributionCenter:
@@ -91,9 +106,8 @@ class DistributionCenter:
         shipped = min(qty, available)
         self._maybe_reorder(sku, sku_name, now, events)
         if shipped <= 0:
-            events.appendleft((now, self.name,
-                               f"🏭 Нет остатка «{sku_name}» — {store_title} "
-                               f"получит прямую поставку от поставщика"))
+            events.appendleft(_ev(now, self.name, "🏭", "log.dc_no_stock",
+                                  name=sku_name, store=store_title))
             return None
         self.stock[sku] = available - shipped
         depart = now + 3.0
@@ -116,9 +130,8 @@ class DistributionCenter:
                               "to": [lat, lon],
                               "path": [[round(p[0], 5), round(p[1], 5)]
                                        for p in path]})
-        events.appendleft((now, self.name,
-                           f"🚚 Отгрузка в {store_title}: {sku_name} "
-                           f"× {shipped}"))
+        events.appendleft(_ev(now, self.name, "🚚", "log.dc_shipment",
+                              name=sku_name, store=store_title, qty=shipped))
         return eta, shipped
 
     def _maybe_reorder(self, sku: str, sku_name: str, now: float,
@@ -128,17 +141,16 @@ class DistributionCenter:
             self.inbound.append({"sku": sku, "sku_name": sku_name,
                                  "qty": self.REORDER_QTY,
                                  "eta": now + self.rng.uniform(70, 140)})
-            events.appendleft((now, self.name,
-                               f"📦 Заказ поставщику: {sku_name} "
-                               f"× {self.REORDER_QTY}"))
+            events.appendleft(_ev(now, self.name, "📦", "log.dc_reorder",
+                                  name=sku_name, qty=self.REORDER_QTY))
 
     def tick(self, now: float, events: Deque) -> None:
         for o in [o for o in self.inbound if now >= o["eta"]]:
             self.inbound.remove(o)
             self.stock[o["sku"]] = self.stock.get(o["sku"], 0) + o["qty"]
-            events.appendleft((now, self.name,
-                               f"🏭 Приход от поставщика: {o['sku_name']} "
-                               f"× {o['qty']}"))
+            events.appendleft(_ev(now, self.name, "🏭",
+                                  "log.dc_supply_arrived",
+                                  name=o["sku_name"], qty=o["qty"]))
         # завершённые рейсы — телеметрия в ИИ-модель прогноза прибытия
         from .eta_ai import get_predictor
         for o in self.outbound:
@@ -202,9 +214,8 @@ class EmulatedStore:
             return
         self.restock_at[sku] = {"due": now + self.rng.uniform(25, 80),
                                 "qty": capacity}
-        events.appendleft((now, self.title,
-                           f"⛔ {product.name}: полка пуста, заказано "
-                           f"пополнение"))
+        events.appendleft(_ev(now, self.title, "⛔", "log.shelf_empty",
+                              name=product.name))
 
     def tick(self, dt: float, now: float, events: Deque) -> None:
         """Один шаг эмуляции: продажи, OOS, пополнения, посетители."""
@@ -226,8 +237,8 @@ class EmulatedStore:
             self.transactions += n
             sold_value += n * price_for(product.category, sku)
             if info.stock == 0:
-                events.appendleft((now, self.title,
-                                   f"⛔ {product.name}: OUT-OF-STOCK"))
+                events.appendleft(_ev(now, self.title, "⛔",
+                                      "log.out_of_stock", name=product.name))
                 self._order_restock(sku, now, events)
 
         # приезд пополнений
@@ -236,10 +247,9 @@ class EmulatedStore:
                 info = self.store.sales[sku]
                 info.stock = min(info.capacity, info.stock + order["qty"])
                 del self.restock_at[sku]
-                events.appendleft((now, self.title,
-                                   f"📦 {self.store.product(sku).name}: "
-                                   f"полка пополнена "
-                                   f"(+{order['qty']} шт.)"))
+                events.appendleft(_ev(
+                    now, self.title, "📦", "log.shelf_restocked",
+                    name=self.store.product(sku).name, qty=order["qty"]))
 
         self.revenue += sold_value
         self.last_tick_revenue = sold_value
@@ -373,12 +383,15 @@ class StoreNetwork:
             last = now
 
     # ----- API ------------------------------------------------------------
-    def state(self) -> dict:
+    def state(self, lang: str = DEFAULT_LANG) -> dict:
         now = time.time()
         with self._lock:
             stores = [e.snapshot() for e in self.stores.values()]
-            events = [{"t": round(t - self.started_at), "store": s,
-                       "text": txt} for t, s, txt in list(self.events)[:20]]
+            # текст ленты собирается здесь, на языке запроса — само событие
+            # хранит только ключ+параметры (см. `_ev`/`render_event`)
+            events = [{"t": round(ev["t"] - self.started_at),
+                      "store": ev["store"], "text": render_event(lang, ev)}
+                     for ev in list(self.events)[:20]]
             dc = self.dc.snapshot(now) if self.dc is not None else None
         sim_seconds = (now - self.started_at) * TIME_SCALE
         return {
@@ -404,7 +417,7 @@ class StoreNetwork:
     def store(self, store_id: str) -> Store:
         return self.stores[store_id].store
 
-    def arrival_board(self, store_id: str) -> dict:
+    def arrival_board(self, store_id: str, lang: str = DEFAULT_LANG) -> dict:
         """Онлайн-табло пункта доставки (магазина): машины поставщиков.
 
         Для каждой машины РЦ в пути — ИИ-прогноз прибытия (остаток
@@ -434,15 +447,21 @@ class StoreNetwork:
                     rows.append({
                         "type": "truck",
                         "icon": "🚚",
-                        "label": f"РЦ «Гурман»: {o['sku_name']} × {o['qty']}",
+                        "label": t(lang, "eta.dc_shipment",
+                                  name=o["sku_name"], qty=o["qty"]),
                         "eta_sec": round(eta_s),
                         "sigma_sec": round(max(3.0, sigma_s)),
                         "eta_ts": now + eta_s,
                         "plan_ts": o.get("plan_eta", o["eta"]),
                         "progress": round(progress, 2),
-                        "source": ("ИИ-прогноз (модель обучена, "
-                                   f"{n_obs} рейс.)") if n_obs
-                                  else "ИИ-прогноз (априорная модель)",
+                        "source": (t(lang, "ai.forecast_trained_trips",
+                                     count=n_obs, n=n_obs,
+                                     trips_word=t(
+                                         lang,
+                                         "ai.forecast_trained_trips."
+                                         "trips_word", count=n_obs))
+                                  if n_obs
+                                  else t(lang, "ai.forecast_prior")),
                     })
             for sku, order in emu.restock_at.items():
                 if sku in truck_skus:
@@ -451,13 +470,14 @@ class StoreNetwork:
                 rows.append({
                     "type": "supplier",
                     "icon": "📦",
-                    "label": f"Поставщик напрямую: {name} × {order['qty']}",
+                    "label": t(lang, "eta.supplier_direct",
+                              name=name, qty=order["qty"]),
                     "eta_sec": max(0, round(order["due"] - now)),
                     "sigma_sec": None,
                     "eta_ts": order["due"],
                     "plan_ts": order["due"],
                     "progress": None,
-                    "source": "план поставки",
+                    "source": t(lang, "eta.supply_plan"),
                 })
         rows.sort(key=lambda r: r["eta_ts"])
         return {"now": now, "point": emu.title, "store_id": store_id,

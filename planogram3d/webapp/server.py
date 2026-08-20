@@ -21,7 +21,7 @@ from flask import (Flask, abort, jsonify, redirect, render_template,
 
 from ..core import build_report_page, check_compliance
 from .delivery import DeliveryHub
-from .i18n import client_catalog, normalize_lang, t
+from .i18n import client_catalog, client_plural_forms, normalize_lang, t
 from .instore import InstoreHub
 from .multigame import MultiHub
 from .network import StoreNetwork
@@ -30,6 +30,9 @@ from .roblox import TeamHub
 from .zabbix import create_provider
 
 app = Flask(__name__)
+# доступ к переводу прямо из Jinja ({{ t(lang, 'key') }}) — без ручного
+# протаскивания словаря подписей в каждый render_template
+app.jinja_env.globals["t"] = t
 network = StoreNetwork()
 zabbix, zabbix_mode = create_provider(list(network.stores))
 instore = InstoreHub()
@@ -52,14 +55,29 @@ def _lang() -> str:
     return normalize_lang(request.args.get("lang"))
 
 
+#: ключи каталога для JS страницы /delivery (панели рисуются в браузере
+#: по данным опроса /api/delivery/state — событийный текст сервер уже
+#: собирает переведённым, здесь только статические подписи-хелперы)
+_DELIVERY_JS_KEYS = (
+    "delivery.routes.empty", "delivery.routes.addresses",
+    "delivery.gantt.empty", "delivery.receipts.empty",
+    "delivery.eta.ai_badge", "delivery.stop.tooltip",
+    "delivery.ai_arrival", "eta.this_point", "eta.plan_short",
+    "eta.courier_assigning", "eta.board_title", "eta.order_status_prefix",
+    "unit.sec_short",
+)
+
+
 @app.get("/delivery")
 def delivery_page():
-    return render_template("delivery.html")
+    lang = _lang()
+    return render_template("delivery.html", lang=lang,
+                           i18n_json=client_catalog(lang, _DELIVERY_JS_KEYS))
 
 
 @app.get("/api/delivery/state")
 def delivery_state():
-    return jsonify(delivery.state())
+    return jsonify(delivery.state(_lang()))
 
 
 @app.post("/api/delivery/gps")
@@ -78,7 +96,7 @@ def eta_store(store_id):
     машин поставщиков и РЦ — по аналогии с «умными остановками»
     городского транспорта (GPS-телеметрия → ИИ-модель → табло)."""
     try:
-        return jsonify(network.arrival_board(store_id))
+        return jsonify(network.arrival_board(store_id, _lang()))
     except KeyError:
         abort(404)
 
@@ -87,7 +105,7 @@ def eta_store(store_id):
 def eta_order(order_id):
     """Онлайн-табло пункта доставки (адреса покупателя): ИИ-прогноз
     прибытия курьера с неопределённостью ±σ и позицией в очереди."""
-    board = delivery.arrival_board(order_id)
+    board = delivery.arrival_board(order_id, _lang())
     if board is None:
         abort(404)
     return jsonify(board)
@@ -96,12 +114,12 @@ def eta_order(order_id):
 @app.get("/fuel")
 def fuel_page():
     """Карта топливной сети Молдовы: нефтебаза, АЗС, рейсы бензовозов."""
-    return render_template("fuel.html")
+    return render_template("fuel.html", lang=_lang())
 
 
 @app.get("/api/fuel/state")
 def api_fuel_state():
-    return jsonify(fuel.state())
+    return jsonify(fuel.state(_lang()))
 
 
 @app.get("/api/eta/fuel/<station_id>")
@@ -109,7 +127,7 @@ def eta_fuel(station_id):
     """Онлайн-табло прибытия АЗС: бензовозы в пути к ней, ИИ-прогноз
     (±σ) — тот же контракт, что у /api/eta/store и /api/eta/order, чтобы
     фронтенд табло переиспользовался без переписывания."""
-    board = fuel.arrival_board(station_id)
+    board = fuel.arrival_board(station_id, _lang())
     if board is None:
         abort(404)
     return jsonify(board)
@@ -187,9 +205,28 @@ def roblox_progress():
         int(d.get("revenue", 0)), d.get("stats", {})))
 
 
+#: ключи каталога, нужные JS карты (табло прибытия, карточки, счётчики —
+#: те части интерфейса, что рисуются в браузере после /api/state, а не
+#: на сервере при первом рендере страницы)
+_MAP_JS_KEYS = (
+    "map.kpi.zabbix_active", "map.kpi.zabbix_emulation",
+    "map.card.empty_shelves", "map.zabbix.head", "map.zabbix.none",
+    "map.eta.head", "map.eta.none", "map.eta.telemetry_note",
+    "map.plan_short", "map.interior.status_line",
+    "map.interior.zabbix_active", "map.interior.zabbix_none",
+    "map.dc.supplier_line", "unit.sec_short", "unit.min_short",
+    "unit.hour_short", "unit.pcs_short",
+)
+_MAP_JS_PLURAL_KEYS = ("map.zabbix.head.problems_word",)
+
+
 @app.get("/")
 def index():
-    return render_template("map.html")
+    lang = _lang()
+    return render_template(
+        "map.html", lang=lang,
+        i18n_json=client_catalog(lang, _MAP_JS_KEYS),
+        i18n_plural_json=client_plural_forms(lang, _MAP_JS_PLURAL_KEYS))
 
 
 # ----- презентация, документация, команда -------------------------------
@@ -254,7 +291,7 @@ def docs_page(name):
     path, title = _DOCS[name]
     md = (_PKG_ROOT / path).read_text(encoding="utf-8")
     return render_template(
-        "docs.html", title=title, current=name,
+        "docs.html", title=title, current=name, lang=_lang(),
         nav=[(k, t) for k, (_, t) in _DOCS.items()],
         content=md_to_html(md))
 
@@ -262,13 +299,13 @@ def docs_page(name):
 @app.get("/team")
 def team_page():
     data = team.team()
-    return render_template("team.html", mode=data["mode"],
+    return render_template("team.html", mode=data["mode"], lang=_lang(),
                            members=data["members"], feed=data["feed"])
 
 
 @app.get("/api/state")
 def api_state():
-    state = network.state()
+    state = network.state(_lang())
     state["zabbix_mode"] = zabbix_mode
     try:
         problems = zabbix.problems()
@@ -300,7 +337,7 @@ def store_live(store_id):
     except KeyError:
         abort(404)
     return render_template("instore.html", store_id=store_id,
-                           store_name=store.name)
+                           store_name=store.name, lang=_lang())
 
 
 @app.get("/store/<store_id>/game")
@@ -310,7 +347,7 @@ def store_game(store_id):
     except KeyError:
         abort(404)
     return render_template("game.html", store_id=store_id,
-                           store_name=store.name)
+                           store_name=store.name, lang=_lang())
 
 
 @app.get("/api/game/<store_id>/config")
@@ -353,7 +390,7 @@ def store_game_multi(store_id):
     except KeyError:
         abort(404)
     return render_template("game_multi.html", store_id=store_id,
-                           store_name=store.name)
+                           store_name=store.name, lang=_lang())
 
 
 @app.post("/api/mgame/<store_id>/<code>/join")
