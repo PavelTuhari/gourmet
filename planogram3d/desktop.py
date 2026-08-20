@@ -9,6 +9,12 @@
 
     python -m planogram3d.desktop            # нативное окно
     python -m planogram3d.desktop --debug    # + инструменты разработчика
+    python -m planogram3d.desktop --url /fuel --width 720 --height 520 --on-top
+                                              # компактное окно поверх
+                                              # остальных — для демонстрации
+                                              # «краем глаза», пока
+                                              # пользователь работает в
+                                              # другом окне
 
 Служебное: переменная окружения ``PLANOGRAM3D_NO_GUI=1`` запускает
 только встроенный сервер и проверяет его готовность (для автотестов в
@@ -60,6 +66,18 @@ def main(argv=None) -> int:
         description="planogram3d в нативном окне (pywebview).")
     parser.add_argument("--debug", action="store_true",
                         help="инструменты разработчика в окне")
+    parser.add_argument(
+        "--url", default="/",
+        help="страница системы при старте: путь (например, /fuel) "
+             "или полный адрес (по умолчанию /)")
+    parser.add_argument("--width", type=int, default=1480,
+                        help="ширина окна (по умолчанию 1480)")
+    parser.add_argument("--height", type=int, default=920,
+                        help="высота окна (по умолчанию 920)")
+    parser.add_argument(
+        "--on-top", action="store_true",
+        help="держать окно поверх всех остальных окон (демонстрация "
+             "«краем глаза», пока работаешь в другом приложении)")
     args = parser.parse_args(argv)
 
     port = _free_port()
@@ -79,10 +97,23 @@ def main(argv=None) -> int:
               file=sys.stderr)
         return 1
 
+    # --url принимает и путь («/fuel»), и полный адрес — второе нужно,
+    # если когда-нибудь захочется указать внешний хост вместо
+    # встроенного сервера на локальном порту.
+    target_url = (args.url if "://" in args.url
+                  else f"http://127.0.0.1:{port}{args.url}")
+
+    # min_size не может быть больше запрошенного размера окна — иначе
+    # окно физически не сожмётся до компактного вида (было жёстко
+    # 1100×700 при дефолте 1480×920, что ломало --width/--height
+    # меньше этого порога).
+    min_size = (min(1100, args.width), min(700, args.height))
+
     webview.create_window(
         "planogram3d — цифровой двойник сети «Гурман»",
-        f"http://127.0.0.1:{port}/",
-        width=1480, height=920, min_size=(1100, 700))
+        target_url,
+        width=args.width, height=args.height, min_size=min_size,
+        on_top=args.on_top)
     webview.start(debug=args.debug)
     return 0
 

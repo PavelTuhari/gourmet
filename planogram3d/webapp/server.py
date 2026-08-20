@@ -25,7 +25,7 @@ from .i18n import client_catalog, client_plural_forms, normalize_lang, t
 from .instore import InstoreHub
 from .multigame import MultiHub
 from .network import StoreNetwork
-from .peco_fuel import FuelNetwork
+from .peco_fuel import ARTGRANIT_BASE_URL, FuelNetwork
 from .roblox import TeamHub
 from .zabbix import create_provider
 
@@ -127,7 +127,8 @@ _FUEL_JS_KEYS = (
 def fuel_page():
     """Карта топливной сети Молдовы: нефтебаза, АЗС, рейсы бензовозов."""
     lang = _lang()
-    return render_template("fuel.html", lang=lang,
+    erp_url = f"{ARTGRANIT_BASE_URL}/UNA.md/orasldev/planograms#fuel"
+    return render_template("fuel.html", lang=lang, erp_url=erp_url,
                            i18n_json=client_catalog(lang, _FUEL_JS_KEYS))
 
 

@@ -646,6 +646,10 @@ MESSAGES: Dict[str, Dict[str, _Entry]] = {
         "ro": "⛽ Rețeaua de combustibil PECO · Moldova",
         "en": "⛽ PECO fuel network · Moldova",
     },
+    "fuel.erp_link": {
+        "ru": "→ учётная система (ERP)", "ro": "→ sistem ERP",
+        "en": "→ ERP system",
+    },
     "fuel.kpi.stations": {"ru": "АЗС: ", "ro": "Stații: ", "en": "Stations: "},
     "fuel.kpi.low": {
         "ru": "низкий запас: ", "ro": "stoc redus: ", "en": "low stock: ",

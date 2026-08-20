@@ -213,6 +213,16 @@ ARTGRANIT_POLL_INTERVAL = float(
 REAL_ARTGRANIT_TIMEOUT = float(
     os.environ.get("REAL_ARTGRANIT_TIMEOUT", "20.0"))
 
+#: адрес ERP для кнопки-перехода «в учётную систему» в шапке /fuel.
+#: Это НЕ то же самое, что автономность ARTGRANIT_URL выше (там пусто по
+#: умолчанию — контур не опрашивает ERP): кнопка ведёт человека мышкой,
+#: а не открывает сетевой канал, поэтому у неё есть рабочий дефолт из
+#: коробки. Если ARTGRANIT_URL задан (живой опрос включён) — берём тот
+#: же адрес, чтобы не держать два разных адреса одного ERP.
+ARTGRANIT_BASE_URL = (
+    os.environ.get("ARTGRANIT_URL", "").rstrip("/")
+    or "http://127.0.0.1:3003")
+
 #: сколько секунд после act_return показывать завершённый реальный рейс
 #: на карте (то же окно, что у эмулятора, см. FuelNetwork._evolve_trips)
 DONE_TRIP_RETENTION_S = 90.0
