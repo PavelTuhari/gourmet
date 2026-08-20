@@ -87,6 +87,23 @@ _PLURAL_FUNCS = {"ru": _plural_ru, "ro": _plural_ro, "en": _plural_en}
 
 MESSAGES: Dict[str, Dict[str, _Entry]] = {
     # ---- общее ----
+    # заголовки вкладок браузера — тоже интерфейс: на румынской версии
+    # русский <title> выглядит недоделкой, особенно в списке вкладок
+    "page.title.map": {
+        "ru": "Сеть «Гурман» — карта магазинов",
+        "ro": "Rețeaua «Gurman» — harta magazinelor",
+        "en": "Gurman network — store map",
+    },
+    "page.title.delivery": {
+        "ru": "Интернет-заказы и доставка — сеть «Гурман»",
+        "ro": "Comenzi online și livrare — rețeaua «Gurman»",
+        "en": "Online orders and delivery — Gurman network",
+    },
+    "page.title.team": {
+        "ru": "Команда «Гурман» — баллы и поощрения",
+        "ro": "Echipa «Gurman» — puncte și recompense",
+        "en": "Gurman team — points and rewards",
+    },
     "city.chisinau": {
         "ru": "Кишинёв", "ro": "Chișinău", "en": "Chisinau",
     },
