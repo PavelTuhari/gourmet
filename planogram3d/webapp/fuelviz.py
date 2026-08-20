@@ -316,7 +316,8 @@ def build_station_figure(station: dict, unload: Optional[dict],
 
 def build_station_page(station: dict, unload: Optional[dict],
                        back_url: str, lang: str = DEFAULT_LANG,
-                       include_plotlyjs=True, compact: bool = False) -> str:
+                       include_plotlyjs=True, compact: bool = False,
+                       demo: bool = False) -> str:
     """Автономная HTML-страница сцены + шапка со сводкой по станции.
 
     ``compact`` — компактная демонстрационная вёрстка (см.
@@ -338,6 +339,15 @@ def build_station_page(station: dict, unload: Optional[dict],
             'font-weight:700;color:#8a4b00;background:rgba(255,243,224,.94);'
             'border-bottom:2px solid #ffcc80;text-align:center">'
             f'{caption}</div>')
+        if demo:
+            # Сценарный обход: досмотрев слив, страница сама возвращается
+            # на карту, чтобы показ поехал к следующей остановке рейса.
+            # Слив в эмуляторе короткий, поэтому ждём не «конца слива» по
+            # состоянию, а фиксированной паузы: иначе на быстрых станциях
+            # страница успевала бы моргнуть и уйти обратно мгновенно.
+            panel += (
+                '<script>setTimeout(function () { location.href = '
+                f'{back_url!r}; }}, 6500);</script>')
         return page.replace("</body>", panel + "</body>")
 
     rows = "".join(

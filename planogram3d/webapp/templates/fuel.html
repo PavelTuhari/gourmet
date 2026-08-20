@@ -112,6 +112,8 @@
   </header>
 
   <div id="side">
+    <h3>{{ t(lang, "fuel.tasks.title") }}</h3>
+    <div id="tasks"></div>
     <h3>{{ t(lang, "fuel.side.trips") }}</h3>
     <div id="trips"></div>
     <h3>{{ t(lang, "fuel.side.runs") }}</h3>
@@ -141,6 +143,7 @@ var I18N = {{ i18n_json|tojson }};
 var I18NP = {};
 var COMPACT = {{ compact|tojson }};
 var FOCUS = {{ focus|tojson }};
+var DEMO = {{ demo|tojson }};
 </script>
 <script>
 const style = {
@@ -313,6 +316,22 @@ async function poll() {
       { type: "FeatureCollection", features: lines });
 
   /* --- боковая панель: рейсы, прогоны, события --- */
+  // Журнал задач автозаказа: зрителю важно видеть не «мало топлива», а
+  // заведённую задачу — стадию, объём и кому назначена. Стадия красится
+  // цветом, чтобы «идёт разгрузка» и «в пути» различались с одного взгляда.
+  const tasksEl = document.getElementById("tasks");
+  if (tasksEl) {
+    tasksEl.innerHTML = (st.tasks || []).slice(0, 8).map(k => `
+      <div class="trip">
+        <span class="tr st-${k.stage}">${k.stage_label}</span> ·
+        ${k.station.replace(/^АЗС №\d+ /, "")}<br>
+        <span class="drv">${k.liters} ${tt("unit.liters_short")}${
+          k.assignee ? " · " + tt("fuel.task.assignee") + ": " + k.assignee
+                     : " · " + k.placed_by}</span>
+      </div>`).join("")
+      || `<div class='ev'>${tt("fuel.tasks.empty")}</div>`;
+  }
+
   document.getElementById("trips").innerHTML = st.trips.map(t => `
     <div class="trip">
       <span class="tr">${t.id}</span> · ${t.status === "done"
@@ -337,7 +356,9 @@ async function poll() {
     showEtaBoard(etaPopupStation, p.lng, p.lat);
   }
 
-  if (FOCUS) runDemoScenario(st);
+  // сценарий ведётся и по ?focus= (совместимость), и по ?demo=1 —
+  // многостанционный обход не привязан к одной станции
+  if (FOCUS || DEMO) runDemoScenario(st);
 }
 
 /* ---- сценарная демонстрация автозаказа (?focus=<station_id>) --------
@@ -349,11 +370,44 @@ async function poll() {
    приближается к участку депо-станция, чтобы в маленьком окне было
    видно именно происходящее, а не всю Молдову. */
 let demoNavigated = false, demoFitted = false;
-function runDemoScenario(st) {
-  const station = st.stations.find(s => s.id === FOCUS);
-  if (!station) return;
-  const phaseEl = document.getElementById("phase");
 
+//: станции, планограмму которых сценарий уже показал, приезжают в
+//: адресе (?seen=6,3). Серверного состояния для этого нет намеренно:
+//: демонстрация — это ход по страницам, и её место в адресе, иначе
+//: перезагрузка окна начинала бы обход заново с первой станции.
+const SEEN = new URLSearchParams(location.search).get("seen");
+const SEEN_IDS = SEEN ? SEEN.split(",").filter(Boolean).map(Number) : [];
+
+function demoUrl(path, extra) {
+  const p = new URLSearchParams({lang: LANG, compact: "1"});
+  if (SEEN_IDS.length) p.set("seen", SEEN_IDS.join(","));
+  Object.entries(extra || {}).forEach(([k, v]) => p.set(k, v));
+  return path + "?" + p.toString();
+}
+
+function runDemoScenario(st) {
+  const phaseEl = document.getElementById("phase");
+  // Рейс идёт через несколько АЗС, поэтому сценарий следит за всем
+  // рейсом, а не за одной станцией: ведущая остановка — та, что сейчас
+  // разгружается, иначе ближайшая недоделанная.
+  const trip = st.trips.find(t => t.status === "en_route"
+    && t.stops.some(sp => sp.status !== "done"));
+  if (!trip) {
+    const waiting = (st.tasks || []).find(k => k.stage === "placed");
+    phaseEl.textContent = waiting
+      ? tt("fuel.demo.phase_waiting", {name: waiting.station})
+      : tt("fuel.tasks.empty");
+    phaseEl.className = "show";
+    return;
+  }
+
+  const unloading = trip.stops.find(sp => sp.status === "unloading");
+  const next = unloading || trip.stops.find(sp => sp.status !== "done");
+  const station = st.stations.find(s => s.id === next.station_id);
+  if (!station) return;
+
+  // кадр держим на паре «депо → текущая цель», чтобы в маленьком окне
+  // было видно именно едущую машину, а не всю страну
   if (!demoFitted && map.isStyleLoaded()) {
     demoFitted = true;
     map.fitBounds([
@@ -364,28 +418,22 @@ function runDemoScenario(st) {
       {padding: 40, duration: 0});
   }
 
-  const trip = st.trips.find(t => t.status === "en_route"
-    && t.stops.some(sp => sp.station_id === FOCUS && sp.status !== "done"));
-  let text;
-  if (!trip) {
-    text = tt("fuel.demo.phase_waiting", {name: station.name});
-  } else {
-    const stop = trip.stops.find(sp => sp.station_id === FOCUS);
-    if (stop.status === "unloading") {
-      text = tt("fuel.demo.phase_arriving", {name: station.name});
-      if (!demoNavigated) {
-        demoNavigated = true;
-        setTimeout(() => {
-          location.href = "/fuel/station/" + FOCUS + "?lang=" + LANG
-            + "&compact=1";
-        }, 1200);          // короткая пауза — зритель успевает прочитать фразу
-      }
-    } else {
-      text = tt("fuel.demo.phase_enroute",
-        {name: station.name, liters: stop.liters, driver: trip.driver});
+  const idx = trip.stops.indexOf(next) + 1;
+  if (unloading && !SEEN_IDS.includes(next.station_id)) {
+    phaseEl.textContent = tt("fuel.demo.phase_arriving", {name: station.name});
+    if (!demoNavigated) {
+      demoNavigated = true;
+      SEEN_IDS.push(next.station_id);
+      setTimeout(() => {           // пауза, чтобы зритель прочитал фразу
+        location.href = demoUrl("/fuel/station/" + next.station_id,
+                                {demo: "1"});
+      }, 1200);
     }
+  } else {
+    phaseEl.textContent = tt("fuel.demo.phase_enroute", {
+      name: station.name, liters: next.liters, driver: trip.driver})
+      + `  (${idx}/${trip.stops.length})`;
   }
-  phaseEl.textContent = text;
   phaseEl.className = "show";
 }
 

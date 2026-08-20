@@ -123,6 +123,8 @@ _FUEL_JS_KEYS = (
     "fuel.station.tooltip", "fuel.tanker.tooltip", "fuel.open_3d",
     "fuel.demo.phase_waiting", "fuel.demo.phase_enroute",
     "fuel.demo.phase_arriving",
+    # журнал задач автозаказа рисуется в браузере по данным опроса
+    "fuel.task.assignee", "fuel.tasks.empty",
 )
 
 
@@ -145,6 +147,9 @@ def fuel_page():
     return render_template(
         "fuel.html", lang=lang, erp_url=erp_url,
         compact=request.args.get("compact") == "1", focus=focus_id,
+        # ?demo=1 — многостанционный обход: страница ведёт сценарий по
+        # всем остановкам рейса, а не по одной станции (?focus=)
+        demo=request.args.get("demo") == "1",
         i18n_json=client_catalog(lang, _FUEL_JS_KEYS))
 
 
@@ -201,8 +206,20 @@ def fuel_station_page(station_id):
         unload = {"driver": t(lang, "fuelviz.demo_driver"),
                  "liters": 6000, "frac": 0.45}
     compact = request.args.get("compact") == "1"
-    return build_station_page(station, unload, f"/fuel?lang={lang}", lang,
-                              compact=compact)
+    # В сценарном обходе (?demo=1) страница станции — не тупик: досмотрев
+    # слив, она сама возвращается на карту, чтобы показ поехал к следующей
+    # остановке рейса. Список уже показанных станций едет в адресе (seen),
+    # иначе обход вечно возвращался бы к первой.
+    demo = request.args.get("demo") == "1"
+    seen = request.args.get("seen", "")
+    if demo:
+        back = f"/fuel?lang={lang}&compact=1&demo=1"
+        if seen:
+            back += f"&seen={seen}"
+    else:
+        back = f"/fuel?lang={lang}"
+    return build_station_page(station, unload, back, lang,
+                              compact=compact, demo=demo)
 
 
 @app.get("/api/eta/fuel/<station_id>")
