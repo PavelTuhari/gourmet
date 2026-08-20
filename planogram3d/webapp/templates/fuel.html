@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Топливная сеть PECO — Молдова</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/static/vendor/maplibre-gl.css">
+<style>
+  html, body { margin:0; height:100%;
+               font-family:'Segoe UI',system-ui,sans-serif;
+               color:#23303f; background:#f0f2f5; overflow:hidden; }
+  #layout { display:grid; height:100%;
+            grid-template-columns: 300px 1fr;
+            grid-template-rows: 46px 1fr; }
+  header { grid-column:1/3; display:flex; align-items:center; gap:14px;
+           padding:0 16px;
+           background:linear-gradient(90deg,#1d2b3a,#2f4b68); color:#fff; }
+  header .t { font-weight:700; font-size:15.5px; }
+  header .k { font-size:12px; opacity:.85; }
+  header .k b { color:#ffd54f; }
+  header .src { font-size:11px; font-weight:700; padding:2px 8px;
+                border-radius:8px; background:#5a6b7f; }
+  header .src.artgranit { background:#2fa14e; }
+  header a { color:#9ec2ff; font-size:12.5px; margin-left:auto; }
+
+  #side { overflow-y:auto; background:#fff; border-right:1px solid #dde3ea;
+          padding:10px 12px; }
+  #side h3 { font-size:12.5px; margin:10px 0 6px; color:#5b6672;
+             text-transform:uppercase; letter-spacing:.4px; }
+  .trip { border:1.5px solid #cdd8ea; border-radius:10px;
+          padding:7px 10px; margin-bottom:8px; font-size:12px;
+          background:#f7f9fd; }
+  .trip .tr { font-weight:700; }
+  .trip .drv { font-size:11px; color:#5b6672; }
+  .trip .bar { height:6px; border-radius:3px; background:#e3e8ef;
+               margin-top:5px; overflow:hidden; }
+  .trip .bar i { display:block; height:100%; background:#2f6fed; }
+  .run { font-size:11.5px; border-top:1px dashed #e3e8ef; padding:4px 0;
+         line-height:1.45; }
+  .ev { font-size:11.5px; border-top:1px dashed #e3e8ef; padding:3px 0;
+        line-height:1.45; }
+
+  #map { position:relative; }
+  .depot-mark { font-size:30px;
+                filter:drop-shadow(0 3px 4px rgba(0,0,0,.4)); }
+  .tanker-mark { font-size:24px;
+                 filter:drop-shadow(0 3px 4px rgba(0,0,0,.4)); }
+  .tanker-tag { font-size:9.5px; font-weight:700; color:#fff;
+                background:#5a6b7f; padding:1px 5px; border-radius:7px;
+                text-align:center; white-space:nowrap; }
+
+  /* ---- маркер АЗС: цвет = уровень запаса (главный сигнал экрана) ---- */
+  .st-mark { width:22px; height:22px; border-radius:50%;
+             border:3px solid #fff; background:#2fa14e;
+             box-shadow:0 2px 5px rgba(0,0,0,.35); cursor:pointer;
+             display:flex; align-items:center; justify-content:center;
+             font-size:10px; color:#fff; font-weight:800; }
+  .st-mark.low { background:#e6a700; }
+  .st-mark.dry { background:#d64541; animation:stp 1.1s infinite; }
+  @keyframes stp { 50% { transform:scale(1.28); } }
+
+  #legend { position:absolute; left:10px; bottom:10px; z-index:5;
+            background:rgba(255,255,255,.94); border-radius:10px;
+            padding:8px 12px; font-size:11px; box-shadow:0 4px 14px
+            rgba(20,40,70,.18); }
+  #legend .li { display:flex; align-items:center; gap:6px; margin:2px 0; }
+  #legend .dot { width:11px; height:11px; border-radius:50%; }
+
+  /* ---- онлайн-табло прибытия (ИИ) — контракт /delivery ---- */
+  .eta-board { font: 12px/1.5 'Segoe UI',system-ui,sans-serif;
+               min-width:250px; }
+  .eta-board .bh { font-weight:700; font-size:12.5px; margin-bottom:2px; }
+  .eta-board .bp { color:#5b6672; font-size:11px; margin-bottom:5px; }
+  .eta-board table { border-collapse:collapse; width:100%; }
+  .eta-board td { padding:2px 4px; border-top:1px dashed #e3e8ef;
+                  font-size:11.5px; white-space:nowrap; }
+  .eta-board .sig { color:#8a94a1; font-size:10px; }
+  .eta-board .src { color:#8a94a1; font-size:10px; margin-top:4px; }
+  .eta-board .ai { display:inline-block; background:#7b1fa2; color:#fff;
+                   font-size:9.5px; font-weight:700; border-radius:6px;
+                   padding:0 5px; vertical-align:1px; }
+</style>
+</head>
+<body>
+<div id="layout">
+  <header>
+    <span class="t">⛽ Топливная сеть PECO · Молдова</span>
+    <span class="k">АЗС: <b id="k-st">0</b></span>
+    <span class="k">низкий запас: <b id="k-low">0</b></span>
+    <span class="k">риск сухого бака: <b id="k-dry">0</b></span>
+    <span class="k">рейсов: <b id="k-trips">0</b></span>
+    <span class="src" id="k-src">—</span>
+    <a href="/">← карта сети</a>
+  </header>
+
+  <div id="side">
+    <h3>Рейсы бензовозов</h3>
+    <div id="trips"></div>
+    <h3>Прогоны автозаказа</h3>
+    <div id="runs"></div>
+    <h3>События</h3>
+    <div id="events"></div>
+  </div>
+
+  <div id="map">
+    <div id="legend">
+      <div class="li"><span class="dot" style="background:#2fa14e"></span>
+        запас в норме</div>
+      <div class="li"><span class="dot" style="background:#e6a700"></span>
+        ниже точки заказа</div>
+      <div class="li"><span class="dot" style="background:#d64541"></span>
+        риск сухого бака</div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/vendor/maplibre-gl.js"></script>
+<script>
+const style = {
+  version: 8,
+  sources: { md: { type: "geojson",
+                   data: "/static/data/moldova_map.geojson" } },
+  layers: [
+    { id: "bg", type: "background",
+      paint: { "background-color": "#eef1e8" } },
+    { id: "water", type: "fill", source: "md",
+      filter: ["==", ["get", "kind"], "water"],
+      paint: { "fill-color": "#8cc4e6" } },
+    { id: "road", type: "line", source: "md",
+      filter: ["==", ["get", "kind"], "road"],
+      paint: { "line-color": "#ffffff", "line-width":
+        ["interpolate", ["linear"], ["zoom"], 6, .4, 12, 2 ] } },
+    { id: "road-major", type: "line", source: "md",
+      filter: ["==", ["get", "kind"], "road_major"],
+      paint: { "line-color": "#ffdf9e", "line-width":
+        ["interpolate", ["linear"], ["zoom"], 6, 1, 12, 4.5 ] } },
+    { id: "places", type: "circle", source: "md",
+      filter: ["==", ["get", "kind"], "place"],
+      paint: { "circle-radius": ["match", ["get", "rank"], "city", 4, 2.4],
+               "circle-color": "#4a5568",
+               "circle-stroke-color": "#fff", "circle-stroke-width": 1 } },
+  ]
+};
+// подписи городов — DOM-маркеры (без символьного слоя: он требует
+// "glyphs" — атласа шрифтов с внешнего сервера, а карта автономна)
+
+const map = new maplibregl.Map({ container: "map", style,
+  center: [28.6, 47.0], zoom: 7, attributionControl: false });
+map.addControl(new maplibregl.NavigationControl(), "bottom-right");
+
+let routeLinesReady = false;
+map.on("load", () => {
+  map.addSource("routelines", { type: "geojson",
+    data: { type: "FeatureCollection", features: [] } });
+  map.addLayer({ id: "routelines", type: "line", source: "routelines",
+    paint: { "line-color": "#7b1fa2", "line-width": 3,
+             "line-dasharray": [2, 1.5] } });
+  routeLinesReady = true;
+});
+
+const stationMarks = {}, tankerMarks = {};
+let depotMark = null;
+
+function fmtT(ts) {
+  return new Date(ts * 1000).toLocaleTimeString("ru-RU",
+    {hour: "2-digit", minute: "2-digit"});
+}
+function fmtTs(ts) {
+  return new Date(ts * 1000).toLocaleTimeString("ru-RU",
+    {hour: "2-digit", minute: "2-digit", second: "2-digit"});
+}
+
+/* ---- онлайн-табло прибытия (ИИ) на АЗС — тот же контракт, что /delivery ---- */
+let etaPopup = null, etaPopupStation = null;
+async function showEtaBoard(stationId, lon, lat) {
+  let b;
+  try { b = await (await fetch("/api/eta/fuel/" + stationId)).json(); }
+  catch (e) { return; }
+  const rows = b.rows.length ? b.rows.map(r => `
+    <tr>
+      <td>${r.icon}</td>
+      <td>${r.label}</td>
+      <td><b>${fmtTs(r.eta_ts)}</b>
+        <span class="sig">±${r.sigma_sec} с</span></td>
+      <td class="sig">план ${fmtT(r.plan_ts)}</td>
+    </tr>`).join("")
+    : `<tr><td colspan="4">бензовозов в пути нет</td></tr>`;
+  const html = `<div class="eta-board">
+    <div class="bh">🚏 Табло прибытия <span class="ai">ИИ</span></div>
+    <div class="bp">${b.point}</div>
+    <table>${rows}</table>
+    <div class="src">${b.rows.length ? b.rows[0].source
+      : "источник данных: " + b.source}</div></div>`;
+  if (etaPopup && etaPopupStation === stationId) {   // живое обновление
+    etaPopup.setHTML(html);
+    return;
+  }
+  if (etaPopup) etaPopup.remove();
+  etaPopupStation = stationId;
+  etaPopup = new maplibregl.Popup({ offset: 14, maxWidth: "340px" })
+    .setLngLat([lon, lat]).setHTML(html).addTo(map);
+  etaPopup.on("close", () => { etaPopupStation = null; });
+}
+
+async function poll() {
+  let st;
+  try { st = await (await fetch("/api/fuel/state")).json(); }
+  catch (e) { return; }
+
+  const srcEl = document.getElementById("k-src");
+  srcEl.textContent = st.source === "artgranit"
+    ? "🔌 Artgranit" : "🧪 эмуляция";
+  srcEl.className = "src " + (st.source === "artgranit" ? "artgranit" : "");
+
+  document.getElementById("k-st").textContent = st.stations.length;
+  document.getElementById("k-low").textContent =
+    st.stations.filter(s => s.is_low && s.days_to_dry >= 2).length;
+  document.getElementById("k-dry").textContent =
+    st.stations.filter(s => s.days_to_dry < 2).length;
+  document.getElementById("k-trips").textContent =
+    st.trips.filter(t => t.status === "en_route").length;
+
+  /* --- нефтебаза --- */
+  if (!depotMark) {
+    const el = document.createElement("div");
+    el.className = "depot-mark"; el.textContent = "🏭";
+    el.title = st.depot.name;
+    depotMark = new maplibregl.Marker({element: el})
+      .setLngLat([st.depot.lon, st.depot.lat]).addTo(map);
+  }
+
+  /* --- АЗС: маркер красится по запасу --- */
+  const seenS = new Set();
+  for (const s of st.stations) {
+    seenS.add(s.id);
+    if (!stationMarks[s.id]) {
+      const el = document.createElement("div");
+      el.onclick = (ev) => { ev.stopPropagation();
+                             showEtaBoard(s.id, s.lon, s.lat); };
+      stationMarks[s.id] = { el, marker:
+        new maplibregl.Marker({element: el})
+          .setLngLat([s.lon, s.lat]).addTo(map) };
+    }
+    const cls = s.days_to_dry < 2 ? "dry" : (s.is_low ? "low" : "");
+    const m = stationMarks[s.id];
+    m.el.className = "st-mark " + cls;
+    m.el.textContent = Math.round(s.fill_pct) + "%";
+    m.el.title = `${s.name} · заполненность ${s.fill_pct}% · ` +
+      `${s.days_to_dry.toFixed(1)} дн. до сухого бака — клик: табло`;
+  }
+  for (const id of Object.keys(stationMarks))
+    if (!seenS.has(Number(id))) { stationMarks[id].marker.remove();
+                                  delete stationMarks[id]; }
+
+  /* --- рейсы бензовозов: маркер на трассе + полилинии --- */
+  const lines = [], seenT = new Set();
+  st.trips.forEach(t => {
+    if (t.status !== "en_route") return;
+    seenT.add(t.id);
+    if (t.path && t.path.length > 1)
+      lines.push({ type: "Feature", properties: {},
+        geometry: { type: "LineString", coordinates: t.path } });
+    if (!tankerMarks[t.id]) {
+      const el = document.createElement("div");
+      el.innerHTML = `<div class="tanker-mark">🚛</div>` +
+        `<div class="tanker-tag">${t.driver.split(" ")[1] || t.driver}</div>`;
+      tankerMarks[t.id] = { el, marker:
+        new maplibregl.Marker({element: el})
+          .setLngLat([t.lon, t.lat]).addTo(map) };
+    } else tankerMarks[t.id].marker.setLngLat([t.lon, t.lat]);
+    tankerMarks[t.id].el.title =
+      `${t.id} · ${t.driver} · ${t.liters} л · прогресс ${
+        Math.round(t.progress * 100)}%`;
+  });
+  for (const id of Object.keys(tankerMarks))
+    if (!seenT.has(id)) { tankerMarks[id].marker.remove();
+                          delete tankerMarks[id]; }
+  if (routeLinesReady)
+    map.getSource("routelines").setData(
+      { type: "FeatureCollection", features: lines });
+
+  /* --- боковая панель: рейсы, прогоны, события --- */
+  document.getElementById("trips").innerHTML = st.trips.map(t => `
+    <div class="trip">
+      <span class="tr">${t.id}</span> · ${t.status === "done"
+        ? "завершён" : "в пути"}<br>
+      <span class="drv">${t.driver} · ${t.liters} л · ${
+        t.stops.map(s => s.name.replace(/^АЗС №\d+ /, "")).join(", ")}</span>
+      <div class="bar"><i style="width:${
+        Math.round(t.progress * 100)}%"></i></div>
+    </div>`).join("") || "<div class='ev'>рейсов пока нет</div>";
+
+  document.getElementById("runs").innerHTML = st.runs.map(r => `
+    <div class="run"><b>${r.id}</b> · ${fmtT(r.started_at)}<br>${
+      r.message}</div>`).join("")
+    || "<div class='ev'>автозаказов пока не было</div>";
+
+  document.getElementById("events").innerHTML = st.events.map(e =>
+    `<div class="ev">${e.text}</div>`).join("");
+
+  /* живое обновление открытого табло */
+  if (etaPopupStation && etaPopup) {
+    const p = etaPopup.getLngLat();
+    showEtaBoard(etaPopupStation, p.lng, p.lat);
+  }
+}
+setInterval(poll, 1500); poll();
+</script>
+</body>
+</html>
