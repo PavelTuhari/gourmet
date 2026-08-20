@@ -596,6 +596,55 @@ class FuelNetwork:
                       f"{len(trips_out)} рейс(ов)")
         self._real_mode = True
 
+    # ----- табло прибытия (ИИ) ----------------------------------------------
+    def arrival_board(self, station_id) -> Optional[dict]:
+        """Онлайн-табло прибытия АЗС: бензовозы в пути к ней, с ИИ-прогнозом
+        (±σ) — та же форма ответа, что у ``network.arrival_board`` и
+        ``delivery.arrival_board`` (``{"now", "point", "rows", "model"}``),
+        чтобы фронтенд табло с ``/delivery`` переиспользовался как есть."""
+        try:
+            sid = int(station_id)
+        except (TypeError, ValueError):
+            return None
+        predictor = get_predictor()
+        now = time.time()
+        st = self.state()                  # тот же снимок, что видит карта
+        station = next((s for s in st["stations"] if s["id"] == sid), None)
+        if station is None:
+            return None
+        rows = []
+        for trip in st["trips"]:
+            if trip["status"] != "en_route":
+                continue
+            stop = next((sp for sp in trip["stops"]
+                        if sp["station_id"] == sid and sp["status"] != "done"),
+                       None)
+            if stop is None:
+                continue
+            # остаток пути до станции — по прямой с запасом на извилистость
+            # дороги (тот же приём, что в delivery._ai_stop_predictions для
+            # плеча без точного дорожного остатка)
+            remaining_m = 1.25 * _geo_dist(
+                self.net, (trip["lon"], trip["lat"]),
+                (station["lon"], station["lat"]))
+            eta_s, sigma_s, n_obs = predictor.predict("tanker", remaining_m)
+            rows.append({
+                "type": "tanker", "icon": "🚛",
+                "label": f"{trip['id']} · {trip['driver']} · "
+                        f"{stop['liters']} л",
+                "eta_sec": round(eta_s),
+                "sigma_sec": round(max(3.0, sigma_s)),
+                "eta_ts": now + eta_s,
+                "plan_ts": stop.get("eta_ts") or trip["eta"],
+                "progress": trip["progress"],
+                "source": (f"ИИ-прогноз (модель обучена, {n_obs} рейс.)"
+                          if n_obs else "ИИ-прогноз (априорная модель)"),
+            })
+        rows.sort(key=lambda r: r["eta_ts"])
+        return {"now": now, "point": station["name"], "station_id": sid,
+                "source": st["source"], "rows": rows,
+                "model": predictor.summary()}
+
     # ----- снимок состояния (evolve-on-poll) --------------------------------
     def state(self) -> dict:
         now = time.time()

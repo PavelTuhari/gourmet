@@ -24,6 +24,7 @@ from .delivery import DeliveryHub
 from .instore import InstoreHub
 from .multigame import MultiHub
 from .network import StoreNetwork
+from .peco_fuel import FuelNetwork
 from .roblox import TeamHub
 from .zabbix import create_provider
 
@@ -34,6 +35,7 @@ instore = InstoreHub()
 team = TeamHub()
 delivery = DeliveryHub(network)
 mgames = MultiHub(network)
+fuel = FuelNetwork()          # контур топлива — своя карта (Молдова), свой граф
 
 
 @app.get("/delivery")
@@ -72,6 +74,28 @@ def eta_order(order_id):
     """Онлайн-табло пункта доставки (адреса покупателя): ИИ-прогноз
     прибытия курьера с неопределённостью ±σ и позицией в очереди."""
     board = delivery.arrival_board(order_id)
+    if board is None:
+        abort(404)
+    return jsonify(board)
+
+
+@app.get("/fuel")
+def fuel_page():
+    """Карта топливной сети Молдовы: нефтебаза, АЗС, рейсы бензовозов."""
+    return render_template("fuel.html")
+
+
+@app.get("/api/fuel/state")
+def api_fuel_state():
+    return jsonify(fuel.state())
+
+
+@app.get("/api/eta/fuel/<station_id>")
+def eta_fuel(station_id):
+    """Онлайн-табло прибытия АЗС: бензовозы в пути к ней, ИИ-прогноз
+    (±σ) — тот же контракт, что у /api/eta/store и /api/eta/order, чтобы
+    фронтенд табло переиспользовался без переписывания."""
+    board = fuel.arrival_board(station_id)
     if board is None:
         abort(404)
     return jsonify(board)
